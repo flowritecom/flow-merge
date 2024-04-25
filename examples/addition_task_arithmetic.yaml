@@ -1,0 +1,21 @@
+method: addition-task-arithmetic
+method_global_parameters:
+  scaling_coefficient: 0.8
+  normalize: False
+base_model: Qwen/Qwen1.5-0.5B
+models:
+  - model: Qwen/Qwen1.5-0.5B-chat
+    weight: 0.3
+  - model: Qwen/Qwen1.5-0.5B
+    weight: 0.4
+tokenizer:
+  mode: base
+  interpolation_method: linear
+directory_settings:
+  cache_dir: null
+  local_dir: ./models
+  output_dir: ./my_model_test_2
+hf_hub_settings:
+  token: null
+  trust_remote_code: False
+device: cpu

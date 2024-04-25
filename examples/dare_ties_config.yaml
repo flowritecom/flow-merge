@@ -1,0 +1,23 @@
+method: dare-ties-merging
+method_global_parameters:
+  scaling_coefficient: 0.7
+  normalize: False
+  p: 0.7
+base_model: Qwen/Qwen1.5-0.5B
+models:
+  - model: Qwen/Qwen1.5-0.5B
+    weight: 0.5
+  - model: Qwen/Qwen1.5-0.5B-chat
+    weight: 0.3
+  - model: minghaowu/Qwen1.5-0.5B-OpenHermes-2.5
+    weight: 0.3
+tokenizer:
+  mode: base
+  interpolation_method: linear
+directory_settings:
+  cache_dir: null
+  local_dir: ./models
+  output_dir: ./ties_merging_model
+hf_hub_settings:
+  token: null
+  trust_remote_code: False
