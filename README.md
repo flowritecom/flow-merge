@@ -53,11 +53,11 @@ Create a new python environment and activate it. For example, with `conda`:
 >Note `flow-merge` requires `python>=3.10`
 
 ```bash
-conda env create -n flow-merge
+conda env create
 conda activate flow-merge
 ```
 
-`flow-merge` can be installed with `pip`:
+`flow-merge` can be installed with running `pip` inside the project directory (-e for editable install):
 
 ```bash
 pip install -e .
@@ -127,7 +127,9 @@ flow-merge --help
 You can display the config yaml schema and the default values by running:
 
 ```bash
-flow-merge schema | jq
+flow-merge schema
+# extra tip: pipe to highlighted json with 'flow-merge schema | jq' or 'flow-merge schema | fx'
+# where you require either 'jq' or 'fx' installed beforehand
 ```
 
 You can optionally validate your config file before running the merge:
