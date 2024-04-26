@@ -51,7 +51,7 @@ cd flow-merge
 
 Create a new python environment and activate it. For example, with `conda`:
 ```bash
-conda create -n flow-merge
+conda env create -n flow-merge
 conda activate flow-merge
 ```
 
@@ -114,7 +114,7 @@ flow-merge --help
 
 You can display the config yaml schema and the default values by running:
 ```bash
-flow-merge schema
+flow-merge schema | jq
 ```
 
 You can optionally validate your config file before running the merge:
@@ -152,6 +152,22 @@ Currently `flow-merge` supports most of the popular and proven merge methods.
 | `llama` | `LlamaForCausalLM` |
 
 >📢 _We plan to support many models and architectures more, including encoder models such as BERT-Family models too._
+
+# Tokenizers
+
+When merging language models, it's crucial to consider the tokenizers involved, as they convert text into tokens that the models can process.
+
+`flow-merge` currently supports two modes for constructing the tokenizer that is used by the resulting merged model:
+- `base`: Default mode. The merged model utilizes the tokenizer of the base model. If no base model is specified in the merged configuration, the first model in the models list is used as the base model.
+- `merged`: If the tokenizers of the models use different vocabularies, a common vocabulary is created, and a new tokenizer is constructed based on this vocabulary.
+
+## Interpolation of embedding and language modeling layers
+If the tokenizers of the models use different vocabularies, `flow-merge` creates `input_ids` mappings for the models and linearly interpolates the embedding and language modeling layers.
+
+Currently, only `linear` interpolation is supported.
+
+## Special tokens
+Conflicts can arise from special tokens used by different models' tokenizers, such as differing `eos_token` tokens. In such cases, `flow-merge` uses the special token of the last model in the list.
 
 # 🚧 WIP 🚧 **📚 Additional resources**
 
