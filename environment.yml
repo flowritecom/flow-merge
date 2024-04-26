@@ -14,6 +14,7 @@ dependencies:
   - safetensors=0.4.2
   - peft=0.9.0
   - accelerate=0.27.2
+  - pip=24.0
   - pip:
       - ipykernel==6.25.2
       - ruff==0.2.0
