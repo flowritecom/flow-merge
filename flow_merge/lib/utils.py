@@ -57,18 +57,19 @@ def generate_model_card(merge_config: MergeConfig, model_name: str = None):
         for model in model_path_list:
             models += "\t- " + model + "\n"
 
-    config = merge_config.data
-
     # tags
     tags = ["flow-merge", "merge"]
 
+    config = merge_config.data.model_dump(exclude={'hf_hub_settings': {'token'}}, 
+                                          exclude_unset=True)
+    config["method"] = config["method"].value
     metadata = yaml.dump({"tags": tags, "library_name": "transformers"})
 
     fmt_card = MODEL_CARD_TEMPLATE.format(
         metadata=metadata,
         model_name=model_name,
         models=models,
-        config=yaml.dump(config, sort_keys=False),
+        config=yaml.dump(config, indent=2, sort_keys=False, default_flow_style=False),
     )
 
     with open(
