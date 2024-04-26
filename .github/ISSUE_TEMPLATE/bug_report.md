@@ -1,38 +1,45 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
+name: 🐛 Bug report
+about: Create a report to help us improve our library!
+title: 'Bug:'
+labels: bug
 assignees: ''
 
 ---
+# 🐛 Bug report
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## **Summary**
+<!-- A clear and concise description of what the bug is. -->
 
-**To Reproduce**
+
+## **Actual Behavior**
+<!-- A clear and concise description of the behavior you're experiencing. -->
+
+## **Expected behavior**
+<!-- A clear and concise description of what you expected to happen. -->
+
+## **To Reproduce**
+<!-- Merge configuration file (if relevant):
+```yaml
+<your_yaml_file>
+```-->
+
 Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+<!-- List down the steps to reproduce the bug -->
+1. 
+2. 
+3. 
+4. 
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## **Environment**
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+- OS:<!-- [e.g., macOS, Windows, Linux] -->
+- Python version: <!-- [e.g., 3.8.2] -->
+- Library version: <!-- [e.g., 1.2.3] -->
+- Other relevant dependencies: <!-- [e.g., torch, peft, etc.] -->
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+## **Additional context**
+<!-- Add any other context about the problem here. -->
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+## **Possible Solution or Workaround**
+<!-- If you have any ideas or attempted workarounds, please describe them here. -->
