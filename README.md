@@ -41,7 +41,21 @@ The key features of the library consists of:
 # **🎉 Getting started**
 
 ## **💻 Installation**
-`flow-merge` can be installed with `pip`:
+Clone the repository and navigate to the root directory:
+```bash
+# via ssh
+git clone git@github.com:flowritecom/flow-merge.git
+
+cd flow-merge
+```
+
+Create a new python environment and activate it. For example, with `conda`:
+```bash
+conda create -n flow-merge
+conda activate flow-merge
+```
+
+`flow-merge` can be now installed with `pip`:
 ```bash
 pip install -e .
 ```
