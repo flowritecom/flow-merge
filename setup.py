@@ -7,6 +7,7 @@ setup(
     author="Flow AI",
     author_email="nothere@flowrite.com",
     packages=find_packages(),
+    python_requires=">=3.10",
     install_requires=[
         "pyyaml==6.0.1",
         "transformers==4.38.1",
