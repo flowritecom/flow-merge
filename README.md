@@ -53,8 +53,7 @@ Create a new python environment and activate it. For example, with `conda`:
 >Note `flow-merge` requires `python>=3.10`
 
 ```bash
-conda env create
-conda activate flow-merge
+conda create -n flow-merge python>=3.10 && conda activate flow-merge
 ```
 
 `flow-merge` can be installed with running `pip` inside the project directory (-e for editable install):
