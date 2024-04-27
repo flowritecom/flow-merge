@@ -13,7 +13,7 @@
     -
     <a href="https://github.com/flowritecom/flow-merge/issues">Issues</a>
     -
-    <a href="https://www.flowrite.com/">Website</a>
+    <a href="http://flow-merge.com/">Website</a>
   </p>
 </p>
 
