@@ -1,6 +1,8 @@
 from typing import Optional
-
-from pydantic import BaseModel, Field, ValidationError, field_validator, validator
+import re
+from pydantic import BaseModel, Field, ValidationError, field_validator
+import os
+from huggingface_hub import login
 
 from flow_merge.lib.logger import get_logger
 
@@ -70,11 +72,22 @@ class HfHubSettings(BaseModel):
 
     @field_validator("token")
     def validate_token(cls, v):
-        if v is False:  # FIXME: exec here the regexp checker for the token format
-            logger.warning(
-                f"Probably invalid Hugging Face Hub token. HF token is usually of the form '<REGEXP_HERE>'."
-            )
+        if v:
+            # Check the token format using a regular expression
+            token_pattern = r"^hf_(?=.*[a-z])(?=.*[A-Z])[a-zA-Z]+$"
+            if not re.match(token_pattern, v):
+                logger.warning(
+                    f"Invalid Hugging Face Hub token format. HF token should be of the form '{token_pattern}'."
+                )
+                return v
+
+            # Attempt to login with the provided token
+            try:
+                login(token=v)
+            except Exception as e:
+                logger.warning(f"Failed to login to the Hugging Face Hub with the provided token: {e}")
         return v
+
 
 
 class DirectorySettings(BaseModel):
