@@ -53,7 +53,7 @@ Create a new python environment and activate it. For example, with `conda`:
 >Note `flow-merge` requires `python>=3.10`
 
 ```bash
-conda create python>=3.10 && conda activate flow-merge
+conda create -n flow-merge python>=3.10 && conda activate flow-merge
 ```
 
 `flow-merge` can be installed with running `pip` inside the project directory (-e for editable install):
@@ -151,15 +151,15 @@ Currently `flow-merge` supports most of the popular and proven merge methods.
 
 > 📢 _We are working hard on adding more methods to the library._
 
-## Limitations of the methods
+## Properties of the methods
 
 | Method                   | Description                 | Uses a Base Model | Can Merge Multiple Models | Supports Weighted Merge |
 | ------------------------ | -------------------------- | ---------- | --------------- | -------|
-| Linear or Model Soups    | Averages the weights of the models | ❌         | 🟢              | 🟢 |
-| SLERP                    | Smoothly interpolates between the weights of two models using spherical linear interpolation | ❌         | ❌              | ❌ |
-| Addition Task Arithmetic | Obtains task vectors or deltas and applies them to the base model | 🟢         | 🟢              | 🟢 |
-| Ties-MERGING             | It addresses the problem of interference between parameters from different models before merging with addition task arithmetic             | 🟢         |  🟢 |🟢              |
-| DARE Ties-MERGING        | Similar to Ties-MERGING but it uses a different approach that prunes the task vectors and rescale them. | 🟢         | 🟢              | 🟢 |
+| Linear or Model Soups    | Averages the weights of the models | No         | Yes              | Yes |
+| SLERP                    | Smoothly interpolates between the weights of two models using spherical linear interpolation | No         | No              | No |
+| Addition Task Arithmetic | Obtains task vectors or deltas and applies them to the base model | Yes         | Yes              | Yes |
+| Ties-MERGING             | It addresses the problem of interference between parameters from different models before merging with addition task arithmetic             | Yes         |  Yes |Yes              |
+| DARE Ties-MERGING        | Similar to Ties-MERGING but it uses a different approach that prunes the task vectors and rescale them. | Yes         | Yes              | Yes |
 
 # Supported LLM Architectures
 
