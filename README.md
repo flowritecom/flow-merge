@@ -53,7 +53,7 @@ Create a new python environment and activate it. For example, with `conda`:
 >Note `flow-merge` requires `python>=3.10`
 
 ```bash
-conda create -n flow-merge python>=3.10 && conda activate flow-merge
+conda create python>=3.10 && conda activate flow-merge
 ```
 
 `flow-merge` can be installed with running `pip` inside the project directory (-e for editable install):
@@ -83,11 +83,11 @@ models:
 tokenizer:
   mode: base
   interpolation_method: linear
-dirs_config:
+directory_settings:
   cache_dir: null
   local_dir: ./models
   output_dir: ./merged_model
-hf_hub_config:
+hf_token:
   token: null
   trust_remote_code: False
 device: cpu
@@ -141,22 +141,25 @@ flow-merge validate --config my_first_merge.yaml
 
 Currently `flow-merge` supports most of the popular and proven merge methods.
 
-| Method                   | Identifier                 | Base Model | Multiple Models | Paper                                 |
-| ------------------------ | -------------------------- | ---------- | --------------- | ------------------------------------- |
-| Linear or Model Soups    | `model-soup`               | ❌         | 🟢              | [1](https://arxiv.org/abs/2203.05482) |
-| SLERP                    | `slerp`                    | ❌         | ❌              | -                                     |
-| Addition Task Arithmetic | `addition-task-arithmetic` | 🟢         | 🟢              | [2](https://arxiv.org/abs/2212.04089) |
-| Ties-MERGING             | `ties-merging`             | 🟢         | 🟢              | [3](https://arxiv.org/abs/2306.01708) |
-| DARE Ties-MERGING        | `dare-ties`                | 🟢         | 🟢              | [4](https://arxiv.org/abs/2311.03099) |
-
-**Paper references:**
-
-1. [Model soups: averaging weights of multiple fine-tuned models improves accuracy without increasing inference time](https://arxiv.org/abs/2203.05482)
-2. [Editing Models with Task Arithmetic](https://arxiv.org/abs/2212.04089)
-3. [TIES-Merging: Resolving Interference When Merging Models](https://arxiv.org/abs/2306.01708)
-4. [Language Models are Super Mario: Absorbing Abilities from Homologous Models as a Free Lunch](https://arxiv.org/abs/2311.03099)
+| Method                   | Identifier                 | Paper |
+| ------------------------ | -------------------------- | ---------- |
+| Linear or Model Soups    | `model-soup`               | [Model soups: averaging weights of multiple fine-tuned models improves accuracy without increasing inference time](https://arxiv.org/abs/2203.05482) |
+| SLERP                    | `slerp`                    | -                                     |
+| Addition Task Arithmetic | `addition-task-arithmetic` | [Editing Models with Task Arithmetic](https://arxiv.org/abs/2212.04089) |
+| Ties-MERGING             | `ties-merging`             | [TIES-Merging: Resolving Interference When Merging Models](https://arxiv.org/abs/2306.01708) |
+| DARE Ties-MERGING        | `dare-ties`                | [Language Models are Super Mario: Absorbing Abilities from Homologous Models as a Free Lunch](https://arxiv.org/abs/2311.03099) |
 
 > 📢 _We are working hard on adding more methods to the library._
+
+## Limitations of the methods
+
+| Method                   | Description                 | Uses a Base Model | Can Merge Multiple Models | Supports Weighted Merge |
+| ------------------------ | -------------------------- | ---------- | --------------- | -------|
+| Linear or Model Soups    | Averages the weights of the models | ❌         | 🟢              | 🟢 |
+| SLERP                    | Smoothly interpolates between the weights of two models using spherical linear interpolation | ❌         | ❌              | ❌ |
+| Addition Task Arithmetic | Obtains task vectors or deltas and applies them to the base model | 🟢         | 🟢              | 🟢 |
+| Ties-MERGING             | It addresses the problem of interference between parameters from different models before merging with addition task arithmetic             | 🟢         |  🟢 |🟢              |
+| DARE Ties-MERGING        | Similar to Ties-MERGING but it uses a different approach that prunes the task vectors and rescale them. | 🟢         | 🟢              | 🟢 |
 
 # Supported LLM Architectures
 
