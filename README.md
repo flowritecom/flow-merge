@@ -211,6 +211,19 @@ Coming soon..
 
 Wanna pitch in? We're totally open to contributions for the core flow-merge library as well as any cool integrations built on top of it! Check out our [Contribution Guide](./CONTRIBUTING.md) for all the details on how to get started.
 
+# **💻 Development setup**
+Install conda (refer [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) for instructions) and make sure it's [initialized](https://docs.conda.io/projects/conda/en/stable/commands/init.html) for your shell.
+Git clone the repository and spawn the environment from environment.yml.
+```shell
+git clone git@github.com:flowritecom/flow-merge.git; cd flow-merge
+conda env create # creates conda env with name flow-merge, python ~3.10 and installs the listed dependencies
+conda activate flow-merge
+pip install -e . # install flow-merge in editable mode
+code . # open your editor, for example vscode
+```
+
+To easily jump into PRs you can use for example the (Github CLI)[https://cli.github.com/] client `gh pr checkout <insert_pr_number>`.
+
 # **🙏 Acknowledgments**
 
 Special thanks to these amazing projects that helped us build `flow-merge`:
