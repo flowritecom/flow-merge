@@ -13,7 +13,7 @@
     -
     <a href="https://github.com/flowritecom/flow-merge/issues">Issues</a>
     -
-    <a href="https://www.flowrite.com/">Website</a>
+    <a href="http://flow-merge.com/">Website</a>
   </p>
 </p>
 
@@ -41,8 +41,22 @@ The key features of the library consists of:
 # **🎉 Getting started**
 
 ## **💻 Installation**
+Clone the repository and navigate to the root directory:
+```bash
+# via ssh
+git clone git@github.com:flowritecom/flow-merge.git
 
-`flow-merge` can be installed with `pip` it requires `python>=3.10`:
+cd flow-merge
+```
+
+Create a new python environment and activate it. For example, with `conda`:
+>Note `flow-merge` requires `python>=3.10`
+
+```bash
+conda create -n flow-merge python>=3.10 && conda activate flow-merge
+```
+
+`flow-merge` can be installed with running `pip` inside the project directory (-e for editable install):
 
 ```bash
 pip install -e .
@@ -69,11 +83,11 @@ models:
 tokenizer:
   mode: base
   interpolation_method: linear
-dirs_config:
+directory_settings:
   cache_dir: null
   local_dir: ./models
   output_dir: ./merged_model
-hf_hub_config:
+hf_token:
   token: null
   trust_remote_code: False
 device: cpu
@@ -113,6 +127,8 @@ You can display the config yaml schema and the default values by running:
 
 ```bash
 flow-merge schema
+# extra tip: pipe to highlighted json with 'flow-merge schema | jq' or 'flow-merge schema | fx'
+# where you require either 'jq' or 'fx' installed beforehand
 ```
 
 You can optionally validate your config file before running the merge:
@@ -125,22 +141,25 @@ flow-merge validate --config my_first_merge.yaml
 
 Currently `flow-merge` supports most of the popular and proven merge methods.
 
-| Method                   | Identifier                 | Base Model | Multiple Models | Paper                                 |
-| ------------------------ | -------------------------- | ---------- | --------------- | ------------------------------------- |
-| Linear or Model Soups    | `model-soup`               | ❌         | 🟢              | [1](https://arxiv.org/abs/2203.05482) |
-| SLERP                    | `slerp`                    | ❌         | ❌              | -                                     |
-| Addition Task Arithmetic | `addition-task-arithmetic` | 🟢         | 🟢              | [2](https://arxiv.org/abs/2212.04089) |
-| Ties-MERGING             | `ties-merging`             | 🟢         | 🟢              | [3](https://arxiv.org/abs/2306.01708) |
-| DARE Ties-MERGING        | `dare-ties`                | 🟢         | 🟢              | [4](https://arxiv.org/abs/2311.03099) |
-
-**Paper references:**
-
-1. [Model soups: averaging weights of multiple fine-tuned models improves accuracy without increasing inference time](https://arxiv.org/abs/2203.05482)
-2. [Editing Models with Task Arithmetic](https://arxiv.org/abs/2212.04089)
-3. [TIES-Merging: Resolving Interference When Merging Models](https://arxiv.org/abs/2306.01708)
-4. [Language Models are Super Mario: Absorbing Abilities from Homologous Models as a Free Lunch](https://arxiv.org/abs/2311.03099)
+| Method                   | Identifier                 | Paper |
+| ------------------------ | -------------------------- | ---------- |
+| Linear or Model Soups    | `model-soup`               | [Model soups: averaging weights of multiple fine-tuned models improves accuracy without increasing inference time](https://arxiv.org/abs/2203.05482) |
+| SLERP                    | `slerp`                    | -                                     |
+| Addition Task Arithmetic | `addition-task-arithmetic` | [Editing Models with Task Arithmetic](https://arxiv.org/abs/2212.04089) |
+| Ties-MERGING             | `ties-merging`             | [TIES-Merging: Resolving Interference When Merging Models](https://arxiv.org/abs/2306.01708) |
+| DARE Ties-MERGING        | `dare-ties`                | [Language Models are Super Mario: Absorbing Abilities from Homologous Models as a Free Lunch](https://arxiv.org/abs/2311.03099) |
 
 > 📢 _We are working hard on adding more methods to the library._
+
+## Properties of the methods
+
+| Method                   | Description                 | Uses a Base Model | Can Merge Multiple Models | Supports Weighted Merge |
+| ------------------------ | -------------------------- | ---------- | --------------- | -------|
+| Linear or Model Soups    | Averages the weights of the models | No         | Yes              | Yes |
+| SLERP                    | Smoothly interpolates between the weights of two models using spherical linear interpolation | No         | No              | No |
+| Addition Task Arithmetic | Obtains task vectors or deltas and applies them to the base model | Yes         | Yes              | Yes |
+| Ties-MERGING             | It addresses the problem of interference between parameters from different models before merging with addition task arithmetic             | Yes         |  Yes |Yes              |
+| DARE Ties-MERGING        | Similar to Ties-MERGING but it uses a different approach that prunes the task vectors and rescale them. | Yes         | Yes              | Yes |
 
 # Supported LLM Architectures
 
@@ -153,6 +172,22 @@ Currently `flow-merge` supports most of the popular and proven merge methods.
 | `llama`    | `LlamaForCausalLM`   |
 
 > 📢 _We plan to support many models and architectures more, including encoder models such as BERT-Family models too._
+
+# Tokenizers
+
+When merging language models, it's crucial to consider the tokenizers involved, as they convert text into tokens that the models can process.
+
+`flow-merge` currently supports two modes for constructing the tokenizer that is used by the resulting merged model:
+- `base`: Default mode. The merged model utilizes the tokenizer of the base model. If no base model is specified in the merged configuration, the first model in the models list is used as the base model.
+- `merged`: If the tokenizers of the models use different vocabularies, a common vocabulary is created, and a new tokenizer is constructed based on this vocabulary.
+
+## Interpolation of embedding and language modeling layers
+If the tokenizers of the models use different vocabularies, `flow-merge` creates `input_ids` mappings for the models and linearly interpolates the embedding and language modeling layers.
+
+Currently, only `linear` interpolation is supported.
+
+## Special tokens
+Conflicts can arise from special tokens used by different models' tokenizers, such as differing `eos_token` tokens. In such cases, `flow-merge` uses the special token of the last model in the list.
 
 # 🚧 WIP 🚧 **📚 Additional resources**
 
@@ -175,6 +210,19 @@ Coming soon..
 # **🤝 Contributing**
 
 Wanna pitch in? We're totally open to contributions for the core flow-merge library as well as any cool integrations built on top of it! Check out our [Contribution Guide](./CONTRIBUTING.md) for all the details on how to get started.
+
+# **💻 Development setup**
+Install conda (refer [here](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) for instructions) and make sure it's [initialized](https://docs.conda.io/projects/conda/en/stable/commands/init.html) for your shell.
+Git clone the repository and spawn the environment from environment.yml.
+```shell
+git clone git@github.com:flowritecom/flow-merge.git; cd flow-merge
+conda env create # creates conda env with name flow-merge, python ~3.10 and installs the listed dependencies
+conda activate flow-merge
+pip install -e . # install flow-merge in editable mode
+code . # open your editor, for example vscode
+```
+
+To easily jump into PRs you can use for example the (Github CLI)[https://cli.github.com/] client `gh pr checkout <insert_pr_number>`.
 
 # **🙏 Acknowledgments**
 
