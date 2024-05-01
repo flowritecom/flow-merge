@@ -1,6 +1,6 @@
 import json
 import re
-from dataclasses import dataclass, field
+from pydantic import BaseModel, Field
 from enum import Enum
 from importlib.resources import contents, read_text
 from typing import Dict, List, Optional
@@ -33,9 +33,7 @@ ModelWeightLayerType = Enum(
     "ModelWeightLayerType", ["decoder", "embedding", "head", "post_norm"]
 )
 
-
-@dataclass
-class ModelWeight:
+class ModelWeight(BaseModel):
     """
     Contains information about a weight in the model.
 
@@ -43,16 +41,16 @@ class ModelWeight:
         name: The name of the weight (e.g., 'model.layers.0.self_attn.v_proj.weight').
         type: The type of the weight (e.g., 'self_attn', 'mlp', etc).
         layer_type: The layer of the model (e.g., 'decoder', 'embedding', etc.).
+        layer_idx: The index of the layer if applicable.
         projection: The projection of the weight if applicable. For self_attn and mlp only. Default to None.
     """
-
     name: str
     type: str
     layer_type: str
-    projection: Optional[str] = field(default=None)
+    layer_idx: Optional[int] = Field(default=None)
+    projection: Optional[str] = Field(default=None)
 
 
-@dataclass
 class ModelArchitecture:
     """
     Contains information about the weights of a decoder ONLY architecture and the model type.
@@ -68,10 +66,11 @@ class ModelArchitecture:
         config: The config object of the transformers model.
     """
 
-    architectures: List[ArchitectureType]
-    weights: List[ModelWeight]
-    model_type: ModelType
-    config: PretrainedConfig
+    def __init__(self, architectures: List[str], weights: List[ModelWeight], model_type: str, config: PretrainedConfig):
+        self.architectures = architectures
+        self.weights = weights
+        self.model_type = model_type
+        self.config = config
 
     @classmethod
     def from_config(cls, config: PretrainedConfig) -> "ModelArchitecture":
@@ -110,6 +109,7 @@ class ModelArchitecture:
                         name=weight["name"],
                         type=weight_type,
                         layer_type=weight["layer_type"],
+                        layer_idx=None,
                         projection=projection,
                     )
                     model_weights.append(model_weight)
@@ -121,6 +121,7 @@ class ModelArchitecture:
                             ),
                             type=weight_type,
                             layer_type=weight["layer_type"],
+                            layer_idx=layer_index,
                             projection=projection,
                         )
                         model_weights.append(model_weight)
@@ -150,36 +151,34 @@ class ModelArchitecture:
             for filepath in filepaths
         ]
 
+    def get_num_decoder_blocks(self) -> int:
+        return self.config.num_hidden_layers
 
-def get_num_decoder_blocks(model_arch: ModelArchitecture) -> int:
-    return model_arch.config.num_hidden_layers
+    def get_all_weights(self) -> List[ModelWeight]:
+        return self.weights
 
+    def get_embedding_weights(self) -> Optional[ModelWeight]:
+        for weight in self.weights:
+            if weight.layer_type == ModelWeightLayerType.embedding.name:
+                return weight
+        return None
 
-def get_all_weights(model_arch: ModelArchitecture) -> List[ModelWeight]:
-    return model_arch.weights
+    def get_post_norm_weights(self) -> Optional[ModelWeight]:
+        for weight in self.weights:
+            if weight.layer_type == ModelWeightLayerType.post_norm.name:
+                return weight
+        return None
 
+    def get_head_weights(self) -> Optional[ModelWeight]:
+        for weight in self.weights:
+            if weight.layer_type == ModelWeightLayerType.head.name:
+                return weight
+        return None
 
-def get_embedding_weights(model_arch: ModelArchitecture) -> ModelWeight:
-    for weight in model_arch.weights:
-        if weight.layer_type == ModelWeightLayerType.embedding.name:
-            return weight
+    def get_decoder_weights(self) -> List[ModelWeight]:
+        decoder_weights: List[ModelWeight] = []
+        for weight in self.weights:
+            if weight.layer_type == ModelWeightLayerType.decoder.name:
+                decoder_weights.append(weight)
+        return decoder_weights
 
-
-def get_post_norm_weights(model_arch: ModelArchitecture) -> ModelWeight:
-    for weight in model_arch.weights:
-        if weight.layer_type == ModelWeightLayerType.post_norm.name:
-            return weight
-
-
-def get_head_weights(model_arch: ModelArchitecture) -> ModelWeight:
-    for weight in model_arch.weights:
-        if weight.layer_type == ModelWeightLayerType.head.name:
-            return weight
-
-
-def get_decoder_weights(model_arch: ModelArchitecture) -> List[ModelWeight]:
-    decoder_weights: List[ModelWeight] = []
-    for weight in model_arch.weights:
-        if weight.layer_type == ModelWeightLayerType.decoder.name:
-            decoder_weights.append(weight)
-    return decoder_weights

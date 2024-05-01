@@ -1,9 +1,8 @@
 import json
 import os
 from contextlib import ExitStack
-from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
-
+from typing import Dict, List
+from pydantic import BaseModel
 import huggingface_hub
 import torch
 from huggingface_hub import hf_hub_download
@@ -21,9 +20,8 @@ from flow_merge.lib.io import (
 )
 from flow_merge.lib.model import Model
 
-
-@dataclass
-class ShardFile:
+    
+class ShardFile(BaseModel):
     filename: str
     path: str
     tensor_keys: List[str]

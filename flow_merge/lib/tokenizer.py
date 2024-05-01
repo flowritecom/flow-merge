@@ -1,5 +1,5 @@
 from copy import deepcopy
-from dataclasses import dataclass
+from pydantic import BaseModel
 from itertools import combinations
 from typing import Dict, Optional
 
@@ -13,8 +13,7 @@ from flow_merge.lib.model import Model
 logger = get_logger(__name__)
 
 
-@dataclass
-class Tokenizer:
+class Tokenizer(BaseModel):
     tokenizer: PreTrainedTokenizerBase
     input_ids_mappings: Optional[Dict[Model, Dict[int, int]]]
 

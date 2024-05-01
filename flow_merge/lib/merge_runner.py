@@ -3,7 +3,7 @@ from typing import Union
 
 import torch
 
-from flow_merge.lib.architecture import ModelArchitecture, get_all_weights
+from flow_merge.lib.architecture import ModelArchitecture
 from flow_merge.lib.logger import get_logger
 from flow_merge.lib.merge_config import MergeConfig
 from flow_merge.lib.merger import Merger
@@ -109,7 +109,7 @@ def run_merge(config: dict | argparse.Namespace, model_name: str = "Untitled") -
 
         # Initialize writer
         with TensorWriter(merge_config=merge_config) as writer:
-            for weight in get_all_weights(model_arch):
+            for weight in model_arch.get_all_weights():
                 if tokenizer.input_ids_mappings and (
                     weight.layer_type == "embedding" or weight.layer_type == "head"
                 ):

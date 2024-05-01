@@ -3,7 +3,6 @@ from typing import Dict, List, Optional, Tuple
 from pydantic import BaseModel, ValidationError, field_validator
 from transformers import AutoConfig, PretrainedConfig
 
-from flow_merge.lib.constants import ConfigKeys, MergeMethodIdentifier
 from flow_merge.lib.logger import get_logger
 
 logger = get_logger(__name__)
