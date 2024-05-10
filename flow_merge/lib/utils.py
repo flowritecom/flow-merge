@@ -28,6 +28,31 @@ The following configuration was used to merge the models:
 """
 
 
+def order_dict_keys(input_dict, key_order):
+    ordered_dict = {}
+    for key in key_order:
+        if key in input_dict:
+            if isinstance(input_dict[key], dict):
+                ordered_dict[key] = order_dict_keys(
+                    input_dict[key], key_order.get(key, [])
+                )
+            else:
+                ordered_dict[key] = input_dict[key]
+    return ordered_dict
+
+
+key_order = {
+    "method": [],
+    "method_global_parameters": ["scaling_coefficient", "normalize", "p", "t", "top_k"],
+    "base_model": [],
+    "models": ["model", "weight"],
+    "tokenizer": ["mode", "interpolation_method"],
+    "directory_settings": ["cache_dir", "local_dir", "output_dir"],
+    "hf_hub_settings": ["token", "trust_remote_code"],
+    "device": [],
+}
+
+
 def generate_model_card(merge_config: MergeConfig, model_name: str = None):
     """
     Generates a model card for the model repository in HF hub.
@@ -60,9 +85,15 @@ def generate_model_card(merge_config: MergeConfig, model_name: str = None):
     # tags
     tags = ["flow-merge", "merge"]
 
-    config = merge_config.data.model_dump(exclude={'hf_hub_settings': {'token'}}, 
-                                          exclude_unset=True)
+    config = merge_config.data.model_dump(
+        by_alias=True, exclude={"hf_hub_settings": {"token"}}, exclude_unset=True
+    )
     config["method"] = config["method"].value
+    device_maybe = config.get("device", None)
+    if device_maybe:
+        config["device"] = device_maybe.value
+    config = order_dict_keys(config, key_order)
+
     metadata = yaml.dump({"tags": tags, "library_name": "transformers"})
 
     fmt_card = MODEL_CARD_TEMPLATE.format(

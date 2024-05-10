@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Type
 
 import torch
 import yaml
-from pydantic import BaseModel, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 from typing_extensions import Self
 
 from flow_merge.lib.constants import DeviceIdentifier, MergeMethodIdentifier
@@ -23,14 +23,14 @@ logger = get_logger(__name__)
 
 
 class ValidatedInputData(BaseModel):
+    method: MergeMethodIdentifier
+    method_global_parameters: Optional[MethodGlobalParameters] = None
     base_model: Optional[PathOrId]
     models: List[RawModelDict]
-    method: MergeMethodIdentifier
-    device: Optional[DeviceIdentifier] = None
-    method_global_parameters: Optional[MethodGlobalParameters] = None
+    tokenizer_settings: Optional[TokenizerSettings] = Field(TokenizerSettings(), alias="tokenizer")
     directory_settings: Optional[DirectorySettings] = DirectorySettings()
     hf_hub_settings: Optional[HfHubSettings] = HfHubSettings()
-    tokenizer_settings: Optional[TokenizerSettings] = TokenizerSettings()
+    device: Optional[DeviceIdentifier] = None
 
     @field_validator("device")
     @classmethod

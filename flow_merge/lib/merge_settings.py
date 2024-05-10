@@ -1,7 +1,9 @@
 from typing import Optional
 import re
 from pydantic import BaseModel, Field, ValidationError, field_validator
+from pathlib import Path
 import os
+
 from huggingface_hub import login
 
 from flow_merge.lib.logger import get_logger
@@ -21,8 +23,8 @@ class MethodGlobalParameters(BaseModel):
     scaling_coefficient: Optional[float] = None
     normalize: Optional[bool] = None
     p: Optional[float] = None
-    top_k: Optional[float] = None
     t: Optional[float] = None
+    top_k: Optional[float] = None
 
 
 class TokenizerSettings(BaseModel):
@@ -88,25 +90,26 @@ class HfHubSettings(BaseModel):
                 logger.warning(f"Failed to login to the Hugging Face Hub with the provided token: {e}")
         return v
 
-
-
 class DirectorySettings(BaseModel):
-    cache_dir: Optional[str] = Field(
-        default=None,
-        description="Directory for caching models and tokenizers with the `transformers` library.",
-    )
-    local_dir: str = Field(
-        default="./models", description="Directory for loading models from local."
-    )
-    output_dir: str = Field(
-        default="./merged_model",
-        description="Directory for saving the merged model, tokenizer and relevant metadata.",
-    )
+    cache_dir: Optional[Path] = Field(default=None, description="Directory for caching models and tokenizers with the `transformers library.")
+    local_dir: Path = Field(default=Path("./models"), description="Directory for loading models from local.")
+    output_dir: Path = Field(default=Path("./merged_model"), description="Directory for saving the merged model, tokenizer, and metadata.")
 
-    # TODO: make sure the directories exist here and not later, find the absolute paths
+    @field_validator("cache_dir")
+    def validate_local_dir(cls, v):
+        if v:
+            v = Path(v).resolve()
+            v.mkdir(parents=True, exist_ok=True)
+            return v
+
     @field_validator("local_dir")
     def validate_local_dir(cls, v):
-        if False:
-            # "Check disk space here":
-            logger.info("Not enough disk space for the chosen models")
+        v = Path(v).resolve()
+        v.mkdir(parents=True, exist_ok=True)
+        return v
+    
+    @field_validator("output_dir")
+    def validate_output_dir(cls, v):
+        v = Path(v).resolve()
+        v.mkdir(parents=True, exist_ok=True)
         return v

@@ -5,16 +5,30 @@ from transformers import AutoConfig, PretrainedConfig
 
 from flow_merge.lib.constants import ConfigKeys, MergeMethodIdentifier
 from flow_merge.lib.logger import get_logger
+from flow_merge.lib.model_metadata import ModelMetadata
+from flow_merge.lib.shard import ShardFile
+from flow_merge.lib.tensor_index import FileToTensorIndex
 
 logger = get_logger(__name__)
 
 
 class Model(BaseModel, arbitrary_types_allowed=True):
+
+    # check the other places
     path: str
+
+    metadata: ModelMetadata
+
+    # concrete
+    file_to_tensor_index: FileToTensorIndex
+    shards: List[ShardFile]
+
+    # transfer to ModelMetadata
     config: Optional[PretrainedConfig]
     revision: Optional[str] = None
     trust_remote_code: bool = False
 
+    # check if needed
     @classmethod
     def from_path(cls, path: str, trust_remote_code: bool = False):
         path_and_revision = cls.validate_path(path)
