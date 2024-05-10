@@ -1,0 +1,32 @@
+slices:
+  - sources:
+      - model: Qwen/Qwen1.5-0.5B
+        range: [0, 12]
+        weight: 0.5
+      - model: Qwen/Qwen1.5-0.5B-chat
+        range: [10, 22]
+        weight: 0.9
+    method:
+      name: slerp
+      parameters:
+        t: 0.5
+  - sources:
+      - model: Qwen/Qwen1.5-0.5B
+        range: [0, 12]
+        weight: 0.5
+        base: true
+      - model: Qwen/Qwen1.5-0.5B-chat
+        range: [10, 22]
+        weight: 0.9
+    layers: [self_attn, mlp]
+    method:
+      name: addition-task-arithmetic
+      parameters:
+        scaling_coefficient: 0.4
+        normalize: true
+  - sources:
+      - model: Qwen/Qwen1.5-0.5B
+        range: [0, 12]
+    method:
+      name: layer-stacking
+

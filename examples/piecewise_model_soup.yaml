@@ -1,0 +1,106 @@
+# TODO - How to handle the tokenizer if embed layer from different model than lm_head layer and different vocabs¿¿
+
+  
+  1. Merge full models
+  2. Select a range of layers to be merged with the same merge method
+  3. Selct a range and the type (self_attn) of the layer to be merged with the same merge method
+  4. As 2. and 3. but merge method for each slice could be different
+  5. Layer stacking or frankenmerging
+
+
+  Does it make sense to merge layers from differnt transformer blocks? e.g. idx 1 and idx 10 for the same slice ???
+
+
+# no global
+
+definition:
+  slice:
+    sources:
+      - model: Qwen/Qwen1.5-0.5B
+        range: [0, 12]
+        weight: 0.5
+      - model: Qwen/Qwen1.5-0.5B-chat
+        range: [10, 22]
+        weight: 0.9
+    method:
+      name: slerp
+      t: 0.5
+  slice:
+    sources:
+      - model: Qwen/Qwen1.5-0.5B
+        range: [0, 12]
+        weight: 0.5
+        base: true
+      - model: Qwen/Qwen1.5-0.5B-chat
+        range: [10, 22]
+        weight: 0.9
+    layers: [self_attn, mlp]
+    method:
+      name: addition-task-arithmetic
+      scaling_coefficient: 0.4
+      normalize: true
+  slice:
+    sources:
+      - model: Qwen/Qwen1.5-0.5B
+        range: [0, 12]
+    method:
+      name: layer-stacking
+
+# ---
+
+method: ties-merging
+method_global_parameters:
+  top_k: 0.2
+  normalize: true
+definition:
+  slice:
+    sources:
+      - model: Qwen/Qwen1.5-0.5B
+        range: [0, 12]
+        weight: 0.5
+      - model: Qwen/Qwen1.5-0.5B-chat
+        range: [10, 22]
+        weight: 0.9
+      - model: Qwen/Qwen1.5-0.5B-chat
+        range: [10, 22]
+        weight: 0.3
+  
+# ---
+
+method: layer-stacking
+definition:
+  slice:
+    sources:
+      - model: Qwen/Qwen1.5-0.5B
+        range: [0, 12]
+  slice:
+    sources:
+      - model: Qwen/Qwen1.5-0.5B-chat
+        range: [10, 22]
+
+# ---
+# Full models with slice definition
+definition:
+  slice:
+    sources:
+      - model: Qwen/Qwen1.5-0.5B
+        range: [0, 32]
+        weight: 0.5
+        base: true
+      - model: Qwen/Qwen1.5-0.5B-chat
+        range: [0, 32]
+        weight: 0.9
+    method:
+      name: model-soups
+      normalize: true
+  
+# the above is the same as this
+method: model-soups
+method_global_parameters:
+  normalize: true
+base_model: Qwen/Qwen1.5-0.5B
+models:
+  - model: Qwen/Qwen1.5-0.5B
+    weight: 0.5
+  - model: Qwen/Qwen1.5-0.5B-chat
+    weight: 0.9
