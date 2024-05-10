@@ -23,7 +23,9 @@ from huggingface_hub.hf_api import (
     TransformersInfo,
 )
 
-from flow_merge.lib.tensor_index import FileToTensorIndex
+from flow_merge.lib.tensor_index import FileToTensorIndex 
+
+from transformers import AutoConfig
 
 ## TODO: Make the creation of this class testable from +10 models
 ## TODO: Potentially place the checks here
@@ -115,25 +117,42 @@ class ModelMetadata(BaseModel):
     def update_checks(self):
         if self.hf_siblings:
             self.file_list = [sibling.rfilename for sibling in self.hf_siblings]
-            self.has_config = has_config_json(file_list)
-            self.has_vocab = has_tokenizer_file(file_list)
-            self.has_tokenizer_config = has_tokenizer_config(file_list)
-            self.has_pytorch_bin_index = has_pytorch_bin_index(file_list)
-            self.has_safetensor_files = has_safetensors_files(file_list)
-            self.has_pytorch_bin_files = has_pytorch_bin_files(file_list)
-            self.has_adapter = has_adapter_files(file_list)
+            self.has_config = has_config_json(self.file_list)
+            self.has_vocab = has_tokenizer_file(self.file_list)
+            self.has_tokenizer_config = has_tokenizer_config(self.file_list)
+            self.has_pytorch_bin_index = has_pytorch_bin_index(self.file_list)
+            self.has_safetensor_files = has_safetensors_files(self.file_list)
+            self.has_pytorch_bin_files = has_pytorch_bin_files(self.file_list)
+            self.has_adapter = has_adapter_files(self.file_list)
     
     def create_file_metadata(self):
         if self.hf_siblings:
             siblings = [sibling for sibling in self.hf_siblings]
 
             # SCENARIO 1 
+            # Sibling -> FileMetadata
             # fn: sibling -> common_file_metadata_object
             # map over the siblings
 
             # SCENARIO 2
+            # LocalDir -> FileMetadata
             # create this using some other way from local data
-            
+            search_dir = model_dir / id
+
+FileMetadata = str
+def sibling_to_metadata(sibling: RepoSibling) -> FileMetadata:
+
+    # RepoSibling
+    # rfilename: str
+    # size: Optional[int] = None
+    # blob_id: Optional[str] = None
+    # lfs: Optional[BlobLfsInfo] = None
+
+    # BlobLfsInfo
+    # size: int
+    # sha256: str
+    # pointer_size: int
+
 
 def load_model_info(path_or_id):
     try:
@@ -146,6 +165,14 @@ def load_model_info(path_or_id):
         # NOT FOUND IN HF, INFERRING FROM LOCAL MODEL DIR
         # TODO: create id
         # TODO: create sha
-        # TODO: create config dict
+        # TODO: create config dict  
+            # check for config.json in the path_or_id  --> already checked in previous steps 
+        
+    
+        config = AutoConfig.from_pretrained(path_or_id).to_dict()
+
+
+
+        # TODO: create siblings equivalent
         # TODO: create hf siblings equivalent
-        # TODO: create safetensors equivalent
+        # TODO: create safetensors equivalent                                               
