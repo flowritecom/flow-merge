@@ -80,56 +80,60 @@ class ModelMetadata(BaseModel):
     sha: Optional[str]
     config: Optional[Dict]
 
-    file_list: List[str]
-    shard_filelist: List[str]
+    hf_siblings: Optional[List[RepoSibling]] = None
+    hf_safetensors: Optional[SafeTensorsInfo] = None
 
-    # TODO: create compat mode
-    hf_siblings: Optional[List[RepoSibling]]
-    hf_safetensors: Optional[SafeTensorsInfo]
-
-    # keep as is 
-    hf_author: Optional[str]
-    hf_created_at: Optional[datetime]
-    hf_last_modified: Optional[datetime]
-    hf_private: bool
-    hf_gated: Optional[Literal["auto", "manual", False]]
-    hf_disabled: Optional[bool]
-    hf_library_name: Optional[str]
-    hf_tags: List[str]
-    hf_pipeline_tag: Optional[str]
-    hf_mask_token: Optional[str]
-    hf_card_data: Optional[ModelCardData]
-    hf_widget_data: Optional[Any]
-    hf_model_index: Optional[Dict]
-    hf_transformers_info: Optional[TransformersInfo]
-    hf_data: Optional[ModelInfo]
+    hf_author: Optional[str] = None
+    hf_created_at: Optional[datetime] = None
+    hf_last_modified: Optional[datetime] = None
+    hf_private: bool = False
+    hf_gated: Optional[Literal["auto", "manual", False]] = None
+    hf_disabled: Optional[bool] = None
+    hf_library_name: Optional[str] = None
+    hf_tags: List[str] = []
+    hf_pipeline_tag: Optional[str] = None
+    hf_mask_token: Optional[str] = None
+    hf_card_data: Optional[ModelCardData] = None
+    hf_widget_data: Optional[Any] = None
+    hf_model_index: Optional[Dict] = None
+    hf_transformers_info: Optional[TransformersInfo] = None
+    hf_data: Optional[ModelInfo] = None
 
     # convenience checks
-    has_config: bool = has_config_json(file_list)
-    has_vocab: bool = has_tokenizer_file(file_list)
-    has_tokenizer_config: bool = has_tokenizer_config(file_list)
-    has_pytorch_bin_index: bool = has_pytorch_bin_index(file_list)
-    has_safetensor_files: bool = has_safetensors_files(file_list)
-    has_pytorch_bin_files: bool = has_pytorch_bin_files(file_list)
-    has_adapter: bool = has_adapter_files(file_list)
+    has_config: bool = False
+    has_vocab: bool = False
+    has_tokenizer_config: bool = False
+    has_pytorch_bin_index: bool = False
+    has_safetensor_files: bool = False
+    has_pytorch_bin_files: bool = False
+    has_adapter: bool = False
 
-    def __init__(self):
-        # try to fetch the ModelInfo with id
-        # if not id, sha, config from local
-        # convert siblings and safetensors info
-        self.siblings = 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.update_checks()
 
-        # add checks
-        file_list = [f.rfilename for f in self.hf_siblings]
-        self.file_list = file_list
-        self.has_config = has_config_json(file_list)
-        self.has_vocab = has_tokenizer_file(file_list)
-        self.has_tokenizer_config = has_tokenizer_config(file_list)
-        self.has_pytorch_bin_index = has_pytorch_bin_index(file_list)
-        self.has_safetensor_files = has_safetensors_files(file_list)
-        self.has_pytorch_bin_files = has_pytorch_bin_files(file_list)
-        self.has_adapter = has_adapter_files(file_list)
+    def update_checks(self):
+        if self.hf_siblings:
+            self.file_list = [sibling.rfilename for sibling in self.hf_siblings]
+            self.has_config = has_config_json(file_list)
+            self.has_vocab = has_tokenizer_file(file_list)
+            self.has_tokenizer_config = has_tokenizer_config(file_list)
+            self.has_pytorch_bin_index = has_pytorch_bin_index(file_list)
+            self.has_safetensor_files = has_safetensors_files(file_list)
+            self.has_pytorch_bin_files = has_pytorch_bin_files(file_list)
+            self.has_adapter = has_adapter_files(file_list)
+    
+    def create_file_metadata(self):
+        if self.hf_siblings:
+            siblings = [sibling for sibling in self.hf_siblings]
 
+            # SCENARIO 1 
+            # fn: sibling -> common_file_metadata_object
+            # map over the siblings
+
+            # SCENARIO 2
+            # create this using some other way from local data
+            
 
 def load_model_info(path_or_id):
     try:
@@ -139,10 +143,9 @@ def load_model_info(path_or_id):
         )
         model_metadata = ModelMetadata(hf=hf, hf_exists=True)
     except huggingface_hub.hf_api.RepositoryNotFoundError:
-        model_metadata = ModelMetadata(
-            hf=None, custom=CustomModelInfo()
-        )
-    checks: Checks = Checks(model_metadata)
-    model_metadata.checks = checks
-
-    return model_metadata
+        # NOT FOUND IN HF, INFERRING FROM LOCAL MODEL DIR
+        # TODO: create id
+        # TODO: create sha
+        # TODO: create config dict
+        # TODO: create hf siblings equivalent
+        # TODO: create safetensors equivalent
