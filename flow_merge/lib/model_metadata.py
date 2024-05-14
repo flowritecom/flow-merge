@@ -150,7 +150,7 @@ class ModelMetadata(BaseModel):
             self.has_pytorch_bin_files = has_pytorch_bin_files(self.file_list)
             self.has_adapter = has_adapter_files(self.file_list)
     
-    def create_file_metadata(self):
+    def create_file_metadata(self) -> List[FileMetadata]:
         if self.hf_siblings:
             for sibling in self.hf_siblings:
 
