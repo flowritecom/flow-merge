@@ -31,6 +31,7 @@ from flow_merge.lib.io import (
 )
 from flow_merge.lib.merge_settings import DirectorySettings
 from flow_merge.lib.model import Model
+from flow_merge.lib.shard import ShardFile
 
 
 SafetensorsIndex = Dict[str, str]

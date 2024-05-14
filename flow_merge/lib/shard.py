@@ -7,6 +7,7 @@ from huggingface_hub import hf_hub_download
 from safetensors import safe_open
 
 from flow_merge.lib.constants import DeviceIdentifier
+from flow_merge.lib.model_metadata import ModelMetadata
 
 SafetensorsIndex = Dict[str, str]
 RepoId = str
