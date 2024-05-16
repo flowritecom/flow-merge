@@ -1,0 +1,117 @@
+{
+    "model_type": "phi",
+    "architectures": [
+        "PhiForCausalLM"
+    ],
+    "num_layers_config_key": "num_hidden_layers",
+    "weights": [
+        {
+            "name": "model.embed_tokens.weight",
+            "type": "embed_tokens",
+            "layer_type": "embedding"
+        },
+        {
+            "name": "model.final_layernorm.weight",
+            "type": "final_layernorm",
+            "layer_type": "layernorm"
+        },
+        {
+            "name": "model.final_layernorm.bias",
+            "type": "final_layernorm",
+            "layer_type": "layernorm"
+        },
+        {
+            "name": "model.layers.{layer_index}.input_layernorm.weight",
+            "type": "input_layernorm",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.input_layernorm.bias",
+            "type": "input_layernorm",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.q_proj.weight",
+            "type": "self_attn",
+            "projection": "q_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.q_proj.bias",
+            "type": "self_attn",
+            "projection": "q_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.k_proj.weight",
+            "type": "self_attn",
+            "projection": "k_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.k_proj.bias",
+            "type": "self_attn",
+            "projection": "k_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.v_proj.weight",
+            "type": "self_attn",
+            "projection": "v_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.v_proj.bias",
+            "type": "self_attn",
+            "projection": "v_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.dense.weight",
+            "type": "self_attn",
+            "projection": "dense",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.dense.bias",
+            "type": "self_attn",
+            "projection": "dense",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.mlp.fc1.weight",
+            "type": "mlp",
+            "projection": "fc1",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.mlp.fc1.bias",
+            "type": "mlp",
+            "projection": "fc1",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.mlp.fc2.weight",
+            "type": "mlp",
+            "projection": "fc2",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.mlp.fc2.bias",
+            "type": "mlp",
+            "projection": "fc2",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "lm_head.weight",
+            "type": "lm_head",
+            "layer_type": "head"
+        }, 
+        {
+            "name": "lm_head.bias",
+            "type": "lm_head",
+            "layer_type": "head"
+        }
+    ],
+    "residual": {}
+}

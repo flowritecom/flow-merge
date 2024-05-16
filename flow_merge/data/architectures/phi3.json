@@ -1,0 +1,59 @@
+{
+    "model_type": "phi3",
+    "architectures": [
+        "Phi3ForCausalLM"
+    ],
+    "num_layers_config_key": "num_hidden_layers",
+    "weights": [
+        {
+            "name": "model.embed_tokens.weight",
+            "type": "embed_tokens",
+            "layer_type": "embedding"
+        },
+        {
+            "name": "model.layers.{layer_index}.input_layernorm.weight",
+            "type": "input_layernorm",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.q_proj.weight",
+            "type": "self_attn",
+            "projection": "o_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.self_attn.qkv_proj.weight",
+            "type": "self_attn",
+            "projection": "qkv_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.mlp.gate_up_proj.weight",
+            "type": "mlp",
+            "projection": "gate_up_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.mlp.down_proj.weight",
+            "type": "mlp",
+            "projection": "down_proj",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.layers.{layer_index}.post_attention_layernorm.weight",
+            "type": "post_attention_layernorm",
+            "layer_type": "decoder"
+        },
+        {
+            "name": "model.norm.weight",
+            "type": "norm",
+            "layer_type": "post_norm"
+        },
+        {
+            "name": "lm_head.weight",
+            "type": "lm_head",
+            "layer_type": "head"
+        }
+    ],
+    "residual": {}
+}
