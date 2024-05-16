@@ -10,9 +10,9 @@ from transformers import PretrainedConfig
 import flow_merge.data.architectures
 
 ArchitectureType = Enum(
-    "ArchitectureType", ["MistralForCausalLM", "LlamaForCausalLM", "Qwen2ForCausalLM"]
+    "ArchitectureType", ["MistralForCausalLM", "LlamaForCausalLM", "Qwen2ForCausalLM", "PhiForCausalLM", "Phi3ForCausalLM"]
 )
-ModelType = Enum("ModelType", ["mistral", "llama", "qwen-1.5"])
+ModelType = Enum("ModelType", ["mistral", "llama", "qwen-1.5", "phi", "phi3"])
 ModelWeightType = Enum(
     "ModelWeightType",
     [
@@ -22,15 +22,16 @@ ModelWeightType = Enum(
         "embed_tokens",
         "norm",
         "lm_head",
-        "post_attention_layernorm",
+        "post_attention_layernorm", 
+        "final_layernorm",
     ],
 )
 ProjectionType = Enum(
     "ProjectionType",
-    ["v_proj", "q_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    ["v_proj", "q_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj", "dense", "fc1", "fc2", "qkv_proj", "gate_up_proj"],
 )
 ModelWeightLayerType = Enum(
-    "ModelWeightLayerType", ["decoder", "embedding", "head", "post_norm"]
+    "ModelWeightLayerType", ["decoder", "embedding", "head", "post_norm", "layernorm"]
 )
 
 
