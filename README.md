@@ -14,6 +14,8 @@
     <a href="https://github.com/flowritecom/flow-merge/issues">Issues</a>
     -
     <a href="http://flow-merge.com/">Website</a>
+    -
+    <a href="https://github.com/flowritecom/flow-merge-ui">flow-merge-UI</a>
   </p>
 </p>
 
