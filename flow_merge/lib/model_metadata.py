@@ -35,16 +35,10 @@ from flow_merge.lib.logger import get_logger
 logger = get_logger(__name__)
 
 
-class LocalRepoSibling(BaseModel):
-    rfilename: str
-    size: Optional[int] = None
-    oid: Optional[str] = None
-
-
 class FileMetadata(BaseModel):
     # Defer to when we have locally
     filename: str
-    oid: Optional[str] = None
+    sha: Optional[str] = None
     blob_id: Optional[str] = None
     size: Optional[int] = None
     lfs: Optional[BlobLfsInfo] = None
@@ -100,28 +94,16 @@ class ModelMetadata(BaseModel):
     id: str
     sha: Optional[str]
     config: Optional[Dict]
+    file_metadata_list: Optional[List[FileMetadata]] = []
+    file_list: Optional[List[str]] = None
+    safetensors_info: Optional[SafeTensorsInfo] = Field(alias="safetensors", default=None)
 
     # design goals
     # metadata for each file in the model directory
     # with extra metadata if the model is from HF
     # problem 1: no SHA for non-model files -> CREATE THE SHA
     # problem 2: blob_id is not consistent with sha256 content hash -> CREATE SHA256
-    # problem 3: we don't have the all files locally at this point in time -> 
-    # 
-
-    ## FIXME: Rename hf_siblings to something that we is more suitable
-    ## 1. it's not sibling
-    ## 2. list of file metadata of type FileMetadata
-    ## 3. drop hf_ prefix
-    files_metadata: Optional[List[FileMetadata]] = []
-    file_something: Optional[List[Union[RepoSibling, LocalRepoSibling]]] = Field(alias="siblings", default=None)
-
-    file_list: Optional[List[str]] = None
-
-    safetensors_info: Optional[SafeTensorsInfo] = Field(alias="safetensors", default=None)
-
-    ## TODO: Files other than model files Git LFS blob_ib + sha
-    ## --> every other file doesn't have a sha
+    # problem 3: we don't have the all files locally at this point in time -> downloading
 
     hf_author: Optional[str] = Field(alias="author", default=None)
     hf_created_at: Optional[datetime] = Field(alias="created_at", default=None)
@@ -152,12 +134,11 @@ class ModelMetadata(BaseModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.update_checks()
-        self.create_file_metadata()
 
 
     def update_checks(self):
-        if self.hf_siblings:
-            self.file_list = [sibling.rfilename for sibling in self.hf_siblings]
+        if self.file_metadata_list:
+            self.file_list = [file_metadata.filename for file_metadata in self.file_metadata_list]
             self.has_config = has_config_json(self.file_list)
             self.has_vocab = has_tokenizer_file(self.file_list)
             self.has_tokenizer_config = has_tokenizer_config(self.file_list)
@@ -166,33 +147,8 @@ class ModelMetadata(BaseModel):
             self.has_pytorch_bin_files = has_pytorch_bin_files(self.file_list)
             self.has_adapter = has_adapter_files(self.file_list)
     
-    def create_file_metadata(self) -> List[FileMetadata]:
-        if self.hf_siblings:
-            for sibling in self.hf_siblings:
 
-                # TODO Figure out a way to generate a content hash (oid) for HF - files aren't locally loaded yet
-
-                if self.hf_exists:
-                    self.files_metadata.append(
-                        FileMetadata(
-                            blob_id=sibling.blob_id,
-                            filename=sibling.rfilename,
-                            size=sibling.size,
-                            lfs=sibling.lfs   
-                        )
-                    )
-                
-                else:
-                    self.files_metadata.append(
-                        FileMetadata(
-                            oid=sibling.oid,
-                            filename=sibling.rfilename,
-                            size=sibling.size,
-                        )
-                    )
-
-
-def generate_oid(file_path):
+def generate_content_hash(file_path) -> str:
     sha256_hash = hashlib.sha256()
 
     with open(file_path, "rb") as file:
@@ -201,8 +157,23 @@ def generate_oid(file_path):
             sha256_hash.update(chunk)
     return sha256_hash.hexdigest()
 
+def download_hf_file(repo_id: str, model_path: str, filename: str) -> str:
+    """
 
-def load_model_info(path_or_id):
+    """
+    path_to_downloaded_file = huggingface_hub.hf_hub_download(
+        repo_id,
+        filename,
+        local_dir=model_path,
+        resume_download=True,
+        token="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"
+    )
+
+    return path_to_downloaded_file
+
+def load_model_info(path_or_id: str, model_path: str) -> ModelMetadata:
+    file_metadata_list = []
+
     try:
         # get the model information from HF if available
         hf_model_info: ModelInfo = huggingface_hub.hf_api.repo_info(
@@ -212,12 +183,45 @@ def load_model_info(path_or_id):
             token="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"
         )
 
-        return ModelMetadata(**hf_model_info.__dict__)
+        for sibling in hf_model_info.siblings:
+            if sibling.lfs is None:
+
+                path_to_downloaded_file = download_hf_file(
+                    repo_id=path_or_id,
+                    model_path=model_path,
+                    filename=sibling.rfilename
+                )
+
+                sha = generate_content_hash(path_to_downloaded_file)
+
+                file_metadata_list.append(
+                    FileMetadata(
+                        sha=sha,
+                        blob_id=sibling.blob_id,
+                        filename=sibling.rfilename,
+                        size=sibling.size,
+                    )
+                )
+
+            else:
+                file_metadata_list.append(
+                    FileMetadata(
+                        sha=sibling.lfs.sha256,
+                        blob_id=sibling.blob_id,
+                        filename=sibling.rfilename,
+                        size=sibling.size,
+                        lfs=sibling.lfs
+                    )
+                )
+
+        return ModelMetadata(
+            **hf_model_info.__dict__,
+            file_metadata_list=file_metadata_list
+        )
     
     except huggingface_hub.hf_api.RepositoryNotFoundError:
         # NOT FOUND IN HF, INFERRING FROM LOCAL MODEL DIR 
         logger.info(f"Model not found in Hugging face. Inferring from local model directory.")
-        siblings = []
 
         # TODO: get the base path from env
         base_path = "../models/"
@@ -225,15 +229,16 @@ def load_model_info(path_or_id):
 
         if path_to_model.exists():
             for file_path in path_to_model.glob("*"):
-                oid = generate_oid(file_path)
+
+                sha = generate_content_hash(file_path)
                 filename = file_path.name
                 size = file_path.stat().st_size
 
-                siblings.append(
-                    LocalRepoSibling(
-                        oid=oid, 
+                file_metadata_list.append(
+                    FileMetadata(
+                        sha=sha, 
                         size=size,
-                        rfilename=filename,
+                        filename=filename,
                     )
                 )
             
@@ -246,7 +251,7 @@ def load_model_info(path_or_id):
             return ModelMetadata(
                 id=path_or_id,
                 sha=None,
-                siblings=siblings,
+                file_metadata_list=file_metadata_list,
                 config=config,
                 hf_exists=False
             )
