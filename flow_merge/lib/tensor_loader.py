@@ -49,7 +49,9 @@ CustomId = str
 ModelFilePath = LocalModelId | RepoId
 
 
-def get_tensor(self, tensor_index: TensorIndex, tensor_key: str, device=device) -> torch.Tensor:
+def get_tensor(
+    self, tensor_index: TensorIndex, tensor_key: str, device=device
+) -> torch.Tensor:
     """
     Retrieves a tensor from the tensor shards based on the provided tensor key.
 
@@ -72,7 +74,5 @@ def get_tensor(self, tensor_index: TensorIndex, tensor_key: str, device=device) 
                     )
                     return file.get_tensor(tensor_key)
                 else:
-                    RuntimeError(
-                        f"Path {path_to_shard} to shard file doesn't exist!"
-                    )
+                    RuntimeError(f"Path {path_to_shard} to shard file doesn't exist!")
     raise KeyError(f"Tensor key {tensor_key} not found in model {path_to_shard}")

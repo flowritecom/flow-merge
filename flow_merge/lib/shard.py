@@ -26,6 +26,7 @@ class ShardFile:
     path: str
     tensor_keys: List[str]
 
+
 ShardFiles = List[ShardFile]
 
 

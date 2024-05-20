@@ -5,7 +5,10 @@ from pydantic import ValidationError, field_validator
 
 from flow_merge.lib.architecture import ModelWeight
 from flow_merge.lib.logger import get_logger
-from flow_merge.lib.merge_methods.merge_method import BaseMergeMethodSettings, MergeMethod
+from flow_merge.lib.merge_methods.merge_method import (
+    BaseMergeMethodSettings,
+    MergeMethod,
+)
 from flow_merge.lib.model import Model
 
 logger = get_logger(__name__)

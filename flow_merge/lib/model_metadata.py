@@ -6,7 +6,14 @@ from typing import Any, Dict, List, Literal, Optional
 import huggingface_hub
 from pydantic import BaseModel, Field
 from transformers import AutoConfig
-from huggingface_hub.hf_api import ModelInfo, BlobLfsInfo, SafeTensorsInfo, ModelCardData, TransformersInfo, RepoSibling
+from huggingface_hub.hf_api import (
+    ModelInfo,
+    BlobLfsInfo,
+    SafeTensorsInfo,
+    ModelCardData,
+    TransformersInfo,
+    RepoSibling,
+)
 
 from flow_merge.lib.io import (
     has_adapter_files,
@@ -40,13 +47,17 @@ class ModelMetadata(BaseModel):
     config: Optional[Dict]
     file_metadata_list: List[FileMetadata] = Field(default_factory=list)
     file_list: List[str] = Field(default_factory=list)
-    safetensors_info: Optional[SafeTensorsInfo] = Field(alias="safetensors", default=None)
+    safetensors_info: Optional[SafeTensorsInfo] = Field(
+        alias="safetensors", default=None
+    )
 
     hf_author: Optional[str] = Field(alias="author", default=None)
     hf_created_at: Optional[datetime] = Field(alias="created_at", default=None)
     hf_last_modified: Optional[datetime] = Field(alias="last_modified", default=None)
     hf_private: bool = Field(alias="private", default=None)
-    hf_gated: Optional[Literal["auto", "manual", False]] = Field(alias="gated", default=None)
+    hf_gated: Optional[Literal["auto", "manual", False]] = Field(
+        alias="gated", default=None
+    )
     hf_disabled: Optional[bool] = Field(alias="disabled", default=None)
     hf_library_name: Optional[str] = Field(alias="library_name", default=None)
     hf_tags: List[str] = Field(alias="tags", default_factory=list)
@@ -55,7 +66,9 @@ class ModelMetadata(BaseModel):
     hf_card_data: Optional[ModelCardData] = Field(alias="card_data", default=None)
     hf_widget_data: Optional[Any] = Field(alias="widget_data", default=None)
     hf_model_index: Optional[Dict] = Field(alias="model_index", default=None)
-    hf_transformers_info: Optional[TransformersInfo] = Field(alias="transformers_info", default=None)
+    hf_transformers_info: Optional[TransformersInfo] = Field(
+        alias="transformers_info", default=None
+    )
     hf_data: Optional[ModelInfo] = Field(alias="data", default=None)
 
     hf_exists: bool = True
@@ -69,7 +82,9 @@ class ModelMetadata(BaseModel):
 
     def update_checks(self):
         if self.file_metadata_list:
-            self.file_list = [file_metadata.filename for file_metadata in self.file_metadata_list]
+            self.file_list = [
+                file_metadata.filename for file_metadata in self.file_metadata_list
+            ]
             self.has_config = has_config_json(self.file_list)
             self.has_vocab = has_tokenizer_file(self.file_list)
             self.has_tokenizer_config = has_tokenizer_config(self.file_list)
@@ -98,21 +113,22 @@ class ModelMetadataService:
             filename,
             local_dir=model_path,
             resume_download=True,
-            token=self.token
+            token=self.token,
         )
 
     def fetch_hf_model_info(self, repo_id: str) -> ModelInfo:
         return huggingface_hub.hf_api.repo_info(
-            repo_id=repo_id,
-            repo_type="model",
-            files_metadata=True,
-            token=self.token
+            repo_id=repo_id, repo_type="model", files_metadata=True, token=self.token
         )
 
-    def create_file_metadata_list_from_hf(self, hf_model_info: ModelInfo, repo_id: str, model_path: str) -> List[FileMetadata]:
+    def create_file_metadata_list_from_hf(
+        self, hf_model_info: ModelInfo, repo_id: str, model_path: str
+    ) -> List[FileMetadata]:
         def create_file_metadata(sibling: RepoSibling) -> FileMetadata:
             if sibling.lfs is None:
-                path_to_downloaded_file = self.download_hf_file(repo_id, model_path, sibling.rfilename)
+                path_to_downloaded_file = self.download_hf_file(
+                    repo_id, model_path, sibling.rfilename
+                )
                 sha = self.generate_content_hash(path_to_downloaded_file)
             else:
                 sha = sibling.lfs.sha256
@@ -121,12 +137,14 @@ class ModelMetadataService:
                 blob_id=sibling.blob_id,
                 filename=sibling.rfilename,
                 size=sibling.size,
-                lfs=sibling.lfs
+                lfs=sibling.lfs,
             )
 
         return [create_file_metadata(sibling) for sibling in hf_model_info.siblings]
 
-    def create_file_metadata_list_from_local(self, path_to_model: Path) -> List[FileMetadata]:
+    def create_file_metadata_list_from_local(
+        self, path_to_model: Path
+    ) -> List[FileMetadata]:
         return [
             FileMetadata(
                 sha=self.generate_content_hash(file_path),
@@ -139,15 +157,23 @@ class ModelMetadataService:
     def load_model_info(self, path_or_id: str, model_path: str) -> ModelMetadata:
         try:
             hf_model_info = self.fetch_hf_model_info(path_or_id)
-            file_metadata_list = self.create_file_metadata_list_from_hf(hf_model_info, path_or_id, model_path)
-            model_metadata = ModelMetadata(**hf_model_info.__dict__, file_metadata_list=file_metadata_list)
+            file_metadata_list = self.create_file_metadata_list_from_hf(
+                hf_model_info, path_or_id, model_path
+            )
+            model_metadata = ModelMetadata(
+                **hf_model_info.__dict__, file_metadata_list=file_metadata_list
+            )
             model_metadata.update_checks()
             return model_metadata
         except huggingface_hub.hf_api.RepositoryNotFoundError:
-            logger.info("Model not found in Hugging face. Inferring from local model directory.")
+            logger.info(
+                "Model not found in Hugging face. Inferring from local model directory."
+            )
             path_to_model = Path(self.base_path + path_or_id).resolve()
             if path_to_model.exists():
-                file_metadata_list = self.create_file_metadata_list_from_local(path_to_model)
+                file_metadata_list = self.create_file_metadata_list_from_local(
+                    path_to_model
+                )
                 config = None
                 try:
                     config = AutoConfig.from_pretrained(path_to_model).to_dict()
@@ -159,7 +185,7 @@ class ModelMetadataService:
                     sha=None,
                     file_metadata_list=file_metadata_list,
                     config=config,
-                    hf_exists=False
+                    hf_exists=False,
                 )
                 model_metadata.update_checks()
                 return model_metadata

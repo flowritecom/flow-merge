@@ -87,13 +87,24 @@ class HfHubSettings(BaseModel):
             try:
                 login(token=v)
             except Exception as e:
-                logger.warning(f"Failed to login to the Hugging Face Hub with the provided token: {e}")
+                logger.warning(
+                    f"Failed to login to the Hugging Face Hub with the provided token: {e}"
+                )
         return v
 
+
 class DirectorySettings(BaseModel):
-    cache_dir: Optional[Path] = Field(default=None, description="Directory for caching models and tokenizers with the `transformers library.")
-    local_dir: Path = Field(default=Path("./models"), description="Directory for loading models from local.")
-    output_dir: Path = Field(default=Path("./merged_model"), description="Directory for saving the merged model, tokenizer, and metadata.")
+    cache_dir: Optional[Path] = Field(
+        default=None,
+        description="Directory for caching models and tokenizers with the `transformers library.",
+    )
+    local_dir: Path = Field(
+        default=Path("./models"), description="Directory for loading models from local."
+    )
+    output_dir: Path = Field(
+        default=Path("./merged_model"),
+        description="Directory for saving the merged model, tokenizer, and metadata.",
+    )
 
     @field_validator("cache_dir")
     def validate_local_dir(cls, v):
@@ -107,7 +118,7 @@ class DirectorySettings(BaseModel):
         v = Path(v).resolve()
         v.mkdir(parents=True, exist_ok=True)
         return v
-    
+
     @field_validator("output_dir")
     def validate_output_dir(cls, v):
         v = Path(v).resolve()

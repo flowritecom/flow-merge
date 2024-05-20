@@ -8,7 +8,10 @@ from typing_extensions import Self
 from flow_merge.lib.constants import DeviceIdentifier, MergeMethodIdentifier
 from flow_merge.lib.logger import get_logger
 from flow_merge.lib.merge_methods import method_classes, method_configs
-from flow_merge.lib.merge_methods.merge_method import BaseMergeMethodSettings, MergeMethod
+from flow_merge.lib.merge_methods.merge_method import (
+    BaseMergeMethodSettings,
+    MergeMethod,
+)
 from flow_merge.lib.merge_settings import (
     DirectorySettings,
     HfHubSettings,
@@ -21,12 +24,15 @@ from flow_merge.lib.model import Model
 
 logger = get_logger(__name__)
 
+
 class ValidatedInputData(BaseModel):
     method: MergeMethodIdentifier
     method_global_parameters: Optional[MethodGlobalParameters] = None
     base_model: Optional[PathOrId]
     models: List[RawModelDict]
-    tokenizer_settings: Optional[TokenizerSettings] = Field(TokenizerSettings(), alias="tokenizer")
+    tokenizer_settings: Optional[TokenizerSettings] = Field(
+        TokenizerSettings(), alias="tokenizer"
+    )
     directory_settings: Optional[DirectorySettings] = DirectorySettings()
     hf_hub_settings: Optional[HfHubSettings] = HfHubSettings()
     device: Optional[DeviceIdentifier] = None
@@ -96,6 +102,7 @@ class ValidatedInputData(BaseModel):
                     + "Please designate one base model from the models."
                 )
         return self
+
 
 class MergeConfig:
     """
@@ -175,7 +182,11 @@ class MergeConfig:
             List[Model]: A list of Model instances.
         """
         return [
-            Model.from_path(model_data.path_or_id, self.hf_hub_settings.token, self.directory_settings)
+            Model.from_path(
+                model_data.path_or_id,
+                self.hf_hub_settings.token,
+                self.directory_settings,
+            )
             for model_data in self.data.models
             if model_data.path_or_id != self.data.base_model
         ]
@@ -190,7 +201,11 @@ class MergeConfig:
         base_model_path_or_id = self.data.base_model or self.data.models[0].path_or_id
         for model_data in self.data.models:
             if model_data.path_or_id == base_model_path_or_id:
-                return Model.from_path(model_data.path_or_id, self.hf_hub_settings.token, self.directory_settings)
+                return Model.from_path(
+                    model_data.path_or_id,
+                    self.hf_hub_settings.token,
+                    self.directory_settings,
+                )
 
         raise ValueError(
             f"Base model '{base_model_path_or_id}' not found in the list of models: "
@@ -238,7 +253,9 @@ class MergeConfig:
         """
         default_values = {
             "method": self.data.method,
-            "method_global_parameters": self.data.method_global_parameters.model_dump() if self.data.method_global_parameters else None,
+            "method_global_parameters": self.data.method_global_parameters.model_dump()
+            if self.data.method_global_parameters
+            else None,
             "base_model": self.data.base_model,
             "models": [model.model_dump() for model in self.data.models],
             "tokenizer_settings": self.tokenizer_settings.model_dump(),

@@ -13,6 +13,7 @@ def print_schema():
     schema = ValidatedInputData.model_json_schema()
     print(json.dumps(schema, indent=2))
 
+
 def print_valid_inputs():
     print("\n# Required parameters")
     print("- 'base_model': \t\t\t the base model to be used for merging")
@@ -79,7 +80,7 @@ def validate_config(args):
 def main():
     parser = argparse.ArgumentParser(description="Process a YAML config")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    
+
     # Schema command
     schema_parser = subparsers.add_parser(
         "schema", help="Display the schema for the YAML config"
@@ -104,27 +105,31 @@ def main():
     merge_parser.add_argument(
         "--model_name", type=str, help="Name of the resulting model", required=False
     )
-    
+
     # Upload command
-    upload_parser = subparsers.add_parser(
-        "upload", help="Upload a model to the HF hub"
-    )
+    upload_parser = subparsers.add_parser("upload", help="Upload a model to the HF hub")
     upload_parser.add_argument(
         "--model_dir",
         type=str,
         help="Path to the directory where the model is save - output_dir in the merge config",
-        required=True
+        required=True,
     )
-    upload_parser.add_argument("--username", type=str, help="Username for the HF hub", required=True)
-    upload_parser.add_argument("--model_name", type=str, help="Name of the model", required=True)
+    upload_parser.add_argument(
+        "--username", type=str, help="Username for the HF hub", required=True
+    )
+    upload_parser.add_argument(
+        "--model_name", type=str, help="Name of the model", required=True
+    )
     upload_parser.add_argument(
         "--private",
         type=bool,
         default=True,
         help="Whether the model should be private or public",
-        required=False
+        required=False,
     )
-    upload_parser.add_argument("--token", type=str, help="Token for the HF hub", required=True)
+    upload_parser.add_argument(
+        "--token", type=str, help="Token for the HF hub", required=True
+    )
 
     args = parser.parse_args()
 
