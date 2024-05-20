@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional
 
 import torch
 import yaml
@@ -21,7 +21,6 @@ from flow_merge.lib.model import Model
 
 logger = get_logger(__name__)
 
-
 class ValidatedInputData(BaseModel):
     method: MergeMethodIdentifier
     method_global_parameters: Optional[MethodGlobalParameters] = None
@@ -40,7 +39,6 @@ class ValidatedInputData(BaseModel):
                 "device",
                 f"Invalid device: {v}. Supported devices are 'cpu' and 'cuda'.",
             )
-        # TODO: include validation here where 'cuda' is set but cuda is not available (cannot be found)
         return v
 
     @field_validator("models")
@@ -64,7 +62,6 @@ class ValidatedInputData(BaseModel):
     def validate_merge_method(cls, v):
         if v == MergeMethodIdentifier.PASSTHROUGH.value:
             raise ValidationError("Passthrough merging method is not implemented yet")
-        # FIXME: takes method_map from outer scope, fix this
         if not v in method_classes:
             valid_methods = [method.value for method in MergeMethodIdentifier]
             raise ValidationError(
@@ -99,7 +96,6 @@ class ValidatedInputData(BaseModel):
                     + "Please designate one base model from the models."
                 )
         return self
-
 
 class MergeConfig:
     """
@@ -142,10 +138,10 @@ class MergeConfig:
         return MergeConfig(validated_data)
 
     @classmethod
-    def from_yaml(self, file_path: str) -> "MergeConfig":
+    def from_yaml(cls, file_path: str) -> "MergeConfig":
         with open(file_path, "r") as file:
             unvalidated_data = yaml.safe_load(file)
-        return self.from_dict(unvalidated_data)
+        return cls.from_dict(unvalidated_data)
 
     def _get_method_config(
         self,
@@ -172,32 +168,34 @@ class MergeConfig:
         return device
 
     def create_models(self) -> List[Model]:
-        # observe that models list doesn't contain the base_model by design
-        # access base_model: Model by accessing base_model variable
-        models_data = [
-            m for m in self.data.models if m.path_or_id != self.data.base_model
+        """
+        Create Model instances for the models to be merged, excluding the base model.
+
+        Returns:
+            List[Model]: A list of Model instances.
+        """
+        return [
+            Model.from_path(model_data.path_or_id, self.hf_hub_settings.token, self.directory_settings)
+            for model_data in self.data.models
+            if model_data.path_or_id != self.data.base_model
         ]
-        return [Model.from_path(model_data.path_or_id) for model_data in models_data]
 
     def create_base_model(self) -> Model:
-        if not self.data.base_model:
-            first_model_from_list = self.data.models[0]
-            return Model.from_path(first_model_from_list.path_or_id)
-        else:
-            base_model = next(
-                (
-                    model
-                    for model in self.data.models
-                    if model.path_or_id == self.data.base_model
-                ),
-                None,
-            )
-            if base_model is None:
-                raise ValueError(
-                    f"Base model '{self.data.base_model}' not found in the list of "
-                    + f"models {[model.path_or_id for model in self.data.models]}."
-                )
-            return Model.from_path(base_model.path_or_id)
+        """
+        Create a Model instance for the base model to be used in the merge process.
+
+        Returns:
+            Model: The base model instance.
+        """
+        base_model_path_or_id = self.data.base_model or self.data.models[0].path_or_id
+        for model_data in self.data.models:
+            if model_data.path_or_id == base_model_path_or_id:
+                return Model.from_path(model_data.path_or_id, self.hf_hub_settings.token, self.directory_settings)
+
+        raise ValueError(
+            f"Base model '{base_model_path_or_id}' not found in the list of models: "
+            + f"{[model.path_or_id for model in self.data.models]}."
+        )
 
     def _extract_and_set_weights(
         self,
@@ -231,30 +229,21 @@ class MergeConfig:
 
         return method_config
 
-    #### WORK IN PROGRESS !! ####
-    def get_defaults(self):
-        # create the keys for each method
-        # for certain methods some defaults don't exist
-        # "broadcast" also the merge method configs
-        return {
-            "data": None,
-            "method": {
-                "slerp": {
-                    "method_global_parameters": {},
-                    "base_model": None,
-                    "models": [],
-                    "method": None,
-                    "method": None,
-                },
-                "slerp": {
-                    "method_global_parameters": {},
-                    "base_model": None,
-                    "models": [],
-                    "method": None,
-                    "method": None,
-                },
-            },
-            "directory_settings": None,
-            "hf_hub_settings": None,
-            "tokenizer_settings": None,
+    def get_default_values(self) -> Dict[str, Any]:
+        """
+        Retrieve the default configuration values for the frontend.
+
+        Returns:
+            Dict[str, Any]: A dictionary of default values.
+        """
+        default_values = {
+            "method": self.data.method,
+            "method_global_parameters": self.data.method_global_parameters.model_dump() if self.data.method_global_parameters else None,
+            "base_model": self.data.base_model,
+            "models": [model.model_dump() for model in self.data.models],
+            "tokenizer_settings": self.tokenizer_settings.model_dump(),
+            "directory_settings": self.directory_settings.model_dump(),
+            "hf_hub_settings": self.hf_hub_settings.model_dump(),
+            "device": self.data.device,
         }
+        return default_values
