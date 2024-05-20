@@ -101,11 +101,27 @@ class ModelMetadata(BaseModel):
     sha: Optional[str]
     config: Optional[Dict]
 
+    # design goals
+    # metadata for each file in the model directory
+    # with extra metadata if the model is from HF
+    # problem 1: no SHA for non-model files -> CREATE THE SHA
+    # problem 2: blob_id is not consistent with sha256 content hash -> CREATE SHA256
+    # problem 3: we don't have the all files locally at this point in time -> 
+    # 
+
+    ## FIXME: Rename hf_siblings to something that we is more suitable
+    ## 1. it's not sibling
+    ## 2. list of file metadata of type FileMetadata
+    ## 3. drop hf_ prefix
     files_metadata: Optional[List[FileMetadata]] = []
+    file_something: Optional[List[Union[RepoSibling, LocalRepoSibling]]] = Field(alias="siblings", default=None)
+
     file_list: Optional[List[str]] = None
 
-    hf_siblings: Optional[List[Union[RepoSibling, LocalRepoSibling]]] = Field(alias="siblings", default=None)
-    hf_safetensors: Optional[SafeTensorsInfo] = Field(alias="safetensors", default=None)
+    safetensors_info: Optional[SafeTensorsInfo] = Field(alias="safetensors", default=None)
+
+    ## TODO: Files other than model files Git LFS blob_ib + sha
+    ## --> every other file doesn't have a sha
 
     hf_author: Optional[str] = Field(alias="author", default=None)
     hf_created_at: Optional[datetime] = Field(alias="created_at", default=None)
