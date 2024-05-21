@@ -66,11 +66,6 @@
             "name": "model.norm.weight",
             "type": "norm",
             "layer_type": "post_norm"
-        },
-        {
-            "name": "lm_head.weight",
-            "type": "lm_head",
-            "layer_type": "head"
         }
     ],
     "residual": {}

@@ -16,7 +16,7 @@
             "layer_type": "decoder"
         },
         {
-            "name": "model.layers.{layer_index}.self_attn.q_proj.weight",
+            "name": "model.layers.{layer_index}.self_attn.o_proj.weight",
             "type": "self_attn",
             "projection": "o_proj",
             "layer_type": "decoder"

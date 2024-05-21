@@ -11,16 +11,6 @@
             "layer_type": "embedding"
         },
         {
-            "name": "model.final_layernorm.weight",
-            "type": "final_layernorm",
-            "layer_type": "layernorm"
-        },
-        {
-            "name": "model.final_layernorm.bias",
-            "type": "final_layernorm",
-            "layer_type": "layernorm"
-        },
-        {
             "name": "model.layers.{layer_index}.input_layernorm.weight",
             "type": "input_layernorm",
             "layer_type": "decoder"
@@ -101,6 +91,16 @@
             "type": "mlp",
             "projection": "fc2",
             "layer_type": "decoder"
+        },
+        {
+            "name": "model.final_layernorm.weight",
+            "type": "final_layernorm",
+            "layer_type": "layernorm"
+        },
+        {
+            "name": "model.final_layernorm.bias",
+            "type": "final_layernorm",
+            "layer_type": "layernorm"
         },
         {
             "name": "lm_head.weight",
