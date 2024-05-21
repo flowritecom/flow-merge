@@ -51,6 +51,16 @@ def get_shard_file(
                     keys = list(f.keys())
         else:
             raise FileNotFoundError(f"File {output_path} not found.")
+    elif shard_filename.endswith(".bin"):
+        if output_path.exists():
+            with open(output_path, 'rb') as f:
+                state_dict = torch.load(f, map_location=device)
+                if keys is None:
+                    keys = list(state_dict.keys())
+        else:
+            raise FileNotFoundError(f"File {output_path} not found.")
+    else:
+        raise ValueError(f"Unsupported file type: {shard_filename}")
 
     return ShardFile(filename=shard_filename, path=str(output_dir), tensor_keys=keys)
 
@@ -109,8 +119,9 @@ def handle_pytorch_bin_files(
             if not bin_file_path.exists():
                 raise FileNotFoundError(f"File {bin_file_path} not found.")
             
-            state_dict = torch.load(bin_file_path, map_location=device)
-            tensor_keys = list(state_dict.keys())
+            with open(bin_file_path, 'rb') as f:
+                state_dict = torch.load(f, map_location=device)
+                tensor_keys = list(state_dict.keys())
             
             shard_files.append(ShardFile(filename=filename, path=str(output_dir), tensor_keys=tensor_keys))
     return shard_files
