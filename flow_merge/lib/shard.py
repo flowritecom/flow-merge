@@ -1,11 +1,9 @@
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from huggingface_hub import hf_hub_download
 from safetensors import safe_open
-from transformers import AutoModel
 from peft import PeftModel, PeftConfig
 import torch
 
@@ -30,7 +28,10 @@ ShardFiles = List[ShardFile]
 
 
 def download_file(repo_id: RepoId, filename: Filename, local_dir: Path) -> str:
-    return hf_hub_download(repo_id, filename, local_dir=local_dir, resume_download=True, token=config.hf_token)
+    try:
+        return hf_hub_download(repo_id, filename, local_dir=local_dir, resume_download=True, token=config.hf_token)
+    except Exception as e:
+        raise RuntimeError(f"Failed to download {filename} from {repo_id}: {e}")
 
 
 def get_shard_file(
@@ -43,7 +44,7 @@ def get_shard_file(
     output_path = output_dir / shard_filename
     download_file(repo_id, shard_filename, output_dir)
 
-    if shard_filename == "model.safetensors":
+    if shard_filename.endswith(".safetensors"):
         if output_path.exists():
             with safe_open(output_path, framework="pt", device=device) as f:
                 if keys is None:
@@ -116,20 +117,31 @@ def handle_pytorch_bin_files(
 
 
 def merge_adapter_with_base_model(
-    model_metadata: ModelMetadata, output_dir: Path
+    model_metadata: ModelMetadata, output_dir: Path, device: DeviceIdentifier
 ) -> ShardFile:
     adapter_files: List[Filename] = [f for f in model_metadata.file_list if "adapter" in f]
     for adapter_file in adapter_files:
         download_file(model_metadata.id, adapter_file, output_dir)
 
-    base_model_path = output_dir / "model.safetensors"
-    if not base_model_path.exists():
-        base_model_path = output_dir / "pytorch_model.bin"
-        if not base_model_path.exists():
-            raise FileNotFoundError(f"Base model file {base_model_path} not found.")
+    if model_metadata.has_safetensor_files:
+        base_model_shards = [f for f in model_metadata.file_list if f.startswith("model-") and f.endswith(".safetensors")]
+        if not base_model_shards:
+            base_model_shards = ["model.safetensors"]
+    else:
+        base_model_shards = [f for f in model_metadata.file_list if f.startswith("pytorch_model-") and f.endswith(".bin")]
+        if not base_model_shards:
+            base_model_shards = ["pytorch_model.bin"]
 
+    shard_paths = []
+    for shard_file in base_model_shards:
+        download_file(model_metadata.id, shard_file, output_dir)
+        shard_path = output_dir / shard_file
+        if not shard_path.exists():
+            raise FileNotFoundError(f"Base model shard file {shard_path} not found.")
+        shard_paths.append(str(shard_path))
+    
     peft_config = PeftConfig.from_pretrained(output_dir)
-    base_model = PeftModel.from_pretrained(base_model_path, peft_config=peft_config)
+    base_model = PeftModel.from_pretrained(shard_paths, peft_config=peft_config)
     merged_model_path = output_dir / "merged_model.safetensors"
     base_model.save_pretrained(merged_model_path)
 
