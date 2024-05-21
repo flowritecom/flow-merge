@@ -154,11 +154,11 @@ class ModelMetadataService:
             for file_path in path_to_model.glob("*")
         ]
 
-    def load_model_info(self, path_or_id: str, model_path: str) -> ModelMetadata:
+    def load_model_info(self, path_or_id: str) -> ModelMetadata:
         try:
             hf_model_info = self.fetch_hf_model_info(path_or_id)
             file_metadata_list = self.create_file_metadata_list_from_hf(
-                hf_model_info, path_or_id, model_path
+                hf_model_info, path_or_id, self.base_path
             )
             model_metadata = ModelMetadata(
                 **hf_model_info.__dict__, file_metadata_list=file_metadata_list
