@@ -5,8 +5,12 @@ from transformers import AutoConfig, PretrainedConfig
 
 from flow_merge.lib.logger import get_logger
 from flow_merge.lib.model_metadata import ModelMetadata, ModelMetadataService
-from flow_merge.lib.shard import ShardFile
-from flow_merge.lib.tensor_index import FileToTensorIndex
+from flow_merge.lib.tensor_loader import (
+    ShardFile,
+    ModelService,
+    FileToTensorIndex,
+    TensorIndexService,
+)
 from flow_merge.lib.merge_settings import DirectorySettings
 
 logger = get_logger(__name__)
@@ -14,37 +18,53 @@ logger = get_logger(__name__)
 ModelId = NewType("ModelId", str)
 
 
-class Model(BaseModel):
+class Model(BaseModel, arbitrary_types_allowed=True):
     id: ModelId
     path: Path
     metadata: ModelMetadata
-    file_to_tensor_index: FileToTensorIndex
+    file_to_tensor_index: Optional[FileToTensorIndex]
     shards: List[ShardFile]
     config: Optional[PretrainedConfig]
     revision: Optional[str] = None
-    trust_remote_code: bool = False
 
     @classmethod
     def from_path(
         cls, path: Path, directory_settings: DirectorySettings = DirectorySettings()
     ):
         metadata_service = ModelMetadataService(directory_settings=directory_settings)
-        metadata = metadata_service.load_model_info(path)
+        metadata = metadata_service.load_model_info(str(path))
 
-        # Using the folder name as the unique identifier for local models
-        model_id = ModelId(path.name)
+        model_id = ModelId(str(path))
+        file_to_tensor_index = TensorIndexService.create_file_to_tensor_index(metadata)
+
+        if file_to_tensor_index is None and metadata.file_metadata_list:
+            relevant_files = [
+                file
+                for file in metadata.file_metadata_list
+                if file.filename.endswith((".safetensors", ".bin"))
+            ]
+            single_file = (
+                relevant_files[0].filename
+                if relevant_files
+                else metadata.file_metadata_list[0].filename
+            )
+            shard = ModelService.create_shard_file(
+                path, metadata.id, "cpu", single_file
+            )
+            shards = [shard]
+        else:
+            shards = ModelService.gather_shard_files(
+                file_to_tensor_index, path, metadata.id, "cpu"
+            )
 
         return cls(
             id=model_id,
             path=path.resolve(),
             metadata=metadata,
-            file_to_tensor_index=FileToTensorIndex(metadata.file_metadata_list),
-            shards=[ShardFile(file.filename) for file in metadata.file_metadata_list],
-            config=AutoConfig.from_pretrained(path) if metadata.has_config else None,
+            file_to_tensor_index=file_to_tensor_index,
+            shards=shards,
+            config=PretrainedConfig.from_dict(metadata.config),
             revision=metadata.sha,
-            trust_remote_code=metadata.hf_transformers_info.trust_remote_code
-            if metadata.hf_transformers_info
-            else False,
         )
 
     def __hash__(self):
@@ -52,7 +72,7 @@ class Model(BaseModel):
 
     def __eq__(self, other):
         if isinstance(other, Model):
-            return self.id == other.id
+            return self.id == other.id and self.revision == other.revision
         return False
 
     def __str__(self):

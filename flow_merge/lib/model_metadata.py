@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 import huggingface_hub
 from pydantic import BaseModel, Field
-from transformers import AutoConfig
+from transformers import AutoConfig, PretrainedConfig
 from huggingface_hub.hf_api import (
     ModelInfo,
     BlobLfsInfo,
@@ -21,6 +21,7 @@ from flow_merge.lib.io import (
     has_pytorch_bin_files,
     has_pytorch_bin_index,
     has_safetensors_files,
+    has_safetensors_index,
     has_tokenizer_config,
     has_tokenizer_file,
 )
@@ -53,6 +54,7 @@ class ModelMetadata(BaseModel):
 
     relative_path: Optional[Path] = None
     absolute_path: Optional[Path] = None
+    directory_settings: Optional[DirectorySettings] = None
 
     hf_author: Optional[str] = Field(alias="author", default=None)
     hf_created_at: Optional[datetime] = Field(alias="created_at", default=None)
@@ -79,6 +81,7 @@ class ModelMetadata(BaseModel):
     has_vocab: bool = False
     has_tokenizer_config: bool = False
     has_pytorch_bin_index: bool = False
+    has_safetensors_index: bool = False
     has_safetensor_files: bool = False
     has_pytorch_bin_files: bool = False
     has_adapter: bool = False
@@ -92,6 +95,7 @@ class ModelMetadata(BaseModel):
             self.has_vocab = has_tokenizer_file(self.file_list)
             self.has_tokenizer_config = has_tokenizer_config(self.file_list)
             self.has_pytorch_bin_index = has_pytorch_bin_index(self.file_list)
+            self.has_safetensors_index = has_safetensors_index(self.file_list)
             self.has_safetensor_files = has_safetensors_files(self.file_list)
             self.has_pytorch_bin_files = has_pytorch_bin_files(self.file_list)
             self.has_adapter = has_adapter_files(self.file_list)
@@ -166,6 +170,7 @@ class ModelMetadataService:
             file_metadata_list = self.create_file_metadata_list_from_hf(
                 hf_model_info, path_or_id
             )
+
             model_metadata = ModelMetadata(
                 **hf_model_info.__dict__,
                 file_metadata_list=file_metadata_list,
@@ -173,6 +178,7 @@ class ModelMetadataService:
                 absolute_path=path.resolve(),
             )
             model_metadata.update_checks()
+
             return model_metadata
         except huggingface_hub.hf_api.RepositoryNotFoundError:
             logger.info(
@@ -185,7 +191,10 @@ class ModelMetadataService:
                 )
                 config = None
                 try:
-                    config = AutoConfig.from_pretrained(path_to_model).to_dict()
+                    config_obj = PretrainedConfig.from_json_file(
+                        str(path_to_model / "config.json")
+                    )
+                    config = config_obj.to_dict()
                 except EnvironmentError as e:
                     logger.warn(f"Error while fetching config for local model: {e}")
 
@@ -197,9 +206,13 @@ class ModelMetadataService:
                     hf_exists=False,
                     relative_path=path_to_model,
                     absolute_path=path_to_model.resolve(),
+                    directory_settings=self.directory_settings,
                 )
                 model_metadata.update_checks()
                 return model_metadata
             else:
                 logger.warn("Model not found locally, cannot create model metadata.")
                 return ModelMetadata(id=path_or_id, hf_exists=False)
+        except Exception as e:
+            logger.error(f"Error fetching model info: {e}")
+            return ModelMetadata(id=path_or_id, hf_exists=False)

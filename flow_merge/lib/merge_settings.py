@@ -108,7 +108,7 @@ class DirectorySettings(BaseModel):
     )
 
     @field_validator("cache_dir")
-    def validate_local_dir(cls, v):
+    def validate_cache_dir(cls, v):
         if v:
             v = Path(v).resolve()
             v.mkdir(parents=True, exist_ok=True)
