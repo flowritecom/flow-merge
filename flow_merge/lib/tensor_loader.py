@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Dict, List
 
 from pydantic import BaseModel, Field
@@ -10,7 +11,7 @@ from flow_merge.lib.shard import ShardFile
 
 CustomId = str
 Filename = str
-FilePath = str
+FilePath = Path
 FileToTensorIndex = Dict[str, List[str]]
 HfId = str
 RepoId = str
@@ -45,24 +46,24 @@ class TensorLoader(BaseModel):
         raise KeyError(f"Tensor key {tensor_key} not found in model {self.model.path}")
 
     def _load_tensor_from_shard(self, shard_file: ShardFile, tensor_key: TensorKey) -> torch.Tensor:
-        path_to_shard = os.path.join(shard_file.path, shard_file.filename)
-        if not os.path.exists(path_to_shard):
+        path_to_shard = shard_file.path / shard_file.filename
+        if not path_to_shard.exists():
             raise RuntimeError(f"Path {path_to_shard} to shard file doesn't exist!")
 
-        if shard_file.filename.endswith(".safetensors"):
+        if path_to_shard.suffix == ".safetensors":
             return self._load_safetensor(path_to_shard, tensor_key)
-        elif shard_file.filename.endswith(".bin"):
+        elif path_to_shard.suffix == ".bin":
             return self._load_bin_tensor(path_to_shard, tensor_key)
         else:
-            raise ValueError(f"Unsupported file type: {shard_file.filename}")
+            raise ValueError(f"Unsupported file type: {path_to_shard.suffix}")
 
     def _load_safetensor(self, path: FilePath, tensor_key: TensorKey) -> torch.Tensor:
         with safe_open(path, framework="pt", device=self.device) as file:
             return file.get_tensor(tensor_key)
 
     def _load_bin_tensor(self, path: FilePath, tensor_key: TensorKey) -> torch.Tensor:
-        with open(path, 'rb') as f:
+        with path.open('rb') as f:
             state_dict = torch.load(f, map_location=self.device)
             if tensor_key in state_dict:
                 return state_dict[tensor_key]
-            raise KeyError(f"Tensor key {tensor_key} not found in file {os.path.basename(path)}")
+            raise KeyError(f"Tensor key {tensor_key} not found in file {path.name}")
