@@ -7,6 +7,7 @@ import os
 from huggingface_hub import login
 
 from flow_merge.lib.logger import get_logger
+from flow_merge.lib.config import config
 
 logger = get_logger(__name__)
 
@@ -64,7 +65,7 @@ class TokenizerSettings(BaseModel):
 
 class HfHubSettings(BaseModel):
     token: Optional[str] = Field(
-        default=None,
+        default=config.hf_token,
         description="Hugging Face API token for downloading and pushing models from the Hugging Face Hub.",
     )
     trust_remote_code: bool = Field(
@@ -76,7 +77,7 @@ class HfHubSettings(BaseModel):
     def validate_token(cls, v):
         if v:
             # Check the token format using a regular expression
-            token_pattern = r"^hf_(?=.*[a-z])(?=.*[A-Z])[a-zA-Z]+$"
+            token_pattern = r"^hf_[a-zA-Z0-9]+$"
             if not re.match(token_pattern, v):
                 logger.warning(
                     f"Invalid Hugging Face Hub token format. HF token should be of the form '{token_pattern}'."

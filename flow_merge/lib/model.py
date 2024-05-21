@@ -21,10 +21,8 @@ class Model(BaseModel):
     trust_remote_code: bool = False
 
     @classmethod
-    def from_path(cls, path: str, token: str, directory_settings: DirectorySettings):
-        metadata_service = ModelMetadataService(
-            token=token, directory_settings=directory_settings
-        )
+    def from_path(cls, path: str, directory_settings: DirectorySettings = DirectorySettings()):
+        metadata_service = ModelMetadataService(directory_settings=directory_settings)
         metadata = metadata_service.load_model_info(path)
         return cls(
             path=path,

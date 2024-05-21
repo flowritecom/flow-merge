@@ -25,11 +25,11 @@ from flow_merge.lib.io import (
     has_tokenizer_file,
 )
 from flow_merge.lib.logger import get_logger
+from flow_merge.lib.merge_settings import DirectorySettings
+from flow_merge.lib.config import config
 
 logger = get_logger(__name__)
 
-TOKEN = "<redacted>"
-BASE_PATH = "../models/"
 CHUNK_SIZE = 64 * 1024  # 64KB
 
 
@@ -95,10 +95,8 @@ class ModelMetadata(BaseModel):
 
 
 class ModelMetadataService:
-    def __init__(self, token: str, base_path: str):
-        self.token = token
-        self.base_path = base_path
-
+    def __init__(self, directory_settings: DirectorySettings = DirectorySettings()):
+        self.directory_settings = directory_settings
     @staticmethod
     def generate_content_hash(file_path: str) -> str:
         sha256_hash = hashlib.sha256()
@@ -107,27 +105,27 @@ class ModelMetadataService:
                 sha256_hash.update(chunk)
         return sha256_hash.hexdigest()
 
-    def download_hf_file(self, repo_id: str, model_path: str, filename: str) -> str:
+    def download_hf_file(self, repo_id: str, filename: str) -> str:
         return huggingface_hub.hf_hub_download(
             repo_id,
             filename,
-            local_dir=model_path,
+            local_dir=self.directory_settings.local_dir,
             resume_download=True,
-            token=self.token,
+            token=config.hf_token,
         )
 
     def fetch_hf_model_info(self, repo_id: str) -> ModelInfo:
         return huggingface_hub.hf_api.repo_info(
-            repo_id=repo_id, repo_type="model", files_metadata=True, token=self.token
+            repo_id=repo_id, repo_type="model", files_metadata=True, token=config.hf_token
         )
 
     def create_file_metadata_list_from_hf(
-        self, hf_model_info: ModelInfo, repo_id: str, model_path: str
+        self, hf_model_info: ModelInfo, repo_id: str
     ) -> List[FileMetadata]:
         def create_file_metadata(sibling: RepoSibling) -> FileMetadata:
             if sibling.lfs is None:
                 path_to_downloaded_file = self.download_hf_file(
-                    repo_id, model_path, sibling.rfilename
+                    repo_id, sibling.rfilename
                 )
                 sha = self.generate_content_hash(path_to_downloaded_file)
             else:
@@ -154,11 +152,11 @@ class ModelMetadataService:
             for file_path in path_to_model.glob("*")
         ]
 
-    def load_model_info(self, path_or_id: str, model_path: str) -> ModelMetadata:
+    def load_model_info(self, path_or_id: str) -> ModelMetadata:
         try:
             hf_model_info = self.fetch_hf_model_info(path_or_id)
             file_metadata_list = self.create_file_metadata_list_from_hf(
-                hf_model_info, path_or_id, model_path
+                hf_model_info, path_or_id
             )
             model_metadata = ModelMetadata(
                 **hf_model_info.__dict__, file_metadata_list=file_metadata_list
@@ -169,7 +167,7 @@ class ModelMetadataService:
             logger.info(
                 "Model not found in Hugging face. Inferring from local model directory."
             )
-            path_to_model = Path(self.base_path + path_or_id).resolve()
+            path_to_model = (self.directory_settings.local_dir / path_or_id).resolve()
             if path_to_model.exists():
                 file_metadata_list = self.create_file_metadata_list_from_local(
                     path_to_model
