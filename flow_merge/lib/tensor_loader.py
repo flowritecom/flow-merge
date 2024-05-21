@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field
 import torch
@@ -15,9 +15,9 @@ FilePath = Path
 FileToTensorIndex = Dict[str, List[str]]
 HfId = str
 RepoId = str
-SafetensorsIndex = Dict[str, str]
 ShardFiles = List[ShardFile]
 TensorKey = str
+TensorIndex = Any
 
 
 class TensorLoader(BaseModel):
@@ -45,7 +45,9 @@ class TensorLoader(BaseModel):
                 return self._load_tensor_from_shard(shard_file, tensor_key)
         raise KeyError(f"Tensor key {tensor_key} not found in model {self.model.path}")
 
-    def _load_tensor_from_shard(self, shard_file: ShardFile, tensor_key: TensorKey) -> torch.Tensor:
+    def _load_tensor_from_shard(
+        self, shard_file: ShardFile, tensor_key: TensorKey
+    ) -> torch.Tensor:
         path_to_shard = shard_file.path / shard_file.filename
         if not path_to_shard.exists():
             raise RuntimeError(f"Path {path_to_shard} to shard file doesn't exist!")
@@ -62,7 +64,7 @@ class TensorLoader(BaseModel):
             return file.get_tensor(tensor_key)
 
     def _load_bin_tensor(self, path: FilePath, tensor_key: TensorKey) -> torch.Tensor:
-        with path.open('rb') as f:
+        with path.open("rb") as f:
             state_dict = torch.load(f, map_location=self.device)
             if tensor_key in state_dict:
                 return state_dict[tensor_key]

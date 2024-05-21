@@ -51,6 +51,9 @@ class ModelMetadata(BaseModel):
         alias="safetensors", default=None
     )
 
+    relative_path: Optional[Path] = None
+    absolute_path: Optional[Path] = None
+
     hf_author: Optional[str] = Field(alias="author", default=None)
     hf_created_at: Optional[datetime] = Field(alias="created_at", default=None)
     hf_last_modified: Optional[datetime] = Field(alias="last_modified", default=None)
@@ -97,6 +100,7 @@ class ModelMetadata(BaseModel):
 class ModelMetadataService:
     def __init__(self, directory_settings: DirectorySettings = DirectorySettings()):
         self.directory_settings = directory_settings
+
     @staticmethod
     def generate_content_hash(file_path: str) -> str:
         sha256_hash = hashlib.sha256()
@@ -116,7 +120,10 @@ class ModelMetadataService:
 
     def fetch_hf_model_info(self, repo_id: str) -> ModelInfo:
         return huggingface_hub.hf_api.repo_info(
-            repo_id=repo_id, repo_type="model", files_metadata=True, token=config.hf_token
+            repo_id=repo_id,
+            repo_type="model",
+            files_metadata=True,
+            token=config.hf_token,
         )
 
     def create_file_metadata_list_from_hf(
@@ -145,7 +152,7 @@ class ModelMetadataService:
     ) -> List[FileMetadata]:
         return [
             FileMetadata(
-                sha=self.generate_content_hash(file_path),
+                sha=self.generate_content_hash(str(file_path)),
                 size=file_path.stat().st_size,
                 filename=file_path.name,
             )
@@ -153,13 +160,17 @@ class ModelMetadataService:
         ]
 
     def load_model_info(self, path_or_id: str) -> ModelMetadata:
+        path = Path(path_or_id)
         try:
             hf_model_info = self.fetch_hf_model_info(path_or_id)
             file_metadata_list = self.create_file_metadata_list_from_hf(
                 hf_model_info, path_or_id
             )
             model_metadata = ModelMetadata(
-                **hf_model_info.__dict__, file_metadata_list=file_metadata_list
+                **hf_model_info.__dict__,
+                file_metadata_list=file_metadata_list,
+                relative_path=path,
+                absolute_path=path.resolve(),
             )
             model_metadata.update_checks()
             return model_metadata
@@ -184,6 +195,8 @@ class ModelMetadataService:
                     file_metadata_list=file_metadata_list,
                     config=config,
                     hf_exists=False,
+                    relative_path=path_to_model,
+                    absolute_path=path_to_model.resolve(),
                 )
                 model_metadata.update_checks()
                 return model_metadata

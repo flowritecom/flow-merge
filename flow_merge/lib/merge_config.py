@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import torch
@@ -183,7 +184,7 @@ class MergeConfig:
         """
         return [
             Model.from_path(
-                model_data.path_or_id,
+                Path(model_data.path_or_id),
                 directory_settings=self.directory_settings,
             )
             for model_data in self.data.models

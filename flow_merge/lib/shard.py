@@ -29,7 +29,13 @@ ShardFiles = List[ShardFile]
 
 def download_file(repo_id: RepoId, filename: Filename, local_dir: Path) -> str:
     try:
-        return hf_hub_download(repo_id, filename, local_dir=local_dir, resume_download=True, token=config.hf_token)
+        return hf_hub_download(
+            repo_id,
+            filename,
+            local_dir=local_dir,
+            resume_download=True,
+            token=config.hf_token,
+        )
     except Exception as e:
         raise RuntimeError(f"Failed to download {filename} from {repo_id}: {e}")
 
@@ -53,7 +59,7 @@ def get_shard_file(
             raise FileNotFoundError(f"File {output_path} not found.")
     elif shard_filename.endswith(".bin"):
         if output_path.exists():
-            with open(output_path, 'rb') as f:
+            with open(output_path, "rb") as f:
                 state_dict = torch.load(f, map_location=device)
                 if keys is None:
                     keys = list(state_dict.keys())
@@ -69,9 +75,12 @@ def gather_shard_files(
     file_to_tensor_index: Dict[Filename, TensorKeys],
     output_dir: Path,
     repo_id: RepoId,
-    device: DeviceIdentifier
+    device: DeviceIdentifier,
 ) -> ShardFiles:
-    return [get_shard_file(output_dir, repo_id, device, filename, keys) for filename, keys in file_to_tensor_index.items()]
+    return [
+        get_shard_file(output_dir, repo_id, device, filename, keys)
+        for filename, keys in file_to_tensor_index.items()
+    ]
 
 
 def download_required_files(metadata: ModelMetadata, output_dir: Path):
@@ -91,7 +100,9 @@ def handle_safetensor_files(
     model_metadata: ModelMetadata, output_dir: Path, device: DeviceIdentifier
 ) -> ShardFiles:
     if model_metadata.has_safetensor_index:
-        return gather_shard_files(model_metadata.file_metadata_list, output_dir, model_metadata.id, device)
+        return gather_shard_files(
+            model_metadata.file_metadata_list, output_dir, model_metadata.id, device
+        )
     else:
         get_shard_file(output_dir, model_metadata.id, device, "model.safetensors")
         model_sf_path = output_dir / "model.safetensors"
@@ -118,28 +129,42 @@ def handle_pytorch_bin_files(
             bin_file_path = output_dir / filename
             if not bin_file_path.exists():
                 raise FileNotFoundError(f"File {bin_file_path} not found.")
-            
-            with open(bin_file_path, 'rb') as f:
+
+            with open(bin_file_path, "rb") as f:
                 state_dict = torch.load(f, map_location=device)
                 tensor_keys = list(state_dict.keys())
-            
-            shard_files.append(ShardFile(filename=filename, path=str(output_dir), tensor_keys=tensor_keys))
+
+            shard_files.append(
+                ShardFile(
+                    filename=filename, path=str(output_dir), tensor_keys=tensor_keys
+                )
+            )
     return shard_files
 
 
 def merge_adapter_with_base_model(
     model_metadata: ModelMetadata, output_dir: Path, device: DeviceIdentifier
 ) -> ShardFile:
-    adapter_files: List[Filename] = [f for f in model_metadata.file_list if "adapter" in f]
+    adapter_files: List[Filename] = [
+        f for f in model_metadata.file_list if "adapter" in f
+    ]
     for adapter_file in adapter_files:
         download_file(model_metadata.id, adapter_file, output_dir)
 
     if model_metadata.has_safetensor_files:
-        base_model_shards = [f for f in model_metadata.file_list if f.startswith("model-") and f.endswith(".safetensors")]
+        base_model_shards = [
+            f
+            for f in model_metadata.file_list
+            if f.startswith("model-") and f.endswith(".safetensors")
+        ]
         if not base_model_shards:
             base_model_shards = ["model.safetensors"]
     else:
-        base_model_shards = [f for f in model_metadata.file_list if f.startswith("pytorch_model-") and f.endswith(".bin")]
+        base_model_shards = [
+            f
+            for f in model_metadata.file_list
+            if f.startswith("pytorch_model-") and f.endswith(".bin")
+        ]
         if not base_model_shards:
             base_model_shards = ["pytorch_model.bin"]
 
@@ -150,21 +175,21 @@ def merge_adapter_with_base_model(
         if not shard_path.exists():
             raise FileNotFoundError(f"Base model shard file {shard_path} not found.")
         shard_paths.append(str(shard_path))
-    
+
     peft_config = PeftConfig.from_pretrained(output_dir)
     base_model = PeftModel.from_pretrained(shard_paths, peft_config=peft_config)
     merged_model_path = output_dir / "merged_model.safetensors"
     base_model.save_pretrained(merged_model_path)
 
     return ShardFile(
-        filename="merged_model.safetensors",
-        path=str(output_dir),
-        tensor_keys=[]
+        filename="merged_model.safetensors", path=str(output_dir), tensor_keys=[]
     )
 
 
 def create_shard_files(
-    model_metadata: ModelMetadata, device: DeviceIdentifier, directory_settings: DirectorySettings = DirectorySettings()
+    model_metadata: ModelMetadata,
+    device: DeviceIdentifier,
+    directory_settings: DirectorySettings = DirectorySettings(),
 ) -> ShardFiles:
     md = model_metadata
     output_dir = directory_settings.output_dir / md.id

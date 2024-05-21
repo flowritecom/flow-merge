@@ -1,4 +1,5 @@
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, NewType
 from pydantic import BaseModel
 from transformers import AutoConfig, PretrainedConfig
 
@@ -10,9 +11,12 @@ from flow_merge.lib.merge_settings import DirectorySettings
 
 logger = get_logger(__name__)
 
+ModelId = NewType("ModelId", str)
+
 
 class Model(BaseModel):
-    path: str
+    id: ModelId
+    path: Path
     metadata: ModelMetadata
     file_to_tensor_index: FileToTensorIndex
     shards: List[ShardFile]
@@ -21,11 +25,18 @@ class Model(BaseModel):
     trust_remote_code: bool = False
 
     @classmethod
-    def from_path(cls, path: str, directory_settings: DirectorySettings = DirectorySettings()):
+    def from_path(
+        cls, path: Path, directory_settings: DirectorySettings = DirectorySettings()
+    ):
         metadata_service = ModelMetadataService(directory_settings=directory_settings)
         metadata = metadata_service.load_model_info(path)
+
+        # Using the folder name as the unique identifier for local models
+        model_id = ModelId(path.name)
+
         return cls(
-            path=path,
+            id=model_id,
+            path=path.resolve(),
             metadata=metadata,
             file_to_tensor_index=FileToTensorIndex(metadata.file_metadata_list),
             shards=[ShardFile(file.filename) for file in metadata.file_metadata_list],
@@ -37,14 +48,14 @@ class Model(BaseModel):
         )
 
     def __hash__(self):
-        return hash((self.path, self.revision))
+        return hash((self.id, self.revision))
 
     def __eq__(self, other):
         if isinstance(other, Model):
-            return self.path == other.path
+            return self.id == other.id
         return False
 
     def __str__(self):
         if self.revision:
-            return f"{self.path}@{self.revision}"
-        return self.path
+            return f"{self.id}@{self.revision}"
+        return str(self.id)

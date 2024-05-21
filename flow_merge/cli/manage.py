@@ -10,9 +10,11 @@ from flow_merge.lib.config import config
 
 logger = get_logger(__name__)
 
+
 def print_schema():
     schema = ValidatedInputData.model_json_schema()
     print(json.dumps(schema, indent=2))
+
 
 def print_valid_inputs():
     input_descriptions = {
@@ -21,9 +23,9 @@ def print_valid_inputs():
             "models": [
                 "List of dictionaries, each representing a model to be merged",
                 "- model: Each model dictionary should have a 'model' property specifying the model path or identifier",
-                "- weight: The 'weight' property in a model dictionary is optional and specifies the weight of the model during merging"
+                "- weight: The 'weight' property in a model dictionary is optional and specifies the weight of the model during merging",
             ],
-            "method": "The merge method to be used, one of ['addition-task-arithmetic', 'ties-merging', 'slerp', 'dare-ties-merging', 'model-soup', 'passthrough']"
+            "method": "The merge method to be used, one of ['addition-task-arithmetic', 'ties-merging', 'slerp', 'dare-ties-merging', 'model-soup', 'passthrough']",
         },
         "Optional parameters": {
             "device": "The device to be used for merging, one of ['cpu', 'cuda']",
@@ -33,25 +35,25 @@ def print_valid_inputs():
                 "- p: float",
                 "- scaling_coefficient: float",
                 "- t: float",
-                "- top_k: float"
+                "- top_k: float",
             ],
             "directory_settings": [
                 "Directories for caching, loading, and saving models",
                 "- cache_dir: str",
                 "- local_dir: str",
-                "- output_dir: str"
+                "- output_dir: str",
             ],
             "hf_hub_settings": [
                 "Settings for interacting with the Hugging Face Hub",
                 "- token: str",
-                "- trust_remote_code: bool"
+                "- trust_remote_code: bool",
             ],
             "tokenizer_settings": [
                 "Settings for the tokenizer used with the merged model",
                 "- interpolation_method: str",
-                "- mode: str"
-            ]
-        }
+                "- mode: str",
+            ],
+        },
     }
 
     for section, items in input_descriptions.items():
@@ -63,6 +65,7 @@ def print_valid_inputs():
                     print(f"  {desc}")
             else:
                 print(f"- {key}: {description}")
+
 
 def validate_config(args):
     try:
@@ -76,6 +79,7 @@ def validate_config(args):
         print(f"Configuration file not found: {args.config}")
     except Exception as e:
         print(f"Configuration file is invalid: {str(e)}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Process a YAML config")
@@ -106,7 +110,11 @@ def main():
         "--model_name", type=str, help="Name of the resulting model", required=False
     )
     merge_parser.add_argument(
-        "--token", default=config.hf_token, type=str, help="Token for the HF hub", required=False
+        "--token",
+        default=config.hf_token,
+        type=str,
+        help="Token for the HF hub",
+        required=False,
     )
 
     # Upload command
@@ -131,7 +139,11 @@ def main():
         required=False,
     )
     upload_parser.add_argument(
-        "--token", default=config.hf_token, type=str, help="Token for the HF hub", required=False
+        "--token",
+        default=config.hf_token,
+        type=str,
+        help="Token for the HF hub",
+        required=False,
     )
     args = parser.parse_args()
 
@@ -152,6 +164,7 @@ def main():
         )
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()
