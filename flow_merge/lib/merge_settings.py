@@ -100,10 +100,10 @@ class DirectorySettings(BaseModel):
         description="Directory for caching models and tokenizers with the `transformers library.",
     )
     local_dir: Path = Field(
-        default=Path("./models"), description="Directory for loading models from local."
+        default=Path("./models").resolve(), description="Directory for loading models from local."
     )
     output_dir: Path = Field(
-        default=Path("./merged_model"),
+        default=Path("./merged_model").resolve(),
         description="Directory for saving the merged model, tokenizer, and metadata.",
     )
 

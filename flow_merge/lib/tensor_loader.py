@@ -222,7 +222,6 @@ from typing import Dict, List, NewType, Optional
 
 from flow_merge.lib.tensor_writer import TensorWriter
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 import json
@@ -535,7 +534,7 @@ class ModelService:
     def create_shard_files(
         model_metadata: ModelMetadata, device: DeviceIdentifier
     ) -> List[ShardFile]:
-        output_dir = model_metadata.directory_settings.output_dir / model_metadata.id
+        output_model_path = model_metadata.directory_settings.output_dir / model_metadata.id
 
         if not (model_metadata.has_config and model_metadata.has_tokenizer_config):
             raise FileNotFoundError(
@@ -550,7 +549,7 @@ class ModelService:
         file_index = TensorIndexService.create_file_to_tensor_index(model_metadata)
         if file_index:
             return ModelService.gather_shard_files(
-                file_index, output_dir, model_metadata.id, device
+                file_index, output_model_path, model_metadata.id, device
             )
         else:
             print("Index files not found, using single shard file fallback.")
@@ -560,7 +559,7 @@ class ModelService:
                 else "pytorch_model.bin"
             )
             shard_file = ModelService.create_shard_file(
-                output_dir, model_metadata.id, device, single_file
+                output_model_path, model_metadata.id, device, single_file
             )
             return [shard_file]
 

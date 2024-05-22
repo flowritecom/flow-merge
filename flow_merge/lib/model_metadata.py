@@ -102,7 +102,7 @@ class ModelMetadata(BaseModel):
 
 
 class ModelMetadataService:
-    def __init__(self, directory_settings: DirectorySettings = DirectorySettings()):
+    def __init__(self, directory_settings: DirectorySettings):
         self.directory_settings = directory_settings
 
     @staticmethod

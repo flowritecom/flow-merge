@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import List, Optional, NewType
 from pydantic import BaseModel
-from transformers import AutoConfig, PretrainedConfig
 
 from flow_merge.lib.logger import get_logger
 from flow_merge.lib.model_metadata import ModelMetadata, ModelMetadataService
@@ -24,12 +23,10 @@ class Model(BaseModel, arbitrary_types_allowed=True):
     metadata: ModelMetadata
     file_to_tensor_index: Optional[FileToTensorIndex]
     shards: List[ShardFile]
-    config: Optional[PretrainedConfig]
-    revision: Optional[str] = None
 
     @classmethod
     def from_path(
-        cls, path: Path, directory_settings: DirectorySettings = DirectorySettings()
+        cls, path: Path, directory_settings: DirectorySettings
     ):
         metadata_service = ModelMetadataService(directory_settings=directory_settings)
         metadata = metadata_service.load_model_info(str(path))
@@ -63,19 +60,17 @@ class Model(BaseModel, arbitrary_types_allowed=True):
             metadata=metadata,
             file_to_tensor_index=file_to_tensor_index,
             shards=shards,
-            config=PretrainedConfig.from_dict(metadata.config),
-            revision=metadata.sha,
         )
 
     def __hash__(self):
-        return hash((self.id, self.revision))
+        return hash((self.id, self.metadata.sha))
 
     def __eq__(self, other):
         if isinstance(other, Model):
-            return self.id == other.id and self.revision == other.revision
+            return self.id == other.id and self.metadata.sha == other.metadata.sha
         return False
 
     def __str__(self):
-        if self.revision:
-            return f"{self.id}@{self.revision}"
+        if self.metadata.sha:
+            return f"{self.id}@{self.metadata.sha}"
         return str(self.id)
