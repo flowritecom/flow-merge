@@ -4,7 +4,6 @@ from unittest.mock import mock_open, patch, MagicMock
 from pathlib import Path
 from typing import Optional
 from flow_merge.lib.merge_settings import DirectorySettings
-from flow_merge.lib.config import CentralConfig
 from huggingface_hub.hf_api import ModelInfo, RepoSibling, RepositoryNotFoundError
 from flow_merge.lib.model_metadata import (
     ModelMetadataService,
@@ -89,10 +88,9 @@ def test_download_hf_file(mock_config, mock_download):
 
 
 @patch("huggingface_hub.hf_api.repo_info")
-def test_fetch_hf_model_info(mock_repo_info):
-    service = ModelMetadataService(
-        token="dummy_token", base_path=Path(".")
-    )
+@patch("flow_merge.lib.model_metadata.config")
+def test_fetch_hf_model_info(mock_config, mock_repo_info):
+    service = create_model_metadata_service()
     mock_repo_info.return_value = ModelInfo(
         id="dummy_id",
         private=False,
@@ -101,6 +99,7 @@ def test_fetch_hf_model_info(mock_repo_info):
         tags=["dummy_tag"],
     )
 
+    mock_config.hf_token = "dummy_token"
     result = service.fetch_hf_model_info("dummy_repo")
 
     assert result.id == "dummy_id"
@@ -115,12 +114,12 @@ def test_fetch_hf_model_info(mock_repo_info):
 # Medium Priority Tests
 @patch.object(ModelMetadataService, "download_hf_file")
 @patch.object(ModelMetadataService, "generate_content_hash")
+@patch("flow_merge.lib.model_metadata.config")
 def test_create_file_metadata_list_from_hf(
-    mock_generate_content_hash, mock_download_hf_file
+    mock_config, mock_generate_content_hash, mock_download_hf_file
 ):
-    service = ModelMetadataService(
-        token="dummy_token", base_path=Path(".")
-    )
+    service = create_model_metadata_service()
+    mock_config.hf_token = "dummy_token"
     mock_generate_content_hash.return_value = "dummy_sha"
     mock_download_hf_file.return_value = "path/to/downloaded/file"
 
@@ -129,7 +128,6 @@ def test_create_file_metadata_list_from_hf(
     result = service.create_file_metadata_list_from_hf(
         hf_model_info=model_info, 
         repo_id="dummy_repo",
-        model_path="dummy_model_path"
     )
 
     expected = [
@@ -142,18 +140,20 @@ def test_create_file_metadata_list_from_hf(
     ]
 
     assert result == expected
-    mock_download_hf_file.assert_called_once_with("dummy_repo", "dummy_model_path", "dummy_file")
+    mock_download_hf_file.assert_called_once_with("dummy_repo", "dummy_file")
     mock_generate_content_hash.assert_called_once_with("path/to/downloaded/file")
 
 
 @patch("flow_merge.lib.model_metadata.ModelMetadataService.generate_content_hash")
 @patch("pathlib.Path.glob")
-def test_create_file_metadata_list_from_local(mock_glob, mock_generate_content_hash):
-    service = ModelMetadataService(
-        token="", base_path=Path(".")
-    )
+@patch("flow_merge.lib.model_metadata.config")
+def test_create_file_metadata_list_from_local(mock_config, mock_glob, mock_generate_content_hash):
+    directory_settings = create_directory_settings()
+    service = create_model_metadata_service(directory_settings)
+    
     mock_generate_content_hash.return_value = "dummy_sha"
-
+    
+    mock_config.hf_token = "dummy_token"
     mock_file = MagicMock(spec=Path)
     mock_file.stat.return_value.st_size = 1234
     mock_file.name = "dummy_file"
@@ -164,21 +164,21 @@ def test_create_file_metadata_list_from_local(mock_glob, mock_generate_content_h
     expected = [FileMetadata(filename="dummy_file", sha="dummy_sha", size=1234)]
 
     assert result == expected
-    mock_generate_content_hash.assert_called_once_with(mock_file)
+    mock_generate_content_hash.assert_called_once_with(str(mock_file))
 
 
 # Low Priority Tests
 @patch.object(ModelMetadataService, "fetch_hf_model_info")
 @patch.object(ModelMetadataService, "create_file_metadata_list_from_hf")
+@patch("flow_merge.lib.model_metadata.config")
 def test_load_model_info_hf(
-    mock_create_file_metadata_list_from_hf, mock_fetch_hf_model_info
+    mock_config, mock_create_file_metadata_list_from_hf, mock_fetch_hf_model_info
 ):
-    service = ModelMetadataService(
-        token="dummy_token", base_path="dummy_base_path"
-    )
+    service = create_model_metadata_service()
 
     model_info = create_model_info()
 
+    mock_config.hf_token = "dummy_token"
     mock_fetch_hf_model_info.return_value = model_info
     mock_create_file_metadata_list_from_hf.return_value = []
 
@@ -188,29 +188,27 @@ def test_load_model_info_hf(
     assert result.id == "dummy_id"
     mock_fetch_hf_model_info.assert_called_once_with("dummy_repo")
     mock_create_file_metadata_list_from_hf.assert_called_once_with(
-        model_info, "dummy_repo", "dummy_base_path"
+        model_info, "dummy_repo"
     )
 
 
 @patch.object(ModelMetadataService, "create_file_metadata_list_from_local")
 @patch.object(ModelMetadataService, "fetch_hf_model_info")
-@patch("transformers.AutoConfig.from_pretrained")
-@patch("pathlib.Path.resolve")
+@patch("transformers.PretrainedConfig.from_json_file")
+@patch("flow_merge.lib.model_metadata.config")
 def test_load_model_info_local(
-    mock_path_resolve, mock_from_pretrained, mock_fetch_hf_model_info, mock_create_file_metadata_list_from_local
+    mock_config, mock_from_pretrained, mock_fetch_hf_model_info, mock_create_file_metadata_list_from_local
 ):
-    service = ModelMetadataService(
-        token="",
-        base_path="dummy_base_path"
-    )
+    directory_settings = create_directory_settings()
+    service = create_model_metadata_service(directory_settings)
 
+    mock_config.hf_token = "dummy_token"
     mock_create_file_metadata_list_from_local.return_value = []
     mock_from_pretrained.return_value.to_dict.return_value = {
         "config_key": "config_value"
     }
 
     mock_fetch_hf_model_info.side_effect = RepositoryNotFoundError("Model not found")
-    mock_path_resolve.return_value = Path("dummy_base_path/dummy_repo")
 
     with patch("pathlib.Path.exists", return_value=True):
         result = service.load_model_info(path_or_id="dummy_repo")
@@ -219,23 +217,22 @@ def test_load_model_info_local(
     assert result.id == "dummy_repo"
     assert result.config == {"config_key": "config_value"}
     mock_create_file_metadata_list_from_local.assert_called_once_with(
-        Path("dummy_base_path/dummy_repo")
+        Path(directory_settings.local_dir / "dummy_repo").resolve()
     )
-    mock_from_pretrained.assert_called_once_with(Path("dummy_base_path/dummy_repo"))
+    mock_from_pretrained.assert_called_once_with(str(Path(directory_settings.local_dir / "dummy_repo" / "config.json").resolve()))
 
 
 @patch.object(ModelMetadataService, "fetch_hf_model_info")
 @patch.object(ModelMetadataService, "download_hf_file")
 @patch.object(ModelMetadataService, "generate_content_hash")
+@patch("flow_merge.lib.model_metadata.config")
 def test_end_to_end_hf_model(
-    mock_generate_content_hash, mock_download_hf_file, mock_fetch_hf_model_info
+    mock_config, mock_generate_content_hash, mock_download_hf_file, mock_fetch_hf_model_info
 ):
-    service = ModelMetadataService(
-        token="dummy_token", base_path="dummy_base_path"
-    )
+    service = create_model_metadata_service()
 
     model_info = create_model_info()
-    
+    mock_config.hf_token = "dummy_token"
     mock_fetch_hf_model_info.return_value = model_info
 
     mock_generate_content_hash.return_value = "dummy_sha"
@@ -247,34 +244,34 @@ def test_end_to_end_hf_model(
     assert result.id == "dummy_id"
     assert result.file_metadata_list[0].sha == "dummy_sha"
     mock_fetch_hf_model_info.assert_called_once_with("dummy_repo")
-    mock_download_hf_file.assert_called_once_with("dummy_repo", "dummy_base_path", "dummy_file")
+    mock_download_hf_file.assert_called_once_with("dummy_repo", "dummy_file")
     mock_generate_content_hash.assert_called_once_with("path/to/downloaded/file")
 
 
 @patch.object(ModelMetadataService, "create_file_metadata_list_from_local")
-@patch("transformers.AutoConfig.from_pretrained")
-@patch("pathlib.Path.resolve")
+@patch("transformers.PretrainedConfig.from_json_file")
+@patch("flow_merge.lib.model_metadata.config")
 def test_end_to_end_local_model(
-    mock_path_resolve, mock_from_pretrained, mock_create_file_metadata_list_from_local
+    mock_config, mock_from_pretrained, mock_create_file_metadata_list_from_local
 ):
-    service = ModelMetadataService(
-        token="",
-        base_path="dummy_base_path"
-    )
+    directory_settings = create_directory_settings()
+    service = create_model_metadata_service(directory_settings)
 
+    mock_config.hf_token = "dummy_token"
     mock_create_file_metadata_list_from_local.return_value = []
     mock_from_pretrained.return_value.to_dict.return_value = {
         "config_key": "config_value"
     }
-    mock_path_resolve.return_value = Path("dummy_base_path/dummy_repo")
 
     with patch("pathlib.Path.exists", return_value=True):
         result = service.load_model_info(path_or_id="dummy_repo")
 
     assert isinstance(result, ModelMetadata)
     assert result.id == "dummy_repo"
-    assert result.config == {"config_key": "config_value"}
+    assert result.config == {
+        "config_key": "config_value"
+    }
     mock_create_file_metadata_list_from_local.assert_called_once_with(
-        Path("dummy_base_path/dummy_repo")
+        Path(directory_settings.local_dir / "dummy_repo").resolve()
     )
-    mock_from_pretrained.assert_called_once_with(Path("dummy_base_path/dummy_repo"))
+    mock_from_pretrained.assert_called_once_with( str(Path(directory_settings.local_dir / "dummy_repo" / "config.json").resolve()))
