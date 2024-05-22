@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 import huggingface_hub
 from pydantic import BaseModel, Field
-from transformers import AutoConfig
+from transformers import AutoConfig, PretrainedConfig
 from huggingface_hub.hf_api import (
     ModelInfo,
     BlobLfsInfo,
@@ -21,15 +21,16 @@ from flow_merge.lib.io import (
     has_pytorch_bin_files,
     has_pytorch_bin_index,
     has_safetensors_files,
+    has_safetensors_index,
     has_tokenizer_config,
     has_tokenizer_file,
 )
 from flow_merge.lib.logger import get_logger
+from flow_merge.lib.merge_settings import DirectorySettings
+from flow_merge.lib.config import config
 
 logger = get_logger(__name__)
 
-TOKEN = "<redacted>"
-BASE_PATH = "../models/"
 CHUNK_SIZE = 64 * 1024  # 64KB
 
 
@@ -50,6 +51,10 @@ class ModelMetadata(BaseModel):
     safetensors_info: Optional[SafeTensorsInfo] = Field(
         alias="safetensors", default=None
     )
+
+    relative_path: Optional[Path] = None
+    absolute_path: Optional[Path] = None
+    directory_settings: Optional[DirectorySettings] = None
 
     hf_author: Optional[str] = Field(alias="author", default=None)
     hf_created_at: Optional[datetime] = Field(alias="created_at", default=None)
@@ -76,6 +81,7 @@ class ModelMetadata(BaseModel):
     has_vocab: bool = False
     has_tokenizer_config: bool = False
     has_pytorch_bin_index: bool = False
+    has_safetensors_index: bool = False
     has_safetensor_files: bool = False
     has_pytorch_bin_files: bool = False
     has_adapter: bool = False
@@ -89,15 +95,15 @@ class ModelMetadata(BaseModel):
             self.has_vocab = has_tokenizer_file(self.file_list)
             self.has_tokenizer_config = has_tokenizer_config(self.file_list)
             self.has_pytorch_bin_index = has_pytorch_bin_index(self.file_list)
+            self.has_safetensors_index = has_safetensors_index(self.file_list)
             self.has_safetensor_files = has_safetensors_files(self.file_list)
             self.has_pytorch_bin_files = has_pytorch_bin_files(self.file_list)
             self.has_adapter = has_adapter_files(self.file_list)
 
 
 class ModelMetadataService:
-    def __init__(self, token: str, base_path: str):
-        self.token = token
-        self.base_path = base_path
+    def __init__(self, directory_settings: DirectorySettings = DirectorySettings()):
+        self.directory_settings = directory_settings
 
     @staticmethod
     def generate_content_hash(file_path: str) -> str:
@@ -107,27 +113,30 @@ class ModelMetadataService:
                 sha256_hash.update(chunk)
         return sha256_hash.hexdigest()
 
-    def download_hf_file(self, repo_id: str, model_path: str, filename: str) -> str:
+    def download_hf_file(self, repo_id: str, filename: str) -> str:
         return huggingface_hub.hf_hub_download(
             repo_id,
             filename,
-            local_dir=model_path,
+            local_dir=self.directory_settings.local_dir,
             resume_download=True,
-            token=self.token,
+            token=config.hf_token,
         )
 
     def fetch_hf_model_info(self, repo_id: str) -> ModelInfo:
         return huggingface_hub.hf_api.repo_info(
-            repo_id=repo_id, repo_type="model", files_metadata=True, token=self.token
+            repo_id=repo_id,
+            repo_type="model",
+            files_metadata=True,
+            token=config.hf_token,
         )
 
     def create_file_metadata_list_from_hf(
-        self, hf_model_info: ModelInfo, repo_id: str, model_path: str
+        self, hf_model_info: ModelInfo, repo_id: str
     ) -> List[FileMetadata]:
         def create_file_metadata(sibling: RepoSibling) -> FileMetadata:
             if sibling.lfs is None:
                 path_to_downloaded_file = self.download_hf_file(
-                    repo_id, model_path, sibling.rfilename
+                    repo_id, sibling.rfilename
                 )
                 sha = self.generate_content_hash(path_to_downloaded_file)
             else:
@@ -147,7 +156,7 @@ class ModelMetadataService:
     ) -> List[FileMetadata]:
         return [
             FileMetadata(
-                sha=self.generate_content_hash(file_path),
+                sha=self.generate_content_hash(str(file_path)),
                 size=file_path.stat().st_size,
                 filename=file_path.name,
             )
@@ -155,28 +164,37 @@ class ModelMetadataService:
         ]
 
     def load_model_info(self, path_or_id: str) -> ModelMetadata:
+        path = Path(path_or_id)
         try:
             hf_model_info = self.fetch_hf_model_info(path_or_id)
             file_metadata_list = self.create_file_metadata_list_from_hf(
-                hf_model_info, path_or_id, self.base_path
+                hf_model_info, path_or_id
             )
+
             model_metadata = ModelMetadata(
-                **hf_model_info.__dict__, file_metadata_list=file_metadata_list
+                **hf_model_info.__dict__,
+                file_metadata_list=file_metadata_list,
+                relative_path=path,
+                absolute_path=path.resolve(),
             )
             model_metadata.update_checks()
+
             return model_metadata
         except huggingface_hub.hf_api.RepositoryNotFoundError:
             logger.info(
                 "Model not found in Hugging face. Inferring from local model directory."
             )
-            path_to_model = Path(self.base_path + path_or_id).resolve()
+            path_to_model = (self.directory_settings.local_dir / path_or_id).resolve()
             if path_to_model.exists():
                 file_metadata_list = self.create_file_metadata_list_from_local(
                     path_to_model
                 )
                 config = None
                 try:
-                    config = AutoConfig.from_pretrained(path_to_model).to_dict()
+                    config_obj = PretrainedConfig.from_json_file(
+                        str(path_to_model / "config.json")
+                    )
+                    config = config_obj.to_dict()
                 except EnvironmentError as e:
                     logger.warn(f"Error while fetching config for local model: {e}")
 
@@ -186,9 +204,15 @@ class ModelMetadataService:
                     file_metadata_list=file_metadata_list,
                     config=config,
                     hf_exists=False,
+                    relative_path=path_to_model,
+                    absolute_path=path_to_model.resolve(),
+                    directory_settings=self.directory_settings,
                 )
                 model_metadata.update_checks()
                 return model_metadata
             else:
                 logger.warn("Model not found locally, cannot create model metadata.")
                 return ModelMetadata(id=path_or_id, hf_exists=False)
+        except Exception as e:
+            logger.error(f"Error fetching model info: {e}")
+            return ModelMetadata(id=path_or_id, hf_exists=False)

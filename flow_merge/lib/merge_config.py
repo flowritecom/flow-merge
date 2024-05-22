@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import torch
@@ -183,9 +184,8 @@ class MergeConfig:
         """
         return [
             Model.from_path(
-                model_data.path_or_id,
-                self.hf_hub_settings.token,
-                self.directory_settings,
+                Path(model_data.path_or_id),
+                directory_settings=self.directory_settings,
             )
             for model_data in self.data.models
             if model_data.path_or_id != self.data.base_model
@@ -203,8 +203,7 @@ class MergeConfig:
             if model_data.path_or_id == base_model_path_or_id:
                 return Model.from_path(
                     model_data.path_or_id,
-                    self.hf_hub_settings.token,
-                    self.directory_settings,
+                    directory_settings=self.directory_settings,
                 )
 
         raise ValueError(

@@ -1,12 +1,12 @@
 import json
 import os
+from pathlib import Path
+from typing import Any
 
 import safetensors.torch
 import torch
 
-from flow_merge.lib.architecture import ModelWeight
 from flow_merge.lib.logger import get_logger
-from flow_merge.lib.merge_config import MergeConfig
 
 logger = get_logger(__name__)
 
@@ -15,17 +15,13 @@ logger = get_logger(__name__)
 class TensorWriter:
     def __init__(
         self,
-        merge_config: MergeConfig,
+        output_dir: Path,
         max_shard_size: int = 1000 * 1000 * 1000 * 2,
         safe_serialization: bool = True,
     ) -> None:
-        self.merge_config = merge_config
         self.max_shard_size = max_shard_size
         self.safe_serialization = safe_serialization
-
-        self.output_dir = self.merge_config.directory_settings.output_dir
-        os.makedirs(self.output_dir, exist_ok=True)
-
+        self.output_dir = output_dir
         self.shard_count = 0
         self.weight_map = {}
         self.current_shard = {}
@@ -46,9 +42,7 @@ class TensorWriter:
                 logger.info(f"Removing shard {shard_name}")
                 os.remove(shard_path)
 
-    def save_tensor(
-        self, weight: ModelWeight, tensor: torch.Tensor, clone: bool = False
-    ):
+    def save_tensor(self, weight: Any, tensor: torch.Tensor, clone: bool = False):
         if clone:
             tensor = tensor.clone()
 
