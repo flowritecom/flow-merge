@@ -2,6 +2,9 @@ import hashlib
 import pytest
 from unittest.mock import mock_open, patch, MagicMock
 from pathlib import Path
+from typing import Optional
+from flow_merge.lib.merge_settings import DirectorySettings
+from flow_merge.lib.config import CentralConfig
 from huggingface_hub.hf_api import ModelInfo, RepoSibling, RepositoryNotFoundError
 from flow_merge.lib.model_metadata import (
     ModelMetadataService,
@@ -9,7 +12,8 @@ from flow_merge.lib.model_metadata import (
     ModelMetadata,
 )
 
-def create_model_info():
+##### Utilities
+def create_model_info() -> ModelInfo:
     sibling = RepoSibling(
         rfilename="dummy_file", size=1234, lfs=None
     )
@@ -27,11 +31,22 @@ def create_model_info():
         tags=["dummy_tag"],
     )
 
+
+def create_directory_settings() -> DirectorySettings:
+    return DirectorySettings(local_dir="./models")
+
+
+def create_model_metadata_service(
+        directory_settings: Optional[DirectorySettings] = create_directory_settings()
+    ) -> ModelMetadataService:
+    return ModelMetadataService(
+        directory_settings=directory_settings
+    )
+#####
+
 # High Priority Tests
 def test_generate_content_hash():
-    service = ModelMetadataService(
-        token="", base_path=Path(".")
-    )
+    service = create_model_metadata_service()
 
     # Mock file content
     file_content = b"Hello, World!"
@@ -46,15 +61,20 @@ def test_generate_content_hash():
 
 
 @patch("huggingface_hub.hf_hub_download")
-def test_download_hf_file(mock_download):
+@patch("flow_merge.lib.model_metadata.config")
+def test_download_hf_file(mock_config, mock_download):
+
+    directory_settings = create_directory_settings()
+
     service = ModelMetadataService(
-        token="dummy_token", base_path=Path(".")
+        directory_settings=directory_settings
     )
+
+    mock_config.hf_token = "dummy_token"
     mock_download.return_value = "path/to/downloaded/file"
 
     result = service.download_hf_file(
         repo_id="dummy_repo",
-        model_path=Path("."),
         filename="dummy_file"
     )
 
@@ -62,7 +82,7 @@ def test_download_hf_file(mock_download):
     mock_download.assert_called_once_with(
         "dummy_repo",
         "dummy_file",
-        local_dir=Path("."),
+        local_dir=directory_settings.local_dir,
         resume_download=True,
         token="dummy_token",
     )
