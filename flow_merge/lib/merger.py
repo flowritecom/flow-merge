@@ -1,157 +1,227 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 import torch
+from pydantic import BaseModel
 
-from flow_merge.lib.architecture import ModelWeight
+from flow_merge.lib.architecture import ModelWeight, get_all_weights
 from flow_merge.lib.merge_config import MergeConfig, Model
 from flow_merge.lib.merge_methods.slerp import SlerpSettings
-from flow_merge.lib.tensor_loader import TensorLoader
+from flow_merge.lib.tensor_loader import TensorRepository
+from flow_merge.lib.tensor_writer import TensorWriter
 
 
-class Merger:
+def validate_tensor_shapes(
+    weight: ModelWeight, tensors: Dict[Model, torch.Tensor], layer_type: str
+):
     """
-    The Merger class is responsible for merging weights based on a specified merge configuration.
+    Validates that all tensors have the same shape based on the layer type.
 
     Args:
-        merge_config: An instance of the `MergeConfig` class, which holds the configuration for the merging process.
-        tensor_loaders: A dictionary of `TensorLoader` instances, where the keys are the models and the values are the corresponding `TensorLoader` objects.
-        input_ids_mappings: An optional dictionary that contains input ID mappings for each model from differences in the tokenizers.
+        weight (ModelWeight): The weight configuration.
+        tensors (Dict[Model, torch.Tensor]): Tensors to validate.
+        layer_type (str): The type of layer ("embedding" or other).
+
+    Returns:
+        int: The hidden size of the tensors.
+
+    Raises:
+        RuntimeError: If tensor shapes do not match.
+    """
+    hidden_size = next(iter(tensors.values())).shape[
+        1 if layer_type == "embedding" else 0
+    ]
+    for model, tensor in tensors.items():
+        current_size = tensor.shape[1] if layer_type == "embedding" else tensor.shape[0]
+        if current_size != hidden_size:
+            raise RuntimeError(
+                f"Tensor shape mismatch in '{weight.name}'. Expected {hidden_size}, but {model.path} has {current_size}."
+            )
+    return hidden_size
+
+
+def map_tensors(
+    tensors: Dict[Model, torch.Tensor],
+    input_ids_mappings: Dict[Model, Dict[int, int]],
+    hidden_dim: int,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Maps tensors according to input ID mappings.
+
+    Args:
+        tensors (Dict[Model, torch.Tensor]): Original tensors.
+        input_ids_mappings (Dict[Model, Dict[int, int]]): Input ID mappings.
+        hidden_dim (int): Hidden dimension size.
+
+    Returns:
+        (torch.Tensor, torch.Tensor): Mapped tensors and masks.
+    """
+    mapped_tensors = []
+    masks = []
+    for model, tensor in tensors.items():
+        input_ids_map = input_ids_mappings[model]
+        mapped_tensor = torch.zeros(
+            (len(input_ids_map), hidden_dim), dtype=tensor.dtype
+        )
+        mask = torch.zeros((len(input_ids_map),), dtype=torch.bool)
+
+        for out_id, in_id in input_ids_map.items():
+            if in_id >= 0:
+                mapped_tensor[out_id] = tensor[in_id]
+                mask[out_id] = True
+
+        mapped_tensors.append(mapped_tensor)
+        masks.append(mask)
+
+    return torch.stack(mapped_tensors), torch.stack(masks)
+
+
+def compute_weights(
+    method_config, models: List[Model], base_model: Model
+) -> torch.Tensor:
+    """
+    Computes weights for models.
+
+    Args:
+        method_config: Configuration for the merge method.
+        models ([Model]): List of models.
+        base_model (Model): The base model.
+
+    Returns:
+        torch.Tensor: Computed weights.
+    """
+    weights = [
+        method_config.weights[model]
+        if not isinstance(method_config, SlerpSettings)
+        else 1.0
+        for model in models + [base_model]
+    ]
+    return torch.tensor(weights, dtype=torch.float32)
+
+
+def interpolate_tensors(
+    tensor_loaders: Dict[Model, TensorRepository],
+    input_ids_mappings: Optional[Dict[Model, Dict[int, int]]],
+    method_config,
+    weight: ModelWeight,
+    base_model: Model,
+    models: List[Model],
+) -> torch.Tensor:
+    """
+    Interpolates tensors based on input ID mappings.
+
+    Args:
+        tensor_loaders (Dict[Model, TensorRepository]): Dictionary of tensor loaders.
+        input_ids_mappings (Optional[Dict[Model, Dict[int, int]]]): Dictionary of input ID mappings.
+        method_config: Configuration for the merge method.
+        weight (ModelWeight): The weight configuration.
+        base_model (Model): The base model.
+        models ([Model]): List of models.
+
+    Returns:
+        torch.Tensor: Interpolated tensor.
+    """
+    all_models = models + [base_model]
+    all_tensors = {
+        model: tensor_loaders[model].get_tensor(weight.name) for model in all_models
+    }
+    hidden_dim = validate_tensor_shapes(weight, all_tensors, weight.layer_type)
+
+    mapped_tensors, masks = map_tensors(all_tensors, input_ids_mappings, hidden_dim)
+    weights = (
+        compute_weights(method_config, models, base_model).unsqueeze(-1).unsqueeze(-1)
+    )
+
+    total_weight = (masks.unsqueeze(-1) * weights).sum(dim=0)
+    scale = torch.where(total_weight.abs() < 1e-8, torch.tensor(0.0), 1 / total_weight)
+
+    merged_tensor = (mapped_tensors * weights * masks.unsqueeze(-1)).sum(dim=0) * scale
+    return merged_tensor.to(dtype=all_tensors[base_model].dtype)
+
+
+class Merge(BaseModel):
+    """
+    The Merge class is responsible for merging weights based on a specified merge configuration.
 
     Attributes:
         merge_config: The merge configuration.
-        tensor_loaders: The dictionary of `TensorLoader` instances.
-        input_ids_mappings: The optional dictionary of input ID mappings.
-        merge_method: The merge method specified in the `merge_config`.
-        merge_method_settings: The configuration for the merge method specified in the `merge_config` that contains global parameters for the merge method.
     """
 
-    def __init__(
-        self,
-        merge_config: MergeConfig,
-        tensor_loaders: Dict[Model, TensorLoader],
-        input_ids_mappings: Optional[Dict[Model, Dict[int, int]]],
-    ) -> None:
-        self.merge_config = merge_config
-        self.tensor_loaders = tensor_loaders
-        self.input_ids_mappings = input_ids_mappings
-        self.merge_method = self.merge_config.method
-        self.merge_method_settings = self.merge_config.method_config
+    merge_config: MergeConfig
 
-    def interpolate(self, weight: ModelWeight) -> Dict[str, torch.Tensor]:
-        """
-        Interpolates the weights of embedding and lm head layers when there are inputs ids mappings.
-        """
-        base_model_dtype = (
-            self.tensor_loaders[self.merge_config.base_model]
-            .get_tensor(weight.name)
-            .dtype
-        )
-        all_models = self.merge_config.models + [self.merge_config.base_model]
-
-        mapped_tensors = []
-        mask_list = []
-        weights_list = []
-
-        # ! Note that if Embedding's num_embeddings is larger than vocab size for distributed training reasons,
-        # ! the embeddings and lm_head will be rectified.
-        # ! e.g. Qwen1.5 models have a vocab size of 151646 but the num of embeddings are 151936.
-        # ! The resulting tensor will be of shape (151646, hidden_size) for the embeddings and (hidden_size, 151646) for the lm_head.
-        all_tensors = {}
-        for model in all_models:
-            tensor_loader = self.tensor_loaders[model]
-            tensor = tensor_loader.get_tensor(weight.name)
-            all_tensors[model] = tensor
-
-        # Tensor shape validations
-        if weight.layer_type == "embedding":
-            # Validate that the second dimension of tensors are the same
-            hidden_size = None
-            for model, tensor in all_tensors.items():
-                if hidden_size is None:
-                    hidden_size = tensor.shape[1]
-                else:
-                    if tensor.shape[1] != hidden_size:
-                        raise RuntimeError(
-                            f"Tensor shape mismatch in '{weight.name}'. Expected {hidden_size}, but {model.path} has a hidden size of {tensor.shape[1]}."
-                        )
-        else:
-            hidden_size = None
-            for model, tensor in all_tensors.items():
-                if hidden_size is None:
-                    hidden_size = tensor.shape[0]
-                else:
-                    if tensor.shape[0] != hidden_size:
-                        raise RuntimeError(
-                            f"Tensor shape mismatch in '{weight.name}'. Expected {hidden_size}, but {model.path} has a hidden size of {tensor.shape[0]}."
-                        )
-
-        for model, tensor in all_tensors.items():
-            input_ids_map = self.input_ids_mappings[model]
-            mapped_tensor = torch.zeros(
-                (len(input_ids_map), tensor.shape[-1]), dtype=tensor.dtype
-            )
-            mask = torch.zeros((len(input_ids_map),), dtype=torch.bool)
-
-            for out_id in input_ids_map:
-                in_id = input_ids_map[out_id]
-                if in_id < 0:
-                    continue
-                mapped_tensor[out_id, :] = tensor[in_id, :]
-                mask[out_id] = True
-
-            mapped_tensors.append(mapped_tensor)
-            mask_list.append(mask)
-            # SlerpSettings does not use BaseMergeMethodConfig - special case
-            if not type(self.merge_method_settings) == SlerpSettings:
-                weights_list.append(
-                    self.merge_method_settings.weights[model]
-                )  # * merge weight for the model - float
-            else:
-                weights_list.append(1.0)  # default - full model
-
-        stacked_mapped_tensors = torch.stack(mapped_tensors, dim=0)
-        stacked_mask_tensor = torch.stack(mask_list, dim=0).unsqueeze(-1)
-        weights_tensor = (
-            torch.tensor(weights_list, dtype=stacked_mapped_tensors.dtype)
-            .unsqueeze(-1)
-            .unsqueeze(-1)
-        )
-        total_weight = (stacked_mask_tensor * weights_tensor).sum(dim=0)
-        scale = 1 / total_weight
-        scale[total_weight.abs() < 1e-8] = 0
-
-        merged_mapped_tensor = (
-            stacked_mapped_tensors * weights_tensor * stacked_mask_tensor
-        ).sum(dim=0) * scale
-
-        return merged_mapped_tensor.to(dtype=base_model_dtype)
+    class Config:
+        frozen = True
 
     def merge_weights(self, weight: ModelWeight) -> Dict[str, torch.Tensor]:
         """
         Merges the weights of multiple models based on the specified merge configuration and method.
+
+        Args:
+            weight (ModelWeight): The weight configuration.
+
+        Returns:
+            Dict[str, torch.Tensor]: Merged tensor.
         """
-        base_model_tensor = self.tensor_loaders[
+        base_model_tensor = self.merge_config.tensor_loaders[
             self.merge_config.base_model
         ].get_tensor(weight.name)
-        models_tensors = {}
-        for model in self.merge_config.models:
-            tensor_loader = self.tensor_loaders[model]
-            models_tensors[model] = tensor_loader.get_tensor(weight.name)
+        models_tensors = {
+            model: self.merge_config.tensor_loaders[model].get_tensor(weight.name)
+            for model in self.merge_config.models
+        }
 
-        # Validate tensor shapes
-        base_model_shape = base_model_tensor.shape
-        for model, tensor in models_tensors.items():
-            if tensor.shape != base_model_shape:
-                raise RuntimeError(
-                    f"Tensor shape mismatch in '{weight.name}'. Expected {base_model_shape}, but {model.path} has a shape of {tensor.shape}."
-                )
+        validate_tensor_shapes(weight, models_tensors, weight.layer_type)
 
-        merged_tensor = self.merge_method.merge(
+        merged_tensor = self.merge_config.method.merge(
             weight=weight,
             base_model_tensor=base_model_tensor,
             models_tensors=models_tensors,
-            merge_method_settings=self.merge_method_settings,
+            merge_method_settings=self.merge_config.method_config,
             base_model=self.merge_config.base_model,
         )
 
         return merged_tensor
+
+    def interpolate(self, weight: ModelWeight) -> Dict[str, torch.Tensor]:
+        """
+        Interpolates the weights of embedding and lm head layers when there are input ID mappings.
+
+        Args:
+            weight (ModelWeight): The weight configuration.
+
+        Returns:
+            Dict[str, torch.Tensor]: Interpolated tensor.
+        """
+        return interpolate_tensors(
+            tensor_loaders=self.merge_config.tensor_loaders,
+            input_ids_mappings=self.merge_config.tokenizer.input_ids_mappings,
+            method_config=self.merge_config.method_config,
+            weight=weight,
+            base_model=self.merge_config.base_model,
+            models=self.merge_config.models,
+        )
+
+    def process_and_save_weights(self) -> None:
+        """
+        This function processes and saves model weights using the TensorWriter.
+
+        Args:
+            model_arch: The architecture of the model.
+            merge_config: Configuration for merging tensors.
+            tokenizer: The tokenizer used for processing input ids mappings.
+            merger: An object that handles the merging and interpolation of weights.
+
+        Returns:
+            None
+        """
+        # Initialize writer
+        # FIXME: the arguments are wrong!
+        with TensorWriter(merge_config=self.merge_config) as writer:
+            for weight in self.merge_config.base_architecture.get_all_weights():
+                if self.merge_config.tokenizer.input_ids_mappings and (
+                    weight.layer_type == "embedding" or weight.layer_type == "head"
+                ):
+                    merged_tensor = self.interpolate(weight)
+                else:
+                    merged_tensor = self.merge_weights(weight)
+                writer.save_tensor(weight=weight, tensor=merged_tensor, clone=False)
+            writer.finish()

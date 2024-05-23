@@ -1,16 +1,17 @@
 from pathlib import Path
-from typing import List, Optional, NewType
+from typing import List, NewType, Optional
+
 from pydantic import BaseModel
 
 from flow_merge.lib.logger import get_logger
+from flow_merge.lib.merge_settings import DirectorySettings
 from flow_merge.lib.model_metadata import ModelMetadata, ModelMetadataService
 from flow_merge.lib.tensor_loader import (
-    ShardFile,
-    ModelService,
     FileToTensorIndex,
+    ModelService,
+    ShardFile,
     TensorIndexService,
 )
-from flow_merge.lib.merge_settings import DirectorySettings
 
 logger = get_logger(__name__)
 
@@ -25,9 +26,7 @@ class Model(BaseModel, arbitrary_types_allowed=True):
     shards: List[ShardFile]
 
     @classmethod
-    def from_path(
-        cls, path: Path, directory_settings: DirectorySettings
-    ):
+    def from_path(cls, path: Path, directory_settings: DirectorySettings):
         metadata_service = ModelMetadataService(directory_settings=directory_settings)
         metadata = metadata_service.load_model_info(str(path))
 

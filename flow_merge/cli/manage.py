@@ -1,12 +1,13 @@
 import argparse
 import json
+
 import yaml
 
+from flow_merge.lib.config import config
 from flow_merge.lib.logger import get_logger
 from flow_merge.lib.merge_config import ValidatedInputData
 from flow_merge.lib.merge_runner import run_merge
 from flow_merge.lib.utils import upload_model_to_hub
-from flow_merge.lib.config import config
 
 logger = get_logger(__name__)
 

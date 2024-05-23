@@ -3,6 +3,8 @@ from enum import Enum
 # from transformers library special tokens map
 ADDITIONAL_SPECIAL_TOKENS_KEY = "additional_special_tokens"
 
+CHUNK_SIZE = 64 * 1024  # 64KB
+
 
 class DeviceIdentifier(str, Enum):
     CPU = "cpu"

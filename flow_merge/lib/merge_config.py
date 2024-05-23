@@ -1,11 +1,12 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import torch
 import yaml
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 from typing_extensions import Self
 
+from flow_merge.lib.architecture import ModelArchitecture
 from flow_merge.lib.constants import DeviceIdentifier, MergeMethodIdentifier
 from flow_merge.lib.logger import get_logger
 from flow_merge.lib.merge_methods import method_classes, method_configs
@@ -22,6 +23,9 @@ from flow_merge.lib.merge_settings import (
     TokenizerSettings,
 )
 from flow_merge.lib.model import Model
+from flow_merge.lib.tensor_loader import TensorRepository
+from flow_merge.lib.tokenizer import get_merge_tokenizer
+from flow_merge.lib.types import TensorIndex
 
 logger = get_logger(__name__)
 
@@ -104,8 +108,11 @@ class ValidatedInputData(BaseModel):
                 )
         return self
 
+    class Config:
+        frozen = True  # Make this model immutable
 
-class MergeConfig:
+
+class MergeConfig(BaseModel):
     """
     This class encapsulates the configuration for the model merge, including the merge method,
     method-specific configuration, base model, models to be merged, tokenizer configuration,
@@ -123,22 +130,56 @@ class MergeConfig:
         device (str): The device to be used for the merge process.
     """
 
-    def __init__(
-        self,
-        data: ValidatedInputData,
-    ):
-        self.data = data
-        self.method: MergeMethod = method_classes[data.method]()
-        self.method_config: BaseMergeMethodSettings = self._get_method_config(
-            data.method, data.method_global_parameters
+    data: ValidatedInputData
+    method: MergeMethod
+    method_config: BaseMergeMethodSettings
+    base_model: Model
+    models: List[Model]
+    tokenizer_settings: TokenizerSettings
+    directory_settings: DirectorySettings
+    hf_hub_settings: HfHubSettings
+    device: str
+    base_architecture: ModelArchitecture
+    non_base_architectures: List[ModelArchitecture]
+    tensor_indices: Dict[Model, TensorIndex]
+    tensor_loaders: Dict[Model, TensorRepository]
+
+    def __init__(self, data: ValidatedInputData):
+        super().__init__(
+            data=data,
+            method=method_classes[data.method](),
+            method_config=self._get_method_config(
+                data.method, data.method_global_parameters
+            ),
+            tokenizer_settings=data.tokenizer_settings,
+            directory_settings=data.directory_settings,
+            hf_hub_settings=data.hf_hub_settings,
+            device=self.select_device(),
+            models=self.create_models(data),
+            base_model=self.create_base_model(data),
         )
-        self.tokenizer_settings: TokenizerSettings = data.tokenizer_settings
-        self.directory_settings: DirectorySettings = data.directory_settings
-        self.hf_hub_settings: HfHubSettings = data.hf_hub_settings
-        self.device = self.select_device()
-        self.models: List[Model] = self.create_models()
-        self.base_model: Model = self.create_base_model()
+
+        # Initialize derived attributes
         self.method_config = self._extract_and_set_weights()
+        self.base_architecture = ModelArchitecture.from_config(self.base_model.config)
+        self.non_base_architectures = [
+            ModelArchitecture.from_config(m.config) for m in self.models
+        ]
+        assert self.validate_architectures()
+        self.tensor_indices = self._get_tensor_indices()
+        self.tensor_loaders = self._get_tensor_loaders()
+        self.tokenizer = get_merge_tokenizer(self)
+
+    @classmethod
+    def load(cls, config: Union[str, Dict[str, Any]]) -> "MergeConfig":
+        if isinstance(config, str):
+            return cls.from_yaml(config)
+        elif isinstance(config, dict):
+            return cls.from_dict(config)
+        else:
+            raise TypeError(
+                "Input to load needs to be either a string path to a YAML config file or a dict"
+            )
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "MergeConfig":
@@ -150,6 +191,18 @@ class MergeConfig:
         with open(file_path, "r") as file:
             unvalidated_data = yaml.safe_load(file)
         return cls.from_dict(unvalidated_data)
+
+    def _get_tensor_indices(self):
+        return {
+            model: TensorIndex(str(model.path), self)
+            for model in self.models + [self.base_model]
+        }
+
+    def _get_tensor_loaders(self):
+        return {
+            model: TensorRepository(self.tensor_indices[model], self)
+            for model in self.models + [self.base_model]
+        }
 
     def _get_method_config(
         self,
@@ -175,7 +228,7 @@ class MergeConfig:
             return "cpu"
         return device
 
-    def create_models(self) -> List[Model]:
+    def create_models(self, data: ValidatedInputData) -> List[Model]:
         """
         Create Model instances for the models to be merged, excluding the base model.
 
@@ -187,19 +240,19 @@ class MergeConfig:
                 Path(model_data.path_or_id),
                 directory_settings=self.directory_settings,
             )
-            for model_data in self.data.models
-            if model_data.path_or_id != self.data.base_model
+            for model_data in data.models
+            if model_data.path_or_id != data.base_model
         ]
 
-    def create_base_model(self) -> Model:
+    def create_base_model(self, data: ValidatedInputData) -> Model:
         """
         Create a Model instance for the base model to be used in the merge process.
 
         Returns:
             Model: The base model instance.
         """
-        base_model_path_or_id = self.data.base_model or self.data.models[0].path_or_id
-        for model_data in self.data.models:
+        base_model_path_or_id = data.base_model or data.models[0].path_or_id
+        for model_data in data.models:
             if model_data.path_or_id == base_model_path_or_id:
                 return Model.from_path(
                     model_data.path_or_id,
@@ -208,7 +261,7 @@ class MergeConfig:
 
         raise ValueError(
             f"Base model '{base_model_path_or_id}' not found in the list of models: "
-            + f"{[model.path_or_id for model in self.data.models]}."
+            + f"{[model.path_or_id for model in data.models]}."
         )
 
     def _extract_and_set_weights(
@@ -243,6 +296,37 @@ class MergeConfig:
 
         return method_config
 
+    def validate_architectures(self) -> ModelArchitecture:
+        """
+        Validate that all architectures are the same and therefore compatible.
+        """
+
+        if not all(
+            set(self.base_architecture.architectures).intersection(set(a.architectures))
+            for a in self.non_base_architectures
+        ):
+            raise RuntimeError(
+                "Merging models with different architectures is not supported."
+            )
+
+        if not all(
+            self.base_architecture.weights == a.weights
+            for a in self.non_base_architectures
+        ):
+            raise RuntimeError(
+                "Merging models with different weights is not supported."
+            )
+
+        if not all(
+            self.base_architecture.model_type == a.model_type
+            for a in self.non_base_architectures
+        ):
+            raise RuntimeError(
+                "Merging models with different architectures is not supported."
+            )
+
+        return True
+
     def get_default_values(self) -> Dict[str, Any]:
         """
         Retrieve the default configuration values for the frontend.
@@ -263,3 +347,6 @@ class MergeConfig:
             "device": self.data.device,
         }
         return default_values
+
+    class Config:
+        frozen = True

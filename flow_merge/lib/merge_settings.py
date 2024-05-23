@@ -1,13 +1,13 @@
-from typing import Optional
-import re
-from pydantic import BaseModel, Field, ValidationError, field_validator
-from pathlib import Path
 import os
+import re
+from pathlib import Path
+from typing import Optional
 
 from huggingface_hub import login
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from flow_merge.lib.logger import get_logger
 from flow_merge.lib.config import config
+from flow_merge.lib.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -100,7 +100,8 @@ class DirectorySettings(BaseModel):
         description="Directory for caching models and tokenizers with the `transformers library.",
     )
     local_dir: Path = Field(
-        default=Path("./models").resolve(), description="Directory for loading models from local."
+        default=Path("./models").resolve(),
+        description="Directory for loading models from local.",
     )
     output_dir: Path = Field(
         default=Path("./merged_model").resolve(),

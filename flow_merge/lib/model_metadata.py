@@ -1,37 +1,28 @@
 import hashlib
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
 import huggingface_hub
-from pydantic import BaseModel, Field
-from transformers import AutoConfig, PretrainedConfig
+from huggingface_hub import hf_hub_download
 from huggingface_hub.hf_api import (
-    ModelInfo,
     BlobLfsInfo,
-    SafeTensorsInfo,
     ModelCardData,
-    TransformersInfo,
+    ModelInfo,
     RepoSibling,
+    SafeTensorsInfo,
+    TransformersInfo,
 )
+from pydantic import BaseModel, Field
+from transformers import PretrainedConfig
 
-from flow_merge.lib.io import (
-    has_adapter_files,
-    has_config_json,
-    has_pytorch_bin_files,
-    has_pytorch_bin_index,
-    has_safetensors_files,
-    has_safetensors_index,
-    has_tokenizer_config,
-    has_tokenizer_file,
-)
+from flow_merge.lib.config import config
+from flow_merge.lib.constants import CHUNK_SIZE
 from flow_merge.lib.logger import get_logger
 from flow_merge.lib.merge_settings import DirectorySettings
-from flow_merge.lib.config import config
 
 logger = get_logger(__name__)
-
-CHUNK_SIZE = 64 * 1024  # 64KB
 
 
 class FileMetadata(BaseModel):
@@ -216,3 +207,142 @@ class ModelMetadataService:
         except Exception as e:
             logger.error(f"Error fetching model info: {e}")
             return ModelMetadata(id=path_or_id, hf_exists=False)
+
+
+def has_config_json(file_list):
+    return "config.json" in file_list
+
+
+def has_tokenizer_config(file_list):
+    return "tokenizer_config.json" in file_list
+
+
+def has_tokenizer_file(file_list):
+    return "tokenizer.json" in file_list or any(
+        file.endswith("tokenizer.vocab") for file in file_list
+    )
+
+
+def has_safetensors_files(file_list):
+    safetensors_files = [file for file in file_list if file.endswith(".safetensors")]
+    num_shards = len(safetensors_files)
+    if num_shards == 1 and "model.safetensors" in file_list:
+        return True
+    return all(
+        f"model-{i:05d}-of-{num_shards:05d}.safetensors" in file_list
+        for i in range(1, num_shards + 1)
+    )
+
+
+def has_safetensors_index(files):
+    return any(file.endswith(".safetensors.index.json") for file in files)
+
+
+def has_pytorch_bin_files(file_list):
+    pytorch_bin_files = [
+        file
+        for file in file_list
+        if file.endswith(".bin") and not file.endswith(".index.json")
+    ]
+    num_shards = len(pytorch_bin_files)
+    if num_shards == 1 and "pytorch_model.bin" in file_list:
+        return True
+    return all(
+        f"pytorch_model-{i:05d}-of-{num_shards:05d}.bin" in file_list
+        for i in range(1, num_shards + 1)
+    )
+
+
+def has_pytorch_bin_index(files):
+    return any(file.endswith(".bin.index.json") for file in files)
+
+
+def has_adapter_files(file_list):
+    return any(
+        file.startswith("adapter_")
+        and (file.endswith(".bin") or file.endswith(".safetensors"))
+        for file in file_list
+    )
+
+
+integrity_checks = [
+    (has_config_json, "Missing config.json file"),
+]
+
+tokenizer_checks = [
+    (has_tokenizer_config, "Missing tokenizer_config.json file"),
+    (has_tokenizer_file, "Missing tokenizer vocabulary file"),
+]
+
+safetensor_checks = [
+    (has_safetensors_files, "Missing .safetensors files"),
+    (has_safetensors_index, "Missing model.safetensors.index.json file"),
+]
+
+pytorch_bin_checks = [
+    (has_pytorch_bin_files, "Missing pytorch_model .bin files"),
+    (has_pytorch_bin_index, "Missing pytorch_model.bin.index.json file"),
+]
+
+adapter_checks = [
+    (has_adapter_files, "Missing adapter files"),
+]
+
+
+class FileRepository:
+    """Immutable repository for handling file operations."""
+
+    @staticmethod
+    def download_file(repo_id: str, filename: str, local_dir: Path) -> Path:
+        try:
+            file_path = hf_hub_download(
+                repo_id,
+                filename,
+                local_dir=str(local_dir),  # Convert Path to str for hf_hub_download
+                resume_download=True,
+                token=config.hf_token,
+            )
+            return Path(file_path)  # Convert returned file_path to Path
+
+        except FileExistsError:
+            print(
+                f"File {local_dir / filename} already exists and is complete, skipping download."
+            )
+            return local_dir / filename
+        except Exception as e:
+            raise RuntimeError(
+                f"An unexpected error occurred while downloading {filename} from {repo_id}: {e}"
+            )
+
+    @staticmethod
+    def load_index(file_path: Path) -> dict:
+        try:
+            with open(file_path, "r") as file:
+                return json.load(file)
+        except (json.JSONDecodeError, FileNotFoundError) as e:
+            raise RuntimeError(f"Error loading index from {file_path}: {e}")
+
+    @staticmethod
+    def download_required_files(metadata: "ModelMetadata"):
+        required_files = [
+            "config.json",
+            "tokenizer.json",
+            "tokenizer.vocab",
+            "vocab.json",
+            "tokenizer_config.json",
+        ]
+        for filename in required_files:
+            if filename in metadata.file_list:
+                FileRepository.download_file(
+                    metadata.id, filename, metadata.directory_settings.local_dir
+                )
+
+    @staticmethod
+    def download_adapter_files(model_metadata: "ModelMetadata"):
+        adapter_files = [f for f in model_metadata.file_list if "adapter" in f]
+        for adapter_file in adapter_files:
+            FileRepository.download_file(
+                model_metadata.id,
+                adapter_file,
+                model_metadata.directory_settings.local_dir,
+            )
