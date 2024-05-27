@@ -172,6 +172,12 @@ Currently `flow-merge` supports most of the popular and proven merge methods.
 | `qwen`     | `QwenForCausalLM`    |
 | `mistral`  | `MistralForCausalLM` |
 | `llama`    | `LlamaForCausalLM`   |
+| `gemma`    | `GemmaForCausalLM`   | 
+| `phi`      | `PhiForCausalLM`     |
+| `phi3`     | `Phi3ForCausalLM`    | 
+
+
+
 
 > 📢 _We plan to support many models and architectures more, including encoder models such as BERT-Family models too._
 

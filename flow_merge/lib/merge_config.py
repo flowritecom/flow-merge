@@ -132,8 +132,8 @@ class MergeConfig:
         self.directory_settings: DirectorySettings = data.directory_settings
         self.hf_hub_settings: HfHubSettings = data.hf_hub_settings
         self.device = self.select_device()
-        self.models: List[Model] = self.create_models()
-        self.base_model: Model = self.create_base_model()
+        self.models: List[Model] = self.create_models(trust_remote_code=self.hf_hub_settings.trust_remote_code)
+        self.base_model: Model = self.create_base_model(trust_remote_code=self.hf_hub_settings.trust_remote_code)
         self.method_config = self._extract_and_set_weights()
 
     @staticmethod
@@ -171,18 +171,18 @@ class MergeConfig:
             return "cpu"
         return device
 
-    def create_models(self) -> List[Model]:
+    def create_models(self, trust_remote_code: bool) -> List[Model]:
         # observe that models list doesn't contain the base_model by design
         # access base_model: Model by accessing base_model variable
         models_data = [
             m for m in self.data.models if m.path_or_id != self.data.base_model
         ]
-        return [Model.from_path(model_data.path_or_id) for model_data in models_data]
+        return [Model.from_path(model_data.path_or_id, trust_remote_code=trust_remote_code) for model_data in models_data] # TODO - this should take trust_remote_code
 
-    def create_base_model(self) -> Model:
+    def create_base_model(self, trust_remote_code: bool) -> Model:
         if not self.data.base_model:
             first_model_from_list = self.data.models[0]
-            return Model.from_path(first_model_from_list.path_or_id)
+            return Model.from_path(first_model_from_list.path_or_id, trust_remote_code=trust_remote_code) # TODO - this should take trust_remote_code
         else:
             base_model = next(
                 (
@@ -197,7 +197,7 @@ class MergeConfig:
                     f"Base model '{self.data.base_model}' not found in the list of "
                     + f"models {[model.path_or_id for model in self.data.models]}."
                 )
-            return Model.from_path(base_model.path_or_id)
+            return Model.from_path(base_model.path_or_id, trust_remote_code=trust_remote_code)
 
     def _extract_and_set_weights(
         self,
