@@ -1,0 +1,10 @@
+loops:
+  test:
+    description: Test the project
+    command: pytest tests/lib/test_model_metadata.py --verbose
+
+  test-harness:
+    description: Test some more
+    script: |
+      echo "hello!"
+      echo "hello!"

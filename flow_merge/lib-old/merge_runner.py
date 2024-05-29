@@ -34,7 +34,7 @@ def run_merge(config: dict | argparse.Namespace, model_name: str = "Untitled") -
         merge.process_and_save_weights()
 
         ####################################################################################################
-        ## TODO: REFACTOR 
+        ## TODO: REFACTOR
         ####################################################################################################
 
         # CREATION OF THE NEW OUTPUT MODEL CONFIG
@@ -49,8 +49,8 @@ def run_merge(config: dict | argparse.Namespace, model_name: str = "Untitled") -
         # FIXME: This is not a clean way as merged_model_config has "state"
         merged_model_config._name_or_path = merge_config.directory_settings.output_dir
 
-        # FIXME: We can do this inside merge_config 
-        # ! If input id mappings exist, rectify the embedding size, 
+        # FIXME: We can do this inside merge_config
+        # ! If input id mappings exist, rectify the embedding size,
         # in that case the vocab_size isn't correct in the base model config
         # since it uses the num of embeddings
         # Update vocab size
@@ -70,7 +70,7 @@ def run_merge(config: dict | argparse.Namespace, model_name: str = "Untitled") -
 
 
         # FIXME: SHOULD BE OWNED BY MERGER
-        # save tokenizer 
+        # save tokenizer
         logger.info(f"Saving tokenizer to {merge_config.directory_settings.output_dir}")
         merge_config.tokenizer.tokenizer.save_pretrained(
             merge_config.directory_settings.output_dir, safe_serialization=True
@@ -84,9 +84,9 @@ def run_merge(config: dict | argparse.Namespace, model_name: str = "Untitled") -
         generate_model_card(merge_config, model_name)
 
         logger.info("Merge completed.")
-        
+
         ####################################################################################################
-        ## TODO: REFACTOR 
+        ## TODO: REFACTOR
         ####################################################################################################
 
     except Exception as e:

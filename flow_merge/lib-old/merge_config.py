@@ -133,11 +133,16 @@ class MergeConfig(BaseModel):
     data: ValidatedInputData
     method: MergeMethod
     method_config: BaseMergeMethodSettings
+
     base_model: Model
     models: List[Model]
+
+
     tokenizer_settings: TokenizerSettings
     directory_settings: DirectorySettings
     hf_hub_settings: HfHubSettings
+
+
     device: str
     base_architecture: ModelArchitecture
     non_base_architectures: List[ModelArchitecture]
@@ -151,12 +156,18 @@ class MergeConfig(BaseModel):
             method_config=self._get_method_config(
                 data.method, data.method_global_parameters
             ),
+            # independent from above
             tokenizer_settings=data.tokenizer_settings,
             directory_settings=data.directory_settings,
             hf_hub_settings=data.hf_hub_settings,
-            device=self.select_device(),
+
+            # below dependent on dir_settings
+            # and validated input data
             models=self.create_models(data),
             base_model=self.create_base_model(data),
+
+            # can be centralized
+            device=self.select_device(),
         )
 
         # Initialize derived attributes

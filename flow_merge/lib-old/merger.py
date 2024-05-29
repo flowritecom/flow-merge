@@ -74,7 +74,7 @@ def map_tensors(
 
     return torch.stack(mapped_tensors), torch.stack(masks)
 
-
+# WARNING: these are the biases, not model weights
 def compute_weights(
     method_config, models: List[Model], base_model: Model
 ) -> torch.Tensor:
@@ -98,6 +98,7 @@ def compute_weights(
     return torch.tensor(weights, dtype=torch.float32)
 
 
+# WARNING -> GPT4o's understanding of what we did before -> Fix ?
 def interpolate_tensors(
     tensor_loaders: Dict[Model, TensorRepository],
     input_ids_mappings: Optional[Dict[Model, Dict[int, int]]],
@@ -132,6 +133,7 @@ def interpolate_tensors(
     )
 
     total_weight = (masks.unsqueeze(-1) * weights).sum(dim=0)
+    # FIXME: this is one that needs to be tested well, we didn't use torch.where before
     scale = torch.where(total_weight.abs() < 1e-8, torch.tensor(0.0), 1 / total_weight)
 
     merged_tensor = (mapped_tensors * weights * masks.unsqueeze(-1)).sum(dim=0) * scale
