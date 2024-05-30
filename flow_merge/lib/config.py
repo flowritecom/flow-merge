@@ -1,5 +1,6 @@
 import os
 
+
 class ApplicationConfig:
     def __init__(self):
         self.hf_token = os.getenv("HF_TOKEN")
@@ -10,5 +11,6 @@ class ApplicationConfig:
 
     def set_device(self, device: str):
         self.device = device
+
 
 config = ApplicationConfig()
