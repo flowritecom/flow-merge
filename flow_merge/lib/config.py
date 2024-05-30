@@ -14,15 +14,16 @@ class ApplicationConfig(BaseModel):
     hf_token: str = Field(..., default_factory=lambda: os.getenv("HF_TOKEN"))
 
     def __post_init__(self):
-        os.environ['HF_HUB_DISABLE_IMPLICIT_TOKEN'] = '1'
-        logger.info("HF_HUB_DISABLE_IMPLICIT_TOKEN set to 1 to disable implicit token authentication.")
+        os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
+        logger.info(
+            "HF_HUB_DISABLE_IMPLICIT_TOKEN set to 1 to disable implicit token authentication."
+        )
 
     def set_hf_token(self, token: str):
         self.hf_token = token
 
     def set_device(self, device: str):
         self.device = device
-
 
     @field_validator("device")
     @classmethod

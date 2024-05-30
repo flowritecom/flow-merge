@@ -1,3 +1,3 @@
 from .flow_merge import FlowMergeManager
 
-__all__ = ['FlowMergeManager']
+__all__ = ["FlowMergeManager"]

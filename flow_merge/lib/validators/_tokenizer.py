@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 
@@ -11,6 +10,9 @@ class TokenizerSettings(BaseModel):
         default="linear",
         description="Method for interpolating the token embeddings and language model head layers. 'linear' performs a linear interpolation between the two models.",
     )
+
+    def _unpack(self):
+        return self.mode, self.interpolation_method
 
     @field_validator("mode")
     def validate_mode(cls, v):

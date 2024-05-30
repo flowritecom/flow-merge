@@ -2,12 +2,12 @@ from typing import Any, Callable, Dict, Union
 
 import yaml
 
-from flow_merge.lib.validators.runner import runner
+from flow_merge.lib.validators.runner import ValidationRunner
 
 
 # these might get configs of their own
 class ConfigLoader:
-    def __init__(self, env, logger, validation_runner: Callable = runner):
+    def __init__(self, env, logger, validation_runner: Callable = ValidationRunner):
         self.env = env
         self.logger = logger
         self.validation_runner = validation_runner
@@ -15,7 +15,7 @@ class ConfigLoader:
     def validate(self, raw_data: dict):
         self.logger.info("Validating configuration")
         try:
-            validated_data = self.validation_runner(raw_data)
+            validated_data = self.validation_runner(**raw_data)
             print(validated_data)
             return validated_data
         except ValueError as e:

@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from typing import Optional
 
@@ -18,6 +17,9 @@ class DirectorySettings(BaseModel):
         default=Path("./merged_model").resolve(),
         description="Directory for saving the merged model, tokenizer, and metadata.",
     )
+
+    def _unpack(self):
+        return self.cache_dir, self.local_dir, self.output_dir
 
     @field_validator("cache_dir")
     def validate_cache_dir(cls, v):

@@ -3,22 +3,12 @@ from typing import Dict
 
 # from transformers library special tokens map
 ADDITIONAL_SPECIAL_TOKENS_KEY = "additional_special_tokens"
-
 CHUNK_SIZE = 64 * 1024  # 64KB
 
 
 class DeviceIdentifier(str, Enum):
     CPU = "cpu"
     CUDA = "cuda"
-
-
-class MergeMethodIdentifier(str, Enum):
-    ADDITION_TASK_ARITHMETIC = "addition-task-arithmetic"
-    TIES_MERGING = "ties-merging"
-    SLERP = "slerp"
-    DARE_TIES_MERGING = "dare-ties-merging"
-    MODEL_SOUP = "model-soup"
-    PASSTHROUGH = "passthrough"
 
 
 class ConfigKeys(str, Enum):
