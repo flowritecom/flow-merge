@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class ApplicationConfig(BaseModel):
-    device: DeviceIdentifier = Field(default=os.getenv("DEVICE", "cpu"))
+    device: DeviceIdentifier = Field(default=DeviceIdentifier.CPU)
     hf_token: str = Field(..., default_factory=lambda: os.getenv("HF_TOKEN"))
 
     def __post_init__(self):
@@ -25,15 +25,6 @@ class ApplicationConfig(BaseModel):
     def set_device(self, device: str):
         self.device = device
 
-    @field_validator("device")
-    @classmethod
-    def validate_device(cls, v):
-        if v is not None and v not in ["cpu", "cuda"]:
-            raise ValidationError(
-                "device",
-                f"Invalid device: {v}. Supported devices are 'cpu' and 'cuda'.",
-            )
-        return v
 
     @field_validator("hf_token")
     def validate_hf_token(cls, v):

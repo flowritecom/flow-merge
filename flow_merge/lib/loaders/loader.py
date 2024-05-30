@@ -6,6 +6,7 @@ from flow_merge.lib.validators.runner import ValidationRunner
 
 
 # these might get configs of their own
+# FIXME: takes a normalizer ?
 class ConfigLoader:
     def __init__(self, env, logger, validation_runner: Callable = ValidationRunner):
         self.env = env
@@ -15,7 +16,7 @@ class ConfigLoader:
     def validate(self, raw_data: dict):
         self.logger.info("Validating configuration")
         try:
-            validated_data = self.validation_runner(**raw_data)
+            validated_data = self.validation_runner(**raw_data, self.env, self.logger)
             print(validated_data)
             return validated_data
         except ValueError as e:

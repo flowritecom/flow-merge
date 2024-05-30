@@ -1,7 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 import logging
-from flow_merge.lib.validators._method import MergeMethodIdentifier
+from flow_merge.lib.validators._method_settings import MergeMethodIdentifier
 
 logger = logging.getLogger(__name__)
 
