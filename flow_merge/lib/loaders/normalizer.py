@@ -128,7 +128,14 @@ class NormalizationRunner:
         for slice in raw_data:
             slice = self.apply_transformations(slice)
             normalized_data.extend(self.process_slice(slice, normalized_data))
-            normalized_data.extend(self.process_special_layers(normalized_data))
+        normalized_data = normalized_data + self.process_special_layers(normalized_data)
+
+        # Move slice containing "embed" in any source's layer to the top
+        normalized_data.insert(0, normalized_data.pop(next(i for i, slice_entry in enumerate(normalized_data) if any("embed" in src["layer"] for src in slice_entry["slice"]["sources"]))))
+
+        # Add index to each slice
+        normalized_data = [{**slice_entry, "index": idx} for idx, slice_entry in enumerate(normalized_data)]
+
         return normalized_data
 
 
