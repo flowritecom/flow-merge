@@ -1,5 +1,4 @@
 from typing import Any
-from flow_merge.lib.flow_merge import FlowMerge
 
 
 class ServiceContainer:
@@ -8,7 +7,7 @@ class ServiceContainer:
         self.env = env
         self.logger = logger
 
-    def get_service(self) -> FlowMerge:
+    def get_service(self):
         return self.service_instance
 
 

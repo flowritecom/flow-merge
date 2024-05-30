@@ -1,8 +1,8 @@
 from typing import Any
 
 from flow_merge.lib.extend import DependencyInjector, ServiceContainer
-from .config import ApplicationConfig
-from .logger import Logger
+from flow_merge.lib.config import ApplicationConfig
+from flow_merge.lib.logger import Logger
 
 
 class FlowMerge:

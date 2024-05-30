@@ -11,32 +11,6 @@ from flow_merge.lib.model import Model
 logger = get_logger(__name__)
 
 
-class SlerpSettings(BaseModel):
-    t: Optional[float] = 0.5
-    weights: Optional[Dict[Model, float]] = {}
-
-    @field_validator("weights", check_fields=False)
-    @classmethod
-    def validate_weights(cls, v):
-        if v:
-            for model, weight in v.items():
-                if weight <= 0.0:
-                    raise ValueError(
-                        f"Weight for model '{model.path}' must be greater than 0. Remove '{model.path}' from models if you don't want to use the model in the merge."
-                    )
-            return v
-
-    @field_validator("t")
-    @classmethod
-    def validate_t(cls, v):
-        if v:
-            if not 0.0 <= v <= 1.0:
-                raise ValueError(
-                    "The interpolation parameter for spherical linear interpolation of 2 tensors `t` must be a value between 0.0 and 1.0"
-                )
-            return v
-
-
 class Slerp(MergeMethod):
     """
     This class implements the Slerp algorithm for merging model weights. It supports merging

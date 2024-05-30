@@ -1,13 +1,25 @@
-from typing import Any, Dict, Union
+from typing import Any, Callable, Dict, Union
 
 import yaml
+
+from flow_merge.lib.validators.runner import runner
 
 
 # these might get configs of their own
 class ConfigLoader:
-    def __init__(self, env, logger):
+    def __init__(self, env, logger, validation_runner: Callable = runner):
         self.env = env
         self.logger = logger
+        self.validation_runner = validation_runner
+
+    def validate(self, raw_data: dict):
+        self.logger.info("Validating configuration")
+        try:
+            validated_data = self.validation_runner(raw_data)
+            print(validated_data)
+            return validated_data
+        except ValueError as e:
+            print(f"Validation error: {e}")
 
     def load(self, config: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
         self.logger.info("Loading configuration")
@@ -22,9 +34,11 @@ class ConfigLoader:
 
     def from_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
         self.logger.info("Loading from dict")
-        return data
+        validated_data = self.validate(data)
+        return validated_data
 
     def from_yaml(self, file_path: str) -> Dict[str, Any]:
         self.logger.info(f"Loading from YAML file: {file_path}")
         with open(file_path, "r") as file:
-            return yaml.safe_load(file)
+            data = yaml.safe_load(file)
+        return self.validate(data)
