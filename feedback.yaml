@@ -1,7 +1,7 @@
 loops:
   test:
     description: Test the project
-    command: pytest tests/lib/test_normalizer.py --verbose
+    command: pytest tests/lib/test_config_loader.py --verbose
 
   test-harness:
     description: Test some more
