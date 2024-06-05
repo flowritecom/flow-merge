@@ -1,15 +1,11 @@
 import json
 from typing import Any, Dict, List, Optional
 from functools import reduce
-import pkg_resources
-
+from importlib import resources
 
 def load_architecture(file_path: str) -> Dict[str, Any]:
-    resource_package = __name__
-    resource_path = f"../../data/architectures/{file_path}"
-    file_content = pkg_resources.resource_string(resource_package, resource_path)
-    return json.loads(file_content)
-
+    with resources.open_text("flow_merge.data.architectures", file_path) as file:
+        return json.load(file)
 
 class NormalizationRunner:
     def __init__(self, architecture_path: str):

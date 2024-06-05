@@ -1,6 +1,7 @@
 # test_normalizer.py
 import unittest
 from unittest.mock import patch
+from io import StringIO
 from flow_merge.lib.loaders.normalizer import NormalizationRunner, load_architecture
 
 
@@ -18,9 +19,10 @@ class TestNormalizationRunner(unittest.TestCase):
         self.runner = NormalizationRunner("dummy_path.json")
 
     def test_load_architecture(self):
-        with patch('flow_merge.lib.loaders.normalizer.pkg_resources.resource_string', return_value=b'{}') as mock_resource_string:
-            result = load_architecture("dummy_path.json")
-            mock_resource_string.assert_called_once()
+        mock_file_content = StringIO('{}')
+        with patch('flow_merge.lib.loaders.normalizer.resources.open_text', return_value=mock_file_content) as mock_open_text:
+            result = load_architecture("llama.json")
+            mock_open_text.assert_called_once_with("flow_merge.data.architectures", "llama.json")
             self.assertEqual(result, {})
 
     def test_ensure_base_model(self):

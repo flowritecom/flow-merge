@@ -1,6 +1,7 @@
 from pprint import pprint
 import unittest
-from flow_merge.lib.flow_merge import ConfigLoader, FlowMergeManager
+from flow_merge.lib.loaders.loader import ConfigLoader
+from flow_merge.lib.flow_merge import FlowMergeManager
 from flow_merge.lib.logger import Logger
 from flow_merge.lib.config import ApplicationConfig
 
