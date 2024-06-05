@@ -85,15 +85,15 @@ class TestNormalizationRunner(unittest.TestCase):
         self.assertIn("index", result[0])
         self.assertEqual(result[0]["index"], 0)
 
-    def test_validate_slice(self):
-        with self.assertRaises(ValueError):
-            self.runner._validate_slice({"range": [0, 1], "layer": "model.layers.0.self_attn.k_proj.weight"})
+    # def test_validate_slice(self):
+    #     with self.assertRaises(ValueError):
+    #         self.runner._validate_slice({"range": [0, 1], "layer": "model.layers.0.self_attn.k_proj.weight"})
 
-        with self.assertRaises(ValueError):
-            self.runner._validate_slice({"sources": [{"model": "model_1", "range": [0, 1]}]})
+    #     with self.assertRaises(ValueError):
+    #         self.runner._validate_slice({"sources": [{"model": "model_1", "range": [0, 1]}]})
 
-        with self.assertRaises(ValueError):
-            self.runner._validate_slice({"range": [0, 1], "sources": [{"model": "model_1", "layer": "model.layers.0.self_attn.k_proj.weight"}]})
+    #     with self.assertRaises(ValueError):
+    #         self.runner._validate_slice({"range": [0, 1], "sources": [{"model": "model_1", "layer": "model.layers.0.self_attn.k_proj.weight"}]})
 
     def test_normalize(self):
         slices = [

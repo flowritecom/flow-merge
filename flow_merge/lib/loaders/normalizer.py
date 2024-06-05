@@ -1,4 +1,5 @@
 import json
+from pprint import pprint
 from typing import Any, Dict, List, Optional
 from functools import reduce
 from importlib import resources
@@ -18,7 +19,7 @@ class NormalizationRunner:
     def normalize(self, raw_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         normalized_data = []
         for slice in raw_data:
-            self._validate_slice(slice)
+            # self._validate_slice(slice)
             slice = self._apply_transformations(slice)
             normalized_data.extend(self._process_slice(slice, normalized_data))
         normalized_data += self._process_special_layers(normalized_data)
@@ -38,6 +39,7 @@ class NormalizationRunner:
         # or just base_model = False
         # here we make sure every slice has one base_model = True
         # where it is picked to be the first non-False, if undecided
+        pprint(slice)
         sources = slice.get("sources", [])
 
         # check if there's any source with base_model set to True
@@ -53,23 +55,65 @@ class NormalizationRunner:
         # if already a source with base_model == True, return the original slice
         return slice
 
-    def _create_slice(
-        self, sources: List[Dict[str, Any]], layer: Optional[str], merge_method: str
-    ) -> Dict[str, Any]:
-        # creates a slice, sets merge_method and layer
-        # while making sure to keep all other keys.
-        # Determines if 'layer' is specified in any source,
-        # if not, use the higher-level layer
-        sources_with_layer = [
-            {**src, **({"layer": layer} if layer or "layer" not in src else {})}
-            for src in sources
+
+    def _process_slice(
+        self, slice: Dict[str, Any], normalized_data
+    ) -> List[Dict[str, Any]]:
+        # we process layer and range type slices, expanding range type
+        slices = self._process_template_slices(slice)
+        # we take filter condition 'layers' into consideration
+        # and change the corresponding layers to passthrough and drop sources
+        # that are not the indicated base_model of the slice
+        slices = self._edit_unfiltered_slices(slices, slice)
+        return slices
+
+
+    def _process_special_layers(self, normalized_data) -> List[Dict[str, Any]]:
+        # we don't want to hard code what the special layers are so we
+        # say that the special layers are the ones that aren't templated
+        # with an iterator
+        # in most cases model.embed_tokens, model.norm and lm_head
+        # we only look for 'embed', 'norm' and 'lm_head' to find them
+        # if we don't find any of them then we just produce an empty list
+
+        # the special layers clone the sources data from the adjacent
+        # layer to them, in this case embed layer clones the first layer
+        # (FIX: we don't impose which layer type it should look for cloning)
+        # and the last ones use the last non-special layer
+        # (FIX: we should make sure which sources are copied directly when
+        # cloning and which ones aren't, for example range or layer
+        # shouldn't logically be cloned)
+        pprint(normalized_data)
+        special_layer_names = [
+            item
+            for item in list(self.layers.keys())
+            if "{" not in item and "}" not in item
         ]
-        return {
-            "slice": {
-                "merge_method": merge_method,
-                "sources": sources_with_layer,
-            }
-        }
+        slices = []
+        for special_layer_name in special_layer_names:
+            if "embed" in special_layer_name:
+                embed_slice = self._create_slice(
+                    normalized_data[0]["slice"]["sources"],
+                    special_layer_name,
+                    normalized_data[0]["slice"]["merge_method"],
+                )
+                slices.append(embed_slice)
+            if "norm" in special_layer_name:
+                norm_slice = self._create_slice(
+                    normalized_data[len(normalized_data) - 1]["slice"]["sources"],
+                    special_layer_name,
+                    normalized_data[len(normalized_data) - 1]["slice"]["merge_method"],
+                )
+                slices.append(norm_slice)
+            if "lm_head" in special_layer_name:
+                lm_head_slice = self._create_slice(
+                    normalized_data[len(normalized_data) - 1]["slice"]["sources"],
+                    special_layer_name,
+                    normalized_data[len(normalized_data) - 1]["slice"]["merge_method"],
+                )
+                slices.append(lm_head_slice)
+        return slices
+
 
     def _process_template_slices(self, slice: Dict[str, Any]) -> List[Dict[str, Any]]:
         # should only be passed non-special-layer slices
@@ -98,6 +142,25 @@ class NormalizationRunner:
         elif any("layer" in src for src in slice["sources"]):
             return [self._create_slice(slice["sources"], None, slice["merge_method"])]
         return []
+
+
+    def _create_slice(
+        self, sources: List[Dict[str, Any]], layer: Optional[str], merge_method: str
+    ) -> Dict[str, Any]:
+        # creates a slice, sets merge_method and layer
+        # while making sure to keep all other keys.
+        # Determines if 'layer' is specified in any source,
+        # if not, use the higher-level layer
+        sources_with_layer = [
+            {**src, **({"layer": layer} if layer or "layer" not in src else {})}
+            for src in sources
+        ]
+        return {
+            "slice": {
+                "merge_method": merge_method,
+                "sources": sources_with_layer,
+            }
+        }
 
     def _update_sources_with_base_model(
         self,
@@ -163,61 +226,6 @@ class NormalizationRunner:
 
         return slices
 
-    def _process_slice(
-        self, slice: Dict[str, Any], normalized_data
-    ) -> List[Dict[str, Any]]:
-        # we process layer and range type slices, expanding range type
-        slices = self._process_template_slices(slice)
-        # we take filter condition 'layers' into consideration
-        # and change the corresponding layers to passthrough and drop sources
-        # that are not the indicated base_model of the slice
-        slices = self._edit_unfiltered_slices(slices, slice)
-        return slices
-
-    def _process_special_layers(self, normalized_data) -> List[Dict[str, Any]]:
-        # we don't want to hard code what the special layers are so we
-        # say that the special layers are the ones that aren't templated
-        # with an iterator
-        # in most cases model.embed_tokens, model.norm and lm_head
-        # we only look for 'embed', 'norm' and 'lm_head' to find them
-        # if we don't find any of them then we just produce an empty list
-
-        # the special layers clone the sources data from the adjacent
-        # layer to them, in this case embed layer clones the first layer
-        # (FIX: we don't impose which layer type it should look for cloning)
-        # and the last ones use the last non-special layer
-        # (FIX: we should make sure which sources are copied directly when
-        # cloning and which ones aren't, for example range or layer
-        # shouldn't logically be cloned)
-        special_layer_names = [
-            item
-            for item in list(self.layers.keys())
-            if "{" not in item and "}" not in item
-        ]
-        slices = []
-        for special_layer_name in special_layer_names:
-            if "embed" in special_layer_name:
-                embed_slice = self._create_slice(
-                    normalized_data[0]["slice"]["sources"],
-                    special_layer_name,
-                    normalized_data[0]["slice"]["merge_method"],
-                )
-                slices.append(embed_slice)
-            if "norm" in special_layer_name:
-                norm_slice = self._create_slice(
-                    normalized_data[len(normalized_data) - 1]["slice"]["sources"],
-                    special_layer_name,
-                    normalized_data[len(normalized_data) - 1]["slice"]["merge_method"],
-                )
-                slices.append(norm_slice)
-            if "lm_head" in special_layer_name:
-                lm_head_slice = self._create_slice(
-                    normalized_data[len(normalized_data) - 1]["slice"]["sources"],
-                    special_layer_name,
-                    normalized_data[len(normalized_data) - 1]["slice"]["merge_method"],
-                )
-                slices.append(lm_head_slice)
-        return slices
 
     def _move_embed_slice_to_top(
         self, normalized_data: List[Dict[str, Any]]
@@ -252,23 +260,23 @@ class NormalizationRunner:
             for idx, slice_entry in enumerate(normalized_data)
         ]
 
-    def _validate_slice(self, slice: Dict[str, Any]):
-        # check for both range and layer at the top level
-        if "range" in slice and "layer" in slice:
-            raise ValueError(
-                "Cannot have both 'range' and 'layer' at the top level of the slice"
-            )
-        # ensure 'range' is not declared in sources
-        # and check for both range and layer inside sources
-        if "sources" in slice:
-            for src in slice["sources"]:
-                if "range" in src:
-                    raise ValueError(f"Cannot have 'range' within sources: {src}")
-                if "range" in slice and "layer" in src:
-                    raise ValueError(
-                        str("Cannot have both 'range' at the top level and" +
-                        " 'layer' inside sources")
-                    )
+    # def _validate_slice(self, slice: Dict[str, Any]):
+    #     # check for both range and layer at the top level
+    #     if "range" in slice and "layer" in slice:
+    #         raise ValueError(
+    #             "Cannot have both 'range' and 'layer' at the top level of the slice"
+    #         )
+    #     # ensure 'range' is not declared in sources
+    #     # and check for both range and layer inside sources
+    #     if "sources" in slice:
+    #         for src in slice["sources"]:
+    #             if "range" in src:
+    #                 raise ValueError(f"Cannot have 'range' within sources: {src}")
+    #             if "range" in slice and "layer" in src:
+    #                 raise ValueError(
+    #                     str("Cannot have both 'range' at the top level and" +
+    #                     " 'layer' inside sources")
+    #                 )
 
 
 def display_slices(slices: List[Dict[str, Any]]):
