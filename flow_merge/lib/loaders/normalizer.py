@@ -4,9 +4,11 @@ from typing import Any, Dict, List, Optional
 from functools import reduce
 from importlib import resources
 
+
 def load_architecture(file_path: str) -> Dict[str, Any]:
     with resources.open_text("flow_merge.data.architectures", file_path) as file:
         return json.load(file)
+
 
 class NormalizationRunner:
     def __init__(self, architecture_path: str):
@@ -21,7 +23,7 @@ class NormalizationRunner:
         for slice in raw_data:
             # self._validate_slice(slice)
             slice = self._apply_transformations(slice)
-            normalized_data.extend(self._process_slice(slice, normalized_data))
+            normalized_data.extend(self._process_slice(slice))
         normalized_data += self._process_special_layers(normalized_data)
         normalized_data = self._move_embed_slice_to_top(normalized_data)
         normalized_data = self._add_indices_to_slices(normalized_data)
@@ -55,10 +57,7 @@ class NormalizationRunner:
         # if already a source with base_model == True, return the original slice
         return slice
 
-
-    def _process_slice(
-        self, slice: Dict[str, Any], normalized_data
-    ) -> List[Dict[str, Any]]:
+    def _process_slice(self, slice: Dict[str, Any]) -> List[Dict[str, Any]]:
         # we process layer and range type slices, expanding range type
         slices = self._process_template_slices(slice)
         # we take filter condition 'layers' into consideration
@@ -66,7 +65,6 @@ class NormalizationRunner:
         # that are not the indicated base_model of the slice
         slices = self._edit_unfiltered_slices(slices, slice)
         return slices
-
 
     def _process_special_layers(self, normalized_data) -> List[Dict[str, Any]]:
         # we don't want to hard code what the special layers are so we
@@ -114,7 +112,6 @@ class NormalizationRunner:
                 slices.append(lm_head_slice)
         return slices
 
-
     def _process_template_slices(self, slice: Dict[str, Any]) -> List[Dict[str, Any]]:
         # should only be passed non-special-layer slices
         # ie. ones that take layer index to be templated and thus are expanded
@@ -142,7 +139,6 @@ class NormalizationRunner:
         elif any("layer" in src for src in slice["sources"]):
             return [self._create_slice(slice["sources"], None, slice["merge_method"])]
         return []
-
 
     def _create_slice(
         self, sources: List[Dict[str, Any]], layer: Optional[str], merge_method: str
@@ -182,7 +178,7 @@ class NormalizationRunner:
                 new_sources.append(src)
         return new_sources
 
-    def _determine_base_model(self, sources: List[Dict[str, Any]]) -> str:
+    def _determine_base_model(self, sources: List[Dict[str, Any]]) -> str | None:
         # determine which model name is the base_model for the given slice
         for src in sources:
             if src.get("base_model", False):
@@ -225,7 +221,6 @@ class NormalizationRunner:
             slice_entry["slice"]["merge_method"] = "passthrough"
 
         return slices
-
 
     def _move_embed_slice_to_top(
         self, normalized_data: List[Dict[str, Any]]
@@ -287,14 +282,14 @@ def display_slices(slices: List[Dict[str, Any]]):
 #################
 ## TODO: If given layer types like this then the filling from base_model
 #        for that block doesn't seem to work
-    # {
-    #     "sources": [
-    #         {"model": "model_1",
-    #          "layer": "model.layers.0.self_attn.k_proj.weight"},
-    #         {"model": "model_2",
-    #          "layer": "model.layers.0.post_attention_layernorm.weight"}
-    #     ],
-    #     "merge_method": "slerp"
-    # }
+# {
+#     "sources": [
+#         {"model": "model_1",
+#          "layer": "model.layers.0.self_attn.k_proj.weight"},
+#         {"model": "model_2",
+#          "layer": "model.layers.0.post_attention_layernorm.weight"}
+#     ],
+#     "merge_method": "slerp"
+# }
 
 ## TODO: allow shorter version of the template language if filter is present

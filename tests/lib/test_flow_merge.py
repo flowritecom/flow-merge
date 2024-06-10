@@ -27,6 +27,7 @@ class FlowMergeTest(unittest.TestCase):
         db = merge.get_dependency("db")
         self.assertEqual(db, "DatabaseConnection")
 
+
     def test_load_method(self):
         merge = FlowMergeManager()
         logger = Logger().get_logger()
