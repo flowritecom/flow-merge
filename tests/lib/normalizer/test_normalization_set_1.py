@@ -3,11 +3,13 @@ import unittest
 import yaml
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from unittest.mock import patch
+from pprint import pprint
 
 
 class TestNormalizationRunner(unittest.TestCase):
     @patch('flow_merge.lib.loaders.normalizer.load_architecture')
     def setUp(self, mock_load_architecture):
+        self.maxDiff = None
         mock_load_architecture.return_value = {
             "weights": [
                 {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
@@ -20,13 +22,14 @@ class TestNormalizationRunner(unittest.TestCase):
         Valid configuration – same length `range` in both sources
         """
         yaml_input = """
-        - merge_method: slerp
-          sources:
-            - model: A
-              base_model: True
-              range: [0, 1]
-            - model: B
-              range: [0, 1]
+        definition:
+          - merge_method: slerp
+            sources:
+              - model: A
+                base_model: True
+                range: [0, 1]
+              - model: B
+                range: [0, 1]
         """
         expected = [
             {
@@ -52,13 +55,7 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        # Should work without raising exception
-        processed = []
-        try:
-            processed = self.runner.normalize(yaml_loaded)
-        except Exception as e:
-            self.assertEqual(e, None)
-
+        processed = self.runner.normalize(yaml_loaded)
         self.assertEqual(expected, processed)
 
     def test_different_range_at_sources_level(self):
@@ -66,13 +63,14 @@ class TestNormalizationRunner(unittest.TestCase):
         Valid configuration – different `range` values in both sources, but still the same length in both.
         """
         yaml_input = """
-        - merge_method: slerp
-          sources:
-            - model: A
-              base_model: True
-              range: [0, 1]
-            - model: B
-              range: [5, 6]
+        definition:
+          - merge_method: slerp
+            sources:
+              - model: A
+                base_model: True
+                range: [0, 1]
+              - model: B
+                range: [5, 6]
         """
         expected = [
             {
@@ -107,25 +105,26 @@ class TestNormalizationRunner(unittest.TestCase):
 
         self.assertEqual(expected, processed)
 
-    def test_layer_only_at_once_source(self):
+    def test_layer_only_at_one_source(self):
         """
         Illegal – `layer` syntax used but only for one source. If it's used, it has to be
         applied to all sources.
         """
         yaml_input = """
-        - merge_method: slerp
-          sources:
-            - model: A
-              base_model: True
-              layer: "model.layers.0.self_attn.k_proj.weight" 
-            - model: B
-        """
+        definition:
+          - merge_method: slerp
+            sources:
+              - model: A
+                base_model: True
+                layer: "model.layers.0.self_attn.k_proj.weight" 
+              - model: B
+          """
 
         yaml_loaded = yaml.safe_load(yaml_input)
         with self.assertRaises(Exception) as e:
             self.runner.normalize(yaml_loaded)
 
-        self.assertEqual("'layer' attribute must be defined for all sources", e.__str__())
+        self.assertEqual("If used, `layer` has to be used for all sources", e.exception.__str__())
 
     def test_range_indicated_only_at_once_source(self):
         """
@@ -133,17 +132,19 @@ class TestNormalizationRunner(unittest.TestCase):
         at top level or to all sources (and the length must be the same for all `range`s).
         """
         yaml_input = """
-        - merge_method: slerp
-          sources:
-            - model: A
-              base_model: True
-              range: [0, 1] 
-            - model: B
+        definition:
+          - merge_method: slerp
+            sources:
+              - model: A
+                base_model: True
+                range: [0, 1] 
+              - model: B
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        with self.assertRaises(Exception, msg="'range' attribute of all sources must have the same length"):
+        with self.assertRaises(Exception) as e:
             self.runner.normalize(yaml_loaded)
+        self.assertEqual("If used, `range` has to be used for all sources", e.exception.__str__())
 
     def test_no_slices_defined(self):
         """
@@ -158,12 +159,13 @@ class TestNormalizationRunner(unittest.TestCase):
         In that scenario, take the first model as a base one.
         """
         yaml_input = """
-            - merge_method: slerp
-              sources:
-                - model: A
-                  layer: "model.layers.0.self_attn.k_proj.weight"
-                - model: B
-                  layer: "model.layers.0.self_attn.k_proj.weight"
+        definition:
+          - merge_method: slerp
+            sources:
+              - model: A
+                layer: "model.layers.0.self_attn.k_proj.weight"
+              - model: B
+                layer: "model.layers.0.self_attn.k_proj.weight"
         """
         expected = [
             {
@@ -185,17 +187,17 @@ class TestNormalizationRunner(unittest.TestCase):
 
     def test_all_models_not_base(self):
         """
-        No base model defined, neither at top level or in sources.
-        In that scenario, take the first model as a base one.
+        All models marked as not base, exception
         """
         yaml_input = """
-            - merge_method: slerp
-              range: [0, 1]
-              sources:
-                - model: A
-                  base_model: False
-                - model: B
-                  base_model: False
+        definition:
+          - merge_method: slerp
+            range: [0, 1]
+            sources:
+              - model: A
+                base_model: False
+              - model: B
+                base_model: False
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)
@@ -210,12 +212,13 @@ class TestNormalizationRunner(unittest.TestCase):
         the "select-first-source-as-base-model" behavior is not applied in this case.
         """
         yaml_input = """
-            - merge_method: slerp
-              range: [0, 1]
-              base_model: B
-              sources:
-                - model: A
-                - model: B
+        definition:
+          - merge_method: slerp
+            range: [0, 1]
+            base_model: B
+            sources:
+              - model: A
+              - model: B
         """
         expected = [
             {
@@ -240,6 +243,7 @@ class TestNormalizationRunner(unittest.TestCase):
         Top-level base_model configuration conflicts with base model selected in `sources`
         """
         yaml_input = """
+        definition:
           - merge_method: slerp
             base_model: B
             sources:
@@ -270,13 +274,14 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
-            - merge_method: slerp
-              sources:
-                - model: A
-                  layer: "model.layers.12.self_attn.k_proj.weight"
-                - model: B
-                  layer: "model.layers.12.self_attn.k_proj.weight"
-        """
+        definition:
+          - merge_method: slerp
+            sources:
+              - model: A
+                layer: "model.layers.12.self_attn.k_proj.weight"
+              - model: B
+                layer: "model.layers.12.self_attn.k_proj.weight"
+      """
         expected = [
             {
                 "index": 0,
@@ -303,6 +308,8 @@ class TestNormalizationRunner(unittest.TestCase):
         runner = NormalizationRunner("dummy_path.json")
 
         processed = runner.normalize(yaml_loaded)
+        pprint(processed)
+
         self.assertEqual(2, len(processed))
         self.assertEqual(expected, processed)
 
@@ -320,13 +327,14 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
-            - merge_method: slerp
-              sources:
-                - model: A
-                  layer: "model.layers.12.self_attn.k_proj.weight"
-                - model: B
-                  layer: "model.layers.12.self_attn.k_proj.weight"
-              layers: ["mlp"]
+        definition:
+          - merge_method: slerp
+            sources:
+              - model: A
+                layer: "model.layers.12.self_attn.k_proj.weight"
+              - model: B
+                layer: "model.layers.12.self_attn.k_proj.weight"
+            layers: ["mlp"]
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)
@@ -354,13 +362,14 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
-            - merge_method: slerp
-              sources:
-                - model: A
-                  layer: "model.layers.12.self_attn.k_proj.weight"
-                - model: B
-                  layer: "model.layers.12.self_attn.k_proj.weight"
-              layers: ["self_attn"]
+        definition:
+          - merge_method: slerp
+            sources:
+              - model: A
+                layer: "model.layers.12.self_attn.k_proj.weight"
+              - model: B
+                layer: "model.layers.12.self_attn.k_proj.weight"
+            layers: ["self_attn"]
         """
         expected = [
             {

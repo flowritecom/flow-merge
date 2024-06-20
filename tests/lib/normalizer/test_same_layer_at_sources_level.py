@@ -6,7 +6,8 @@ from flow_merge.lib.loaders.normalizer import NormalizationRunner
 ## FIXME: We need to fill the whole layer block 0 with passthrough from base
 def test_same_layer_at_sources_level():
     yaml_input = """
-    merge_method: slerp
+definition:
+  - merge_method: slerp
     sources:
       - model: Qwen/Qwen1.5-7B
         layer: model.layers.0.self_attn.q_proj.bias

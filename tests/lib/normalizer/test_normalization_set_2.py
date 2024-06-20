@@ -3,7 +3,6 @@ import unittest
 import yaml
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from unittest.mock import patch
-from pprint import pprint
 
 
 class TestNormalizationRunner(unittest.TestCase):
@@ -18,14 +17,15 @@ class TestNormalizationRunner(unittest.TestCase):
         }
         self.runner = NormalizationRunner("dummy_path.json")
 
-    def xtest_range_without_layers_filter(self):
+    def test_range_without_layers_filter(self):
         yaml_input = """
-        - merge_method: slerp
-          range: [0, 1]
-          sources:
-            - model: A
-              base_model: True
-            - model: B
+        definition:
+          - merge_method: slerp
+            range: [0, 1]
+            sources:
+              - model: A
+                base_model: True
+              - model: B
         """
         expected = [
             {
@@ -74,15 +74,16 @@ class TestNormalizationRunner(unittest.TestCase):
         processed = self.runner.normalize(yaml_loaded)
         self.assertEqual(expected, processed)
 
-    def xtest_range_with_layers_filter(self):
+    def test_range_with_layers_filter(self):
         yaml_input = """
-        - merge_method: slerp
-          range: [0, 1]
-          layers: ["self_attn"]
-          sources:
-            - model: A
-              base_model: True
-            - model: B
+        definition:
+          - merge_method: slerp
+            range: [0, 1]
+            layers: ["self_attn"]
+            sources:
+              - model: A
+                base_model: True
+              - model: B
         """
         expected = [
             {
@@ -129,15 +130,16 @@ class TestNormalizationRunner(unittest.TestCase):
         processed = self.runner.normalize(yaml_loaded)
         self.assertEqual(expected, processed)
 
-    def xtest_nontexisting_model_layer_in_layers_filter(self):
+    def test_nontexisting_model_layer_in_layers_filter(self):
         yaml_input = """
-        - merge_method: slerp
-          range: [0, 1]
-          layers: ["xyz_not_existing"]
-          sources:
-            - model: A
-              base_model: True
-            - model: B
+        definition:
+          - merge_method: slerp
+            range: [0, 1]
+            layers: ["xyz_not_existing"]
+            sources:
+              - model: A
+                base_model: True
+              - model: B
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)
@@ -146,15 +148,15 @@ class TestNormalizationRunner(unittest.TestCase):
             self.runner.normalize(yaml_loaded)
         self.assertEqual("layer 'xyz_not_existing' does not exist in the model", e.exception.__str__())
 
-    def xtest_range_outside_of_the_available_models_layers(self):
+    def test_range_outside_of_the_available_models_layers(self):
         yaml_input = """
-        
-        - merge_method: slerp
-          range: [1337, 1338]
-          sources:
-            - model: A
-              base_model: True
-            - model: B
+        definition:
+          - merge_method: slerp
+            range: [1337, 1338]
+            sources:
+              - model: A
+                base_model: True
+              - model: B
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)
@@ -163,13 +165,14 @@ class TestNormalizationRunner(unittest.TestCase):
             self.runner.normalize(yaml_loaded)
         self.assertEqual("provided layers range is outside of the source model layers range", e.exception.__str__())
 
-    def xtest_invalid_range(self):
+    def test_invalid_range(self):
         yaml_input = """
-        - merge_method: slerp
-          range: [2000, 1999]
-          sources:
-            - model: A
-            - model: B
+        definition:
+          - merge_method: slerp
+            range: [2000, 1999]
+            sources:
+              - model: A
+              - model: B
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)
@@ -181,11 +184,12 @@ class TestNormalizationRunner(unittest.TestCase):
 
     def test_range_at_least_of_length_one(self):
         yaml_input = """
-        - merge_method: slerp
-          range: [2000, 2000]
-          sources:
-            - model: A
-            - model: B
+        definition:
+          - merge_method: slerp
+            range: [2000, 2000]
+            sources:
+              - model: A
+              - model: B
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)
@@ -197,12 +201,13 @@ class TestNormalizationRunner(unittest.TestCase):
 
     def test_different_ranges_lengths_at_different_sources(self):
         yaml_input = """
-        - merge_method: slerp
-          sources:
-            - model: A
-              range: [0, 1]
-            - model: B
-              range: [0, 999]
+        definition:
+          - merge_method: slerp
+            sources:
+              - model: A
+                range: [0, 1]
+              - model: B
+                range: [0, 999]
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)

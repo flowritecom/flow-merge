@@ -6,7 +6,8 @@ from flow_merge.lib.loaders.normalizer import NormalizationRunner
 
 def test_range_at_top_level():
     yaml_input = """
-    merge_method: slerp
+definition:
+  - merge_method: slerp
     sources:
       - model: Qwen/Qwen1.5-7B
       - model: Qwen/Qwen1.5-7B-instruct

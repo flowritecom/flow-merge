@@ -18,12 +18,13 @@ class NormalizationRunner:
         }
         self.transformations = [self._ensure_base_model]
 
-    def normalize(self, raw_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def normalize(self, raw_data: Dict) -> List[Dict[str, Any]]:
+        slices = raw_data["definition"]
         normalized_data = []
-        for slice in raw_data:
-            # self._validate_slice(slice)
-            slice = self._apply_transformations(slice)
-            normalized_data.extend(self._process_slice(slice))
+        for s in slices:
+            self._validate_slice(s)
+            s = self._apply_transformations(s)
+            normalized_data.extend(self._process_slice(s))
         normalized_data += self._process_special_layers(normalized_data)
         normalized_data = self._move_embed_slice_to_top(normalized_data)
         normalized_data = self._add_indices_to_slices(normalized_data)
@@ -41,7 +42,6 @@ class NormalizationRunner:
         # or just base_model = False
         # here we make sure every slice has one base_model = True
         # where it is picked to be the first non-False, if undecided
-        pprint(slice)
         sources = slice.get("sources", [])
 
         # check if there's any source with base_model set to True
@@ -81,7 +81,6 @@ class NormalizationRunner:
         # (FIX: we should make sure which sources are copied directly when
         # cloning and which ones aren't, for example range or layer
         # shouldn't logically be cloned)
-        pprint(normalized_data)
         special_layer_names = [
             item
             for item in list(self.layers.keys())
@@ -130,6 +129,25 @@ class NormalizationRunner:
                 for i in range(start, end + 1)
                 for lnt in layer_name_templates
             ]
+        elif all("range" in src for src in slice["sources"]):
+            start, end = slice["sources"][0]["range"]
+            return [
+                {
+                    "slice": {
+                        "merge_method": slice["merge_method"],
+                        "sources": [
+                            {
+                                **({k: v for k, v in src.items() if k != "range"}),
+                                **({"layer": lnt.format(layer_index=src["range"][0] + i)})
+                            }
+                            for src in slice["sources"]
+                        ],
+                    }
+                }
+                for i in range(end - start + 1)
+                for lnt in layer_name_templates
+            ]
+
         elif "layer" in slice:
             return [
                 self._create_slice(
@@ -141,7 +159,7 @@ class NormalizationRunner:
         return []
 
     def _create_slice(
-        self, sources: List[Dict[str, Any]], layer: Optional[str], merge_method: str
+            self, sources: List[Dict[str, Any]], layer: Optional[str], merge_method: str
     ) -> Dict[str, Any]:
         # creates a slice, sets merge_method and layer
         # while making sure to keep all other keys.
@@ -159,10 +177,10 @@ class NormalizationRunner:
         }
 
     def _update_sources_with_base_model(
-        self,
-        sources: List[Dict[str, Any]],
-        base_model: str,
-        layers_to_process: List[str],
+            self,
+            sources: List[Dict[str, Any]],
+            base_model: str,
+            layers_to_process: List[str],
     ) -> List[Dict[str, Any]]:
         # keep only the sources that are indicated with base_model = True,
         # those are the ones we are interested in mutating to be passthrough
@@ -180,13 +198,17 @@ class NormalizationRunner:
 
     def _determine_base_model(self, sources: List[Dict[str, Any]]) -> str | None:
         # determine which model name is the base_model for the given slice
+        base_source = self._determine_base_source(sources)
+        return base_source["model"] if base_source is not None else None
+
+    def _determine_base_source(self, sources: List[Dict[str, Any]]) -> Dict[str, Any] | None:
         for src in sources:
             if src.get("base_model", False):
-                return src["model"]
+                return src
         return None
 
     def _edit_unfiltered_slices(
-        self, slices: List[Dict[str, Any]], slice: Dict[str, Any]
+            self, slices: List[Dict[str, Any]], slice: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         # if 'layers' filter is in place, edit the layer slices that aren't in the filter
         # to be passthrough from base_model
@@ -223,7 +245,7 @@ class NormalizationRunner:
         return slices
 
     def _move_embed_slice_to_top(
-        self, normalized_data: List[Dict[str, Any]]
+            self, normalized_data: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         # We added the embed_tokens layer when we didn't yet have an index
         # so we move it to the beginning, the other special layers will remain at the end
@@ -234,10 +256,7 @@ class NormalizationRunner:
             (
                 i
                 for i, slice_entry in enumerate(normalized_data)
-                if any(
-                    "embed" in src.get("layer", "")
-                    for src in slice_entry["slice"]["sources"]
-                )
+                if any("embed" in src.get("layer", "") for src in slice_entry["slice"]["sources"])
             ),
             None,
         )
@@ -247,7 +266,7 @@ class NormalizationRunner:
         return normalized_data
 
     def _add_indices_to_slices(
-        self, normalized_data: List[Dict[str, Any]]
+            self, normalized_data: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         # we create the index as the last thing
         return [
@@ -255,29 +274,42 @@ class NormalizationRunner:
             for idx, slice_entry in enumerate(normalized_data)
         ]
 
-    # def _validate_slice(self, slice: Dict[str, Any]):
-    #     # check for both range and layer at the top level
-    #     if "range" in slice and "layer" in slice:
-    #         raise ValueError(
-    #             "Cannot have both 'range' and 'layer' at the top level of the slice"
-    #         )
-    #     # ensure 'range' is not declared in sources
-    #     # and check for both range and layer inside sources
-    #     if "sources" in slice:
-    #         for src in slice["sources"]:
-    #             if "range" in src:
-    #                 raise ValueError(f"Cannot have 'range' within sources: {src}")
-    #             if "range" in slice and "layer" in src:
-    #                 raise ValueError(
-    #                     str("Cannot have both 'range' at the top level and" +
-    #                     " 'layer' inside sources")
-    #                 )
+    def _validate_slice(self, slice: Dict[str, Any]):
+        # Check that at least model is allowed as base
+        if all("base_model" in source and source["base_model"] is False for source in slice["sources"]):
+            raise ValueError("No valid source found to set as base_model")
+
+        # check for both range and layer at the top level
+        if "range" in slice and "layer" in slice:
+            raise ValueError(
+                "Cannot have both 'range' and 'layer' at the top level of the slice"
+            )
+
+        if any("range" in src for src in slice["sources"]) and not all("range" in src for src in slice["sources"]):
+            raise ValueError(
+                "If used, `range` has to be used for all sources"
+            )
+
+        if any("layer" in src for src in slice["sources"]) and not all("layer" in src for src in slice["sources"]):
+            raise ValueError(
+                "If used, `layer` has to be used for all sources"
+            )
+
+        # check for both range and layer in any of the sources within the same slice
+        if any("range" in src for src in slice["sources"]) and any("layer" in src for src in slice["sources"]):
+            raise ValueError(
+                "Slice sources have to be defined with either `layer` or `range`, not both"
+            )
+
+    def _weight_from_layer_name(self, layer_name: str) -> str | None:
+        import re
+        weight_name_pattern = re.sub(r"/\.\d+\./g", "{layer_index}", layer_name)
+        return self.layers
 
 
 def display_slices(slices: List[Dict[str, Any]]):
     for entry in slices:
         print(json.dumps(entry, indent=2))
-
 
 #################
 ## TODO: If given layer types like this then the filling from base_model
