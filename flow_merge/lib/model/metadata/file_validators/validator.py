@@ -1,9 +1,9 @@
 from flow_merge.lib.model.metadata.model_metadata import ModelMetadata
-from flow_merge.lib.model.metadata.file_validators.adapter import has_adapter_files
-from flow_merge.lib.model.metadata.file_validators.integrity import has_config_json
-from flow_merge.lib.model.metadata.file_validators.tokenizer import has_tokenizer_config, has_tokenizer_file
-from flow_merge.lib.model.metadata.file_validators.safetensors import has_safetensors_files, has_safetensors_index
-from flow_merge.lib.model.metadata.file_validators.pytorch_bin import has_pytorch_bin_files, has_pytorch_bin_index
+from flow_merge.lib.model.metadata.file_validators._adapter import has_adapter_files
+from flow_merge.lib.model.metadata.file_validators._integrity import has_config_json
+from flow_merge.lib.model.metadata.file_validators._tokenizer import has_tokenizer_config, has_tokenizer_file
+from flow_merge.lib.model.metadata.file_validators._safetensors import has_safetensors_files, has_safetensors_index
+from flow_merge.lib.model.metadata.file_validators._pytorch_bin import has_pytorch_bin_files, has_pytorch_bin_index
 
 # (attribute effected, test function, missing message)
 integrity_checks = [
