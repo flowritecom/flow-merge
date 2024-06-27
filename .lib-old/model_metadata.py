@@ -41,7 +41,7 @@ class ModelMetadata(BaseModel):
     file_list: List[str] = Field(default_factory=list)
     safetensors_info: Optional[SafeTensorsInfo] = Field(
         alias="safetensors", default=None
-    )
+    ) 
 
     relative_path: Optional[Path] = None
     absolute_path: Optional[Path] = None

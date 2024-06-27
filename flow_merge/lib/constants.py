@@ -35,7 +35,6 @@ class ConfigKeys(str, Enum):
     TOKEN = "token"
     TRUST_REMOTE_CODE = "trust_remote_code"
 
-
 # method_classes: Dict[MergeMethodIdentifier, TaskArithmetic | Linear | Slerp] = {
 #     MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC.value: TaskArithmetic,
 #     MergeMethodIdentifier.MODEL_SOUP.value: Linear,

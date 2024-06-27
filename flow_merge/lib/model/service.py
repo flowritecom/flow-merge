@@ -6,10 +6,10 @@ from peft import PeftConfig, PeftModel
 
 from flow_merge.lib.architecture import ModelWeight
 from flow_merge.lib.constants import DeviceIdentifier
-from flow_merge.lib.model_metadata import FileRepository, ModelMetadata
-from flow_merge.lib.tensor_index import TensorIndexService
-from flow_merge.lib.tensor_loader import ShardFile, TensorRepository
-from flow_merge.lib.tensor_writer import TensorWriter
+from flow_merge.lib.model.metadata import FileRepository, ModelMetadata
+from flow_merge.lib.tensor.index import TensorIndexService
+from flow_merge.lib.tensor.loader import ShardFile, TensorRepository
+from flow_merge.lib.tensor.writer import TensorWriter
 
 
 class ModelService:
@@ -124,19 +124,67 @@ class ModelService:
         return ModelService.save_model_shards(
             base_model, model_metadata.directory_settings.output_dir
         )
-
+    
     @staticmethod
-    def create_shard_files(
-        model_metadata: ModelMetadata, device: DeviceIdentifier
-    ) -> List[ShardFile]:
-        output_model_path = (
+    def get_output_model_path(model_metadata: ModelMetadata):
+        return (
             model_metadata.directory_settings.output_dir / model_metadata.id
         )
-
+    
+    @staticmethod
+    def validate_config(model_metadata: ModelMetadata):
         if not (model_metadata.has_config and model_metadata.has_tokenizer_config):
             raise FileNotFoundError(
                 "Model is missing config.json or tokenizer_config.json"
             )
+
+    @staticmethod
+    def get_shard_filenames_from_layers(
+        layers_to_download: List[str], 
+        file_index: Dict
+    ) -> List[str]:
+        shard_filenames = set()
+
+        (
+            shard_filenames.add(file_index[layer]) 
+            for layer in layers_to_download 
+            if layer in file_index
+        )
+        
+        return list(shard_filenames)
+        
+    @staticmethod
+    def gather_shard_files_from_layers(
+        layers_to_download,
+        file_index,
+        output_model_path,
+        repo_id,
+        device
+    ) -> List[ShardFile]:
+        shards_to_download = ModelService.get_shard_filenames_from_layers(
+            layers_to_download,
+            file_index
+        )
+
+        try:
+            return [
+                ModelService.create_shard_file(
+                    output_model_path, repo_id, device, filename
+                )
+                for filename in shards_to_download
+            ]
+        except Exception as e:
+            raise RuntimeError(
+                f"Error gathering shard files from layers {e}"
+            )
+
+    @staticmethod
+    def create_shard_files(
+        model_metadata: ModelMetadata, device: DeviceIdentifier, layers_to_download: List[str] = None
+    ) -> List[ShardFile]:
+        output_model_path = ModelService.get_output_model_path(model_metadata)
+
+        ModelService.validate_config(model_metadata)
 
         FileRepository.download_required_files(model_metadata)
 
@@ -145,6 +193,17 @@ class ModelService:
 
         file_index = TensorIndexService.create_file_to_tensor_index(model_metadata)
         if file_index:
+            if layers_to_download:
+                ModelService.gather_shard_files_from_layers(
+                    layers_to_download,
+                    file_index,
+                    output_model_path,
+                    model_metadata.id,
+                    device
+                )
+
+            file_index = TensorIndexService.flip_keys(file_index)
+
             return ModelService.gather_shard_files(
                 file_index, output_model_path, model_metadata.id, device
             )
@@ -160,7 +219,3 @@ class ModelService:
             )
             return [shard_file]
         
-
-        @staticmethod
-        def create_shard_files_for_layers():
-            pass
