@@ -1,6 +1,7 @@
 from pprint import pprint
 import unittest
-from flow_merge.lib.flow_merge import ConfigLoader, FlowMergeManager
+from flow_merge.lib.loaders.loader import ConfigLoader
+from flow_merge.lib.flow_merge import FlowMergeManager
 from flow_merge.lib.logger import Logger
 from flow_merge.lib.config import ApplicationConfig
 
@@ -25,6 +26,7 @@ class FlowMergeTest(unittest.TestCase):
         merge.register_dependency("db", "DatabaseConnection")
         db = merge.get_dependency("db")
         self.assertEqual(db, "DatabaseConnection")
+
 
     def test_load_method(self):
         merge = FlowMergeManager()
