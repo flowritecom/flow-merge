@@ -1,14 +1,7 @@
 import unittest
 
 import yaml
-from flow_merge.lib.loaders.normalizer import NormalizationRunner
-from unittest.mock import patch
-from pprint import pprint
-
 from flow_merge.lib.validators.slice_validator import SliceValidator
-import pydevd_pycharm
-
-pydevd_pycharm.settrace('172.17.0.1', port=9898, stdoutToServer=True, stderrToServer=True)
 
 
 class TestSliceValidator(unittest.TestCase):
