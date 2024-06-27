@@ -130,7 +130,8 @@ class TestSliceValidator(unittest.TestCase):
         with self.assertRaises(Exception) as e:
             validator.validate(yaml_loaded["definition"][0])
 
-        self.assertEqual("Slice sources have to be defined with either `layer` or `range`, not both", e.exception.__str__())
+        self.assertEqual("Slice sources have to be defined with either `layer` or `range`, not both",
+                         e.exception.__str__())
 
     def test_layers_filter_used_with_layer_syntax(self):
         """
@@ -152,4 +153,64 @@ class TestSliceValidator(unittest.TestCase):
         with self.assertRaises(Exception) as e:
             validator.validate(yaml_loaded["definition"][0])
 
-        self.assertEqual("Layers filter can only be used with `range` definition, not with `layer`", e.exception.__str__())
+        self.assertEqual("Layers filter can only be used with `range` definition, not with `layer`",
+                         e.exception.__str__())
+
+    def test_source_range_not_positive(self):
+        """
+        Illegal – `layers` filter can only be used with `range` syntax, not with `layer` syntax
+        """
+        yaml_input = """
+        definition:
+          - sources:
+              - model: A
+                range: [100, 0]
+        """
+
+        yaml_loaded = yaml.safe_load(yaml_input)
+        validator = SliceValidator()
+
+        with self.assertRaises(Exception) as e:
+            validator.validate(yaml_loaded["definition"][0])
+
+        self.assertEqual("Provided layers range is not positive", e.exception.__str__())
+
+    def test_source_range_at_least_length_one(self):
+        """
+        Illegal – `layers` filter can only be used with `range` syntax, not with `layer` syntax
+        """
+        yaml_input = """
+        definition:
+          - sources:
+              - model: A
+                range: [0, 0]
+        """
+
+        yaml_loaded = yaml.safe_load(yaml_input)
+        validator = SliceValidator()
+
+        with self.assertRaises(Exception) as e:
+            validator.validate(yaml_loaded["definition"][0])
+
+        self.assertEqual("Provided layers range is not positive", e.exception.__str__())
+
+    def test_source_ranges_the_same_length(self):
+        """
+        Illegal – `layers` filter can only be used with `range` syntax, not with `layer` syntax
+        """
+        yaml_input = """
+        definition:
+          - sources:
+              - model: A
+                range: [0, 1]
+              - model: A
+                range: [0, 999]
+        """
+
+        yaml_loaded = yaml.safe_load(yaml_input)
+        validator = SliceValidator()
+
+        with self.assertRaises(Exception) as e:
+            validator.validate(yaml_loaded["definition"][0])
+
+        self.assertEqual("All `range` must be of the same length", e.exception.__str__())

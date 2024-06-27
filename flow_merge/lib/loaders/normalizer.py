@@ -151,6 +151,12 @@ class NormalizationRunner:
             ]
         elif all("range" in src for src in slice["sources"]) and "layers" in slice:
             # Layers filter applied
+
+            # Validate if requested layers are at all available in the architecture of the base model
+            for l in slice["layers"]:
+                if l not in self.models_layers_by_type[base_model]:
+                    raise Exception(f"Layer '{l}' does not exist in the model")
+
             start, end = slice["sources"][0]["range"]
             user_requested_layers = [
                 layer
