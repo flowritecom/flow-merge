@@ -7,6 +7,7 @@ from transformers import AutoConfig, AutoTokenizer, PreTrainedTokenizerBase
 
 from flow_merge.lib.constants import ADDITIONAL_SPECIAL_TOKENS_KEY
 from flow_merge.lib.logger import get_logger
+from flow_merge.lib.enriched_snapshot import EnrichedSnapshot
 from flow_merge.lib.merge_config import MergeConfig
 from flow_merge.lib.model import Model
 
@@ -318,7 +319,9 @@ class MergedTokenizerBuilder(BaseModel):
         return merged_tokenizer
 
 
-def get_merge_tokenizer(merge_config: MergeConfig) -> Tokenizer:
+def get_merge_tokenizer(
+        enriched_snapshot: EnrichedSnapshot, 
+        env, logger) -> Tokenizer:
     """
     Returns a tokenizer for the merged model based on the provided configuration.
 
@@ -328,18 +331,24 @@ def get_merge_tokenizer(merge_config: MergeConfig) -> Tokenizer:
     Returns:
         The tokenizer for the merged model with the inputs_ids_mappings if available.
     """
-    all_tokenizers = load_all_tokenizers(merge_config)
+    
+    # FIXME uses models + base_model from merge_config
+    all_tokenizers = load_all_tokenizers(enriched_snapshot)
 
     if not check_tokenizers_for_differences(all_tokenizers):
         logger.info(
-            f"No differences in tokens or vocab among tokenizers. Using {merge_config.base_model.path} for the tokenizer."
+            f"No differences in tokens or vocab among tokenizers. Using {enriched_snapshot.base_model.path} for the tokenizer."
         )
-        return Tokenizer(tokenizer=all_tokenizers[merge_config.base_model])
+        return Tokenizer(tokenizer=all_tokenizers[enriched_snapshot.base_model])
 
     logger.info(
         "Different tokens or vocab among tokenizers. Building the tokenizer for the merged model."
     )
+
+    # FIXME requires tokenizer_settings, base_model from merge_config 
     merge_tokenizer = construct_appropriate_tokenizer(merge_config, all_tokenizers)
+    
+    # FIXME requires models + base_model, hf_hub_settings 
     input_ids_mappings = create_input_ids_mappings(
         merge_config, all_tokenizers, merge_tokenizer
     )
@@ -362,6 +371,7 @@ def load_all_tokenizers(
     all_tokenizers = {}
     for model in merge_config.models + [merge_config.base_model]:
         try:
+            # FIXME trust_remote_code from merge config
             tokenizer = AutoTokenizer.from_pretrained(
                 model.path,
                 trust_remote_code=merge_config.hf_hub_settings.trust_remote_code,
@@ -397,7 +407,7 @@ def construct_appropriate_tokenizer(
 
 
 def create_input_ids_mappings(
-    merge_config: MergeConfig,
+    c: MergeConfig,
     all_tokenizers: Dict[Model, PreTrainedTokenizerBase],
     merge_tokenizer: PreTrainedTokenizerBase,
 ) -> Dict[Model, Dict[int, int]]:

@@ -1,0 +1,1 @@
+from flow_merge.lib.snapshot.data_architecture import Snapshot

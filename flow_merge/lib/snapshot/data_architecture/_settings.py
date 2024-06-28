@@ -6,6 +6,7 @@ from ...validators._tokenizer_settings import TokenizerSettings
 from ..hash import create_content_hash
 
 class MergeSettings(BaseModel):
+    # FIXME We might not have model settings here, with the normalized slices
     models: ModelSettings
     method: MethodSettings
     tokenizer: TokenizerSettings

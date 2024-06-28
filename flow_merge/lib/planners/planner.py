@@ -1,8 +1,11 @@
 from typing import List
 
+from flow_merge.lib.snapshot import Snapshot
+from flow_merge.lib.enriched_snapshot import EnrichedSnapshot
 from flow_merge.lib.planners.resolver import extract_models_by_layers, ModelLayers
 from flow_merge.lib.model.model import ModelBase, Model
 from flow_merge.lib.snapshot.data_architecture.snapshot import Snapshot
+from flow_merge.lib.tokenizer import get_merge_tokenizer, Tokenizer
 
 
 # Model 
@@ -63,6 +66,7 @@ from flow_merge.lib.snapshot.data_architecture.snapshot import Snapshot
 # snapshot = merge.load()
 # merge.plan(snapshot)
 
+
 # FIXME: takes a model, tokenizer?
 class Planner:
     def __init__(self, env, logger, snapshot: Snapshot, model_class: Model = Model):
@@ -72,7 +76,15 @@ class Planner:
         self.model_class = model_class
 
     def plan(self):
-        pass
+        (base_model, models) = self._load_models()
+        enriched_snapshot = EnrichedSnapshot(
+            **self.snapshot, 
+            base_model=base_model, 
+            models=models
+        )
+
+        tokenizer = self._build_merge_tokenizer(enriched_snapshot)
+
 
     def _load_models(self):
         normalized_slices = self.snapshot.normalized
@@ -99,7 +111,9 @@ class Planner:
                 env=self.env,
                 logger=self.logger
             )
+
+        return (base_model, models)
         
 
-    def _build_merge_tokenizerself(self):
-        return get_merge_tokenizer()
+    def _build_merge_tokenizer(self, enriched_snapshot: EnrichedSnapshot):
+        return get_merge_tokenizer(enriched_snapshot, self.env, self.logger)
