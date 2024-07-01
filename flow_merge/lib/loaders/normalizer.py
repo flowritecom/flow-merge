@@ -21,14 +21,19 @@ class NormalizationRunner:
 
     def normalize(self, raw_data: Dict) -> List[Dict[str, Any]]:
         self._load_models_layers(raw_data)
+
+        if "base_model" not in raw_data:
+            raise ValueError("Base model is missing")
+
         slices = raw_data["definition"]
         normalized_data = []
         for i, s in enumerate(slices):
             s = self._apply_transformations(s)
             s["output_layer_id"] = i
             normalized_data.extend(self._process_slice(s))
-        # normalized_data += self._process_special_layers(normalized_data)
-        # normalized_data = self._move_embed_slice_to_top(normalized_data)
+        normalized_data += self._process_special_layers(normalized_data, raw_data["base_model"])
+        normalized_data = self._move_embed_slice_to_top(normalized_data)
+        normalized_data = self._reindex_slices_with_embed_slice(normalized_data)
         return normalized_data
 
     def _apply_transformations(self, slice: Dict[str, Any]) -> Dict[str, Any]:
@@ -68,8 +73,7 @@ class NormalizationRunner:
         # slices = self._edit_unfiltered_slices(slices, slice)
         return slices
 
-    def _process_special_layers(self, normalized_data) -> List[Dict[str, Any]]:
-        pass
+    def _process_special_layers(self, normalized_data, base_model: str) -> List[Dict[str, Any]]:
         # we don't want to hard code what the special layers are so we
         # say that the special layers are the ones that aren't templated
         # with an iterator
@@ -83,41 +87,45 @@ class NormalizationRunner:
         # and the last ones use the last non-special layer
 
         # Removes all unnecessary attributes for special layer slices sources
-        # def get_plain_sources(sources: List[Dict]):
-        #     return [
-        #         {"model": source["model"], **({"base_model": True} if source["base_model"] else {})}
-        #         for source in sources
-        #     ]
-        #
-        # special_layer_names = [
-        #     item
-        #     for item in list(self.layers.keys())
-        #     if "{" not in item and "}" not in item
-        # ]
-        # slices = []
-        # for special_layer_name in special_layer_names:
-        #     if "embed" in special_layer_name:
-        #         embed_slice = self._create_slice(
-        #             get_plain_sources(normalized_data[0]["slice"]["sources"]),
-        #             special_layer_name,
-        #             normalized_data[0]["slice"]["merge_method"],
-        #         )
-        #         slices.append(embed_slice)
-        #     if "norm" in special_layer_name:
-        #         norm_slice = self._create_slice(
-        #             get_plain_sources(normalized_data[len(normalized_data) - 1]["slice"]["sources"]),
-        #             special_layer_name,
-        #             "passthrough",
-        #         )
-        #         slices.append(norm_slice)
-        #     if "lm_head" in special_layer_name:
-        #         lm_head_slice = self._create_slice(
-        #             get_plain_sources(normalized_data[len(normalized_data) - 1]["slice"]["sources"]),
-        #             special_layer_name,
-        #             "passthrough",
-        #         )
-        #         slices.append(lm_head_slice)
-        # return slices
+        def get_plain_sources(sources: List[Dict]):
+            return [
+                {"model": source["model"], **({"base_model": True} if "base_model" in source else {})}
+                for source in sources
+            ]
+
+        special_layer_names = [
+            item
+            for item in list(self.models_layers[base_model].keys())
+            if "{" not in item and "}" not in item
+        ]
+        slices = []
+        for special_layer_name in special_layer_names:
+            if "embed" in special_layer_name:
+                embed_slice = self._create_slice(
+                    get_plain_sources(normalized_data[0]["slice"]["sources"]),
+                    special_layer_name,
+                    "interpolate",
+                    0
+                )
+                slices.append(embed_slice)
+
+            if "norm" in special_layer_name:
+                norm_slice = self._create_slice(
+                    get_plain_sources(normalized_data[len(normalized_data) - 1]["slice"]["sources"]),
+                    special_layer_name,
+                    "interpolate",
+                    len(normalized_data)
+                )
+                slices.append(norm_slice)
+            if "lm_head" in special_layer_name:
+                lm_head_slice = self._create_slice(
+                    get_plain_sources(normalized_data[len(normalized_data) - 1]["slice"]["sources"]),
+                    special_layer_name,
+                    "interpolate",
+                    len(normalized_data)
+                )
+                slices.append(lm_head_slice)
+        return slices
 
     def _process_template_slices(self, slice: Dict[str, Any]) -> List[Dict[str, Any]]:
         # should only be passed non-special-layer slices
@@ -206,7 +214,8 @@ class NormalizationRunner:
             user_defined_slice = [
                 self._create_slice(slice["sources"], None, slice["merge_method"], slice["output_layer_id"])]
             remaining_slices = [
-                self._create_slice([base_source], layer.format(layer_index=user_defined_layer_id[0]), "passthrough", slice["output_layer_id"])
+                self._create_slice([base_source], layer.format(layer_index=user_defined_layer_id[0]), "passthrough",
+                                   slice["output_layer_id"])
                 for layer in remaining_layers
             ]
 
@@ -301,27 +310,6 @@ class NormalizationRunner:
 
         return slices
 
-    def _move_embed_slice_to_top(
-            self, normalized_data: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
-        # We added the embed_tokens layer when we didn't yet have an index
-        # so we move it to the beginning, the other special layers will remain at the end
-        # with ordering norm and lm_head
-
-        # Find the index of the embed slice, if it exists
-        embed_index = next(
-            (
-                i
-                for i, slice_entry in enumerate(normalized_data)
-                if any("embed" in src.get("layer", "") for src in slice_entry["slice"]["sources"])
-            ),
-            None,
-        )
-        # Only move the embed slice if it was found
-        if embed_index is not None:
-            normalized_data.insert(0, normalized_data.pop(embed_index))
-        return normalized_data
-
     def _load_models_layers(self, raw_data: Dict[str, Any]):
         all_models = [raw_data["base_model"]] if "base_model" in raw_data else []
         all_models.extend([
@@ -343,6 +331,35 @@ class NormalizationRunner:
                 ]
                 for weight in arch["weights"]
             }
+
+    def _move_embed_slice_to_top(self, normalized_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        embed_index = self._embed_slice_index(normalized_data)
+        if embed_index is None:
+            return normalized_data
+
+        normalized_data.insert(0, normalized_data.pop(embed_index))
+        return normalized_data
+
+    def _reindex_slices_with_embed_slice(self, normalized_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        embed_index = self._embed_slice_index(normalized_data)
+        if embed_index is None:
+            return normalized_data
+
+        for i, slice in enumerate(normalized_data):
+            if i is not embed_index:
+                slice["output_layer_id"] += 1
+
+        return normalized_data
+
+    def _embed_slice_index(self, normalized_data: List[Dict[str, Any]]) -> bool | int:
+        return next(
+            (
+                i
+                for i, slice_entry in enumerate(normalized_data)
+                if any("embed" in src.get("layer", "") for src in slice_entry["slice"]["sources"])
+            ),
+            None,
+        )
 
 
 def display_slices(slices: List[Dict[str, Any]]):

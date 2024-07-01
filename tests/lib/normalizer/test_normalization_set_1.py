@@ -3,10 +3,6 @@ import unittest
 import yaml
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from unittest.mock import patch
-# import pydevd_pycharm
-
-# pydevd_pycharm.settrace('172.17.0.1', port=9898, stdoutToServer=True, stderrToServer=True)
-
 
 class TestNormalizationRunner(unittest.TestCase):
     def setUp(self):
@@ -24,6 +20,7 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
+        base_model: A
         definition:
           - merge_method: slerp
             sources:
@@ -71,6 +68,7 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
+        base_model: A
         definition:
           - merge_method: slerp
             sources:
@@ -126,6 +124,7 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
+        base_model: A
         definition:
           - merge_method: slerp
             sources:
@@ -165,6 +164,7 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
+        base_model: A
         definition:
           - merge_method: slerp
             sources:

@@ -18,6 +18,7 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
+        base_model: A
         definition:
           - merge_method: slerp
             sources:
@@ -84,6 +85,7 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
+        base_model: A
         definition:
           - merge_method: slerp
             layers: ["attn"]
@@ -148,6 +150,7 @@ class TestNormalizationRunner(unittest.TestCase):
             ]
         }
         yaml_input = """
+        base_model: A
         definition:
           - merge_method: slerp
             layers: ["xyz_not_existing"]
