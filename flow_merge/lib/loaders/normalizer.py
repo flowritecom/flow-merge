@@ -1,5 +1,4 @@
 import json
-from pprint import pprint
 from typing import Any, Dict, List, Optional
 from functools import reduce
 import re
@@ -31,7 +30,7 @@ class NormalizationRunner:
             s = self._apply_transformations(s)
             s["output_layer_id"] = i
             normalized_data.extend(self._process_slice(s))
-        normalized_data += self._process_special_layers(normalized_data, raw_data["base_model"])
+        normalized_data = self._process_special_layers(normalized_data, raw_data["base_model"])
         normalized_data = self._move_embed_slice_to_top(normalized_data)
         normalized_data = self._reindex_slices_with_embed_slice(normalized_data)
         return normalized_data
@@ -67,10 +66,6 @@ class NormalizationRunner:
         # we process layer and range type slices, expanding range type
         slices = self._process_template_slices(slice)
 
-        # we take filter condition 'layers' into consideration
-        # and change the corresponding layers to passthrough and drop sources
-        # that are not the indicated base_model of the slice
-        # slices = self._edit_unfiltered_slices(slices, slice)
         return slices
 
     def _process_special_layers(self, normalized_data, base_model: str) -> List[Dict[str, Any]]:
@@ -98,7 +93,7 @@ class NormalizationRunner:
             for item in list(self.models_layers[base_model].keys())
             if "{" not in item and "}" not in item
         ]
-        slices = []
+
         for special_layer_name in special_layer_names:
             if "embed" in special_layer_name:
                 embed_slice = self._create_slice(
@@ -107,25 +102,30 @@ class NormalizationRunner:
                     "interpolate",
                     0
                 )
-                slices.append(embed_slice)
+                normalized_data.append(embed_slice)
 
             if "norm" in special_layer_name:
                 norm_slice = self._create_slice(
                     get_plain_sources(normalized_data[len(normalized_data) - 1]["slice"]["sources"]),
                     special_layer_name,
                     "interpolate",
-                    len(normalized_data)
+                    self._get_last_output_slice_id(normalized_data)+1
                 )
-                slices.append(norm_slice)
+                normalized_data.append(norm_slice)
+
             if "lm_head" in special_layer_name:
                 lm_head_slice = self._create_slice(
                     get_plain_sources(normalized_data[len(normalized_data) - 1]["slice"]["sources"]),
                     special_layer_name,
                     "interpolate",
-                    len(normalized_data)
+                    self._get_last_output_slice_id(normalized_data)+1
                 )
-                slices.append(lm_head_slice)
-        return slices
+                normalized_data.append(lm_head_slice)
+        return normalized_data
+
+    def _get_last_output_slice_id(self, slices: List[Dict[str, Any]]) -> int:
+        sorted_slices = sorted(slices, key=lambda s: -s["output_layer_id"])
+        return sorted_slices[0]["output_layer_id"]
 
     def _process_template_slices(self, slice: Dict[str, Any]) -> List[Dict[str, Any]]:
         # should only be passed non-special-layer slices
@@ -242,73 +242,16 @@ class NormalizationRunner:
             }
         }
 
-    def _update_sources_with_base_model(
-            self,
-            sources: List[Dict[str, Any]],
-            base_model: str,
-            layers_to_process: List[str],
-    ) -> List[Dict[str, Any]]:
-        # keep only the sources that are indicated with base_model = True,
-        # those are the ones we are interested in mutating to be passthrough
-        # from the base_model, if 'layers' filter is in place
-        # - note. before this step we have created everything ready to be filtered
-        new_sources = []
-        for src in sources:
-            if any(layer_type in src["layer"] for layer_type in layers_to_process):
-                src["model"] = base_model
-                if src.get("base_model", False):
-                    new_sources.append(src)
-            else:
-                new_sources.append(src)
-        return new_sources
-
     def _determine_base_model(self, sources: List[Dict[str, Any]]) -> str | None:
         # determine which model name is the base_model for the given slice
         base_source = self._determine_base_source(sources)
         return base_source["model"] if base_source is not None else None
 
-    def _determine_base_source(self, sources: List[Dict[str, Any]]) -> Dict[str, Any] | None:
+    def _determine_base_source(self, sources: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Every slice must have base source"""
         for src in sources:
             if src.get("base_model", False):
                 return src
-        return None
-
-    def _edit_unfiltered_slices(
-            self, slices: List[Dict[str, Any]], slice: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        # if 'layers' filter is in place, edit the layer slices that aren't in the filter
-        # to be passthrough from base_model
-        # while making sure not to do this for the special_layer_names (embed_tokens, norm, lm_head)
-        # also take those layer types dynamically from the architecture
-
-        # get all layer types from the architecture
-        # layer_types = list(self.layers.values())
-        # special_layer_names = [
-        #     item
-        #     for item in list(self.layers.keys())
-        #     if "{" not in item and "}" not in item
-        # ]
-        # # determine which layers to keep from the filter in the config
-        # layers_to_keep = slice.get("layers")
-        #
-        # # if layers_to_keep is None, or it includes all layer types, skip editing
-        # if layers_to_keep is None or set(layers_to_keep) == set(layer_types):
-        #     return slices
-        #
-        # # determine layers to process
-        # # (those not in layers_to_keep and not special layers)
-        # layers_to_process = [
-        #     lt for lt in layer_types if lt not in layers_to_keep + special_layer_names
-        # ]
-        #
-        # for slice_entry in slices:
-        #     base_model = self._determine_base_model(slice_entry["slice"]["sources"])
-        #     slice_entry["slice"]["sources"] = self._update_sources_with_base_model(
-        #         slice_entry["slice"]["sources"], base_model, layers_to_process
-        #     )
-        #     slice_entry["slice"]["merge_method"] = "passthrough"
-
-        return slices
 
     def _load_models_layers(self, raw_data: Dict[str, Any]):
         all_models = [raw_data["base_model"]] if "base_model" in raw_data else []
@@ -362,21 +305,3 @@ class NormalizationRunner:
         )
 
 
-def display_slices(slices: List[Dict[str, Any]]):
-    for entry in slices:
-        print(json.dumps(entry, indent=2))
-
-#################
-## TODO: If given layer types like this then the filling from base_model
-#        for that block doesn't seem to work
-# {
-#     "sources": [
-#         {"model": "model_1",
-#          "layer": "model.layers.0.self_attn.k_proj.weight"},
-#         {"model": "model_2",
-#          "layer": "model.layers.0.post_attention_layernorm.weight"}
-#     ],
-#     "merge_method": "slerp"
-# }
-
-## TODO: allow shorter version of the template language if filter is present
