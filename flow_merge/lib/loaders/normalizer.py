@@ -23,10 +23,6 @@ class Source:
         self.model = kwargs["model"] if "model" in kwargs else None
         self.is_base = kwargs["is_base"] if "is_base" in kwargs else None
 
-    @staticmethod
-    def from_dict(source: Dict[str, Any]) -> "Source":
-        return Source(**source)
-
     def update(self, attr: str, value: Any):
         self.__setattr__(attr, value)
         return self
@@ -41,19 +37,11 @@ class Slice:
     def __init__(self, **kwargs):
         self.output_layer_id = kwargs["output_layer_id"] if "output_layer_id" in kwargs else None
         self.layers = kwargs["layers"] if "layers" in kwargs else None
-        self.sources = []
-        for source in (kwargs["sources"] or []):
-            if isinstance(source, dict):
-                self.sources.append(Source.from_dict(source))
-            else:
-                self.sources.append(Source(**source.__dict__))
-
-        # self.sources = [ for source in (kwargs["sources"] if "sources" in kwargs else [])]
+        self.sources = [
+            Source(**source) if isinstance(source, dict) else Source(**source.__dict__)
+            for source in kwargs["sources"]
+        ]
         self.merge_method = kwargs["merge_method"] if "merge_method" in kwargs else None
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "Slice":
-        return Slice(**data)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -75,7 +63,7 @@ class NormalizationRunner:
         if "base_model" not in raw_data:
             raise ValueError("Base model is missing")
 
-        slices = [Slice.from_dict(s) for s in raw_data["definition"]]
+        slices = [Slice(**s) for s in raw_data["definition"]]
         normalized_slices = []
         for i, s in enumerate(slices):
             s = self._apply_transformations(s)
