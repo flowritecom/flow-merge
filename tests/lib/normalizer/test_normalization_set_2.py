@@ -4,6 +4,7 @@ import yaml
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from unittest.mock import patch
 
+
 class TestNormalizationRunner(unittest.TestCase):
 
     def setUp(self):
@@ -23,7 +24,7 @@ class TestNormalizationRunner(unittest.TestCase):
           - merge_method: slerp
             sources:
               - model: A
-                base_model: True
+                is_base: True
                 range: [0, 1]
               - model: B
                 range: [0, 1]
@@ -31,43 +32,35 @@ class TestNormalizationRunner(unittest.TestCase):
         expected = [
             {
                 "output_layer_id": 0,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
-                        {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
-                    ],
-                    "merge_method": "slerp"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
+                    {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
+                ],
+                "merge_method": "slerp"
             },
             {
                 "output_layer_id": 0,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.0.mlp.weight", "model": "A", },
-                        {"layer": "model.layers.0.mlp.weight", "model": "B", },
-                    ],
-                    "merge_method": "slerp"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.0.mlp.weight", "model": "A", },
+                    {"layer": "model.layers.0.mlp.weight", "model": "B", },
+                ],
+                "merge_method": "slerp"
             },
             {
                 "output_layer_id": 1,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
-                        {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
-                    ],
-                    "merge_method": "slerp"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
+                    {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
+                ],
+                "merge_method": "slerp"
             },
             {
                 "output_layer_id": 1,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.1.mlp.weight", "model": "A", },
-                        {"layer": "model.layers.1.mlp.weight", "model": "B", },
-                    ],
-                    "merge_method": "slerp"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.1.mlp.weight", "model": "A", },
+                    {"layer": "model.layers.1.mlp.weight", "model": "B", },
+                ],
+                "merge_method": "slerp"
             },
         ]
 
@@ -91,7 +84,7 @@ class TestNormalizationRunner(unittest.TestCase):
             layers: ["attn"]
             sources:
               - model: A
-                base_model: True
+                is_base: True
                 range: [0, 1]
               - model: B
                 range: [0, 1]
@@ -99,41 +92,33 @@ class TestNormalizationRunner(unittest.TestCase):
         expected = [
             {
                 "output_layer_id": 0,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
-                        {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
-                    ],
-                    "merge_method": "slerp"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
+                    {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
+                ],
+                "merge_method": "slerp"
             },
             {
                 "output_layer_id": 1,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
-                        {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
-                    ],
-                    "merge_method": "slerp"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
+                    {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
+                ],
+                "merge_method": "slerp"
             },
             {
                 "output_layer_id": 0,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.0.mlp.weight", "model": "A", },
-                    ],
-                    "merge_method": "passthrough"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.0.mlp.weight", "model": "A", },
+                ],
+                "merge_method": "passthrough"
             },
             {
                 "output_layer_id": 1,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.1.mlp.weight", "model": "A", },
-                    ],
-                    "merge_method": "passthrough"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.1.mlp.weight", "model": "A", },
+                ],
+                "merge_method": "passthrough"
             },
         ]
 
@@ -156,7 +141,7 @@ class TestNormalizationRunner(unittest.TestCase):
             layers: ["xyz_not_existing"]
             sources:
               - model: A
-                base_model: True
+                is_base: True
                 range: [0, 1]
               - model: B
                 range: [0, 1]

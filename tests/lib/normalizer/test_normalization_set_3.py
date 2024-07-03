@@ -4,8 +4,9 @@ import yaml
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from unittest.mock import patch
 
-# import pydevd_pycharm
-# pydevd_pycharm.settrace('172.17.0.1', port=9898, stdoutToServer=True, stderrToServer=True)
+
+#import pydevd_pycharm
+#pydevd_pycharm.settrace('172.17.0.1', port=9898, stdoutToServer=True, stderrToServer=True)
 
 class TestNormalizationRunner(unittest.TestCase):
     def setUp(self):
@@ -31,7 +32,7 @@ class TestNormalizationRunner(unittest.TestCase):
           - merge_method: slerp
             sources:
               - model: A
-                base_model: True
+                is_base: True
                 range: [0, 1]
               - model: B
                 range: [0, 1]
@@ -39,53 +40,43 @@ class TestNormalizationRunner(unittest.TestCase):
         expected = [
             {
                 "output_layer_id": 0,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.embed_tokens.weight", "model": "A", },
-                        {"layer": "model.embed_tokens.weight", "model": "B", },
-                    ],
-                    "merge_method": "interpolate"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.embed_tokens.weight", "model": "A", },
+                    {"layer": "model.embed_tokens.weight", "model": "B", },
+                ],
+                "merge_method": "interpolate"
             },
             {
                 "output_layer_id": 1,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
-                        {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
-                    ],
-                    "merge_method": "slerp"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
+                    {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
+                ],
+                "merge_method": "slerp"
             },
             {
                 "output_layer_id": 2,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
-                        {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
-                    ],
-                    "merge_method": "slerp"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
+                    {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
+                ],
+                "merge_method": "slerp"
             },
             {
                 "output_layer_id": 3,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "model.norm.weight", "model": "A", },
-                        {"layer": "model.norm.weight", "model": "B", },
-                    ],
-                    "merge_method": "interpolate"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "model.norm.weight", "model": "A", },
+                    {"layer": "model.norm.weight", "model": "B", },
+                ],
+                "merge_method": "interpolate"
             },
             {
                 "output_layer_id": 4,
-                "slice": {
-                    "sources": [
-                        {"base_model": True, "layer": "lm_head.weight", "model": "A", },
-                        {"layer": "lm_head.weight", "model": "B", },
-                    ],
-                    "merge_method": "interpolate"
-                },
+                "sources": [
+                    {"is_base": True, "layer": "lm_head.weight", "model": "A", },
+                    {"layer": "lm_head.weight", "model": "B", },
+                ],
+                "merge_method": "interpolate"
             },
         ]
 
@@ -105,7 +96,7 @@ class TestNormalizationRunner(unittest.TestCase):
               - merge_method: slerp
                 sources:
                   - model: A
-                    base_model: True
+                    is_base: True
                     range: [0, 1]
             """
 
@@ -128,7 +119,7 @@ class TestNormalizationRunner(unittest.TestCase):
               - merge_method: slerp
                 sources:
                   - model: A
-                    base_model: False
+                    is_base: False
                     range: [0, 1]
             """
 
@@ -151,7 +142,7 @@ class TestNormalizationRunner(unittest.TestCase):
               - merge_method: slerp
                 sources:
                   - model: A
-                    base_model: True
+                    is_base: True
             """
 
         yaml_loaded = yaml.safe_load(yaml_input)
@@ -173,7 +164,7 @@ class TestNormalizationRunner(unittest.TestCase):
               - merge_method: slerp
                 sources:
                   - model: A
-                    base_model: True
+                    is_base: True
                     layer: model.lm_head
             """
 
