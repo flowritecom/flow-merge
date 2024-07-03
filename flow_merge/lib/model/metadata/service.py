@@ -105,10 +105,13 @@ class ModelMetadataService:
             )
             path_to_model = (self.directory_settings.local_dir / path_or_id).resolve()
             if path_to_model.exists():
+
                 file_metadata_list = self.create_file_metadata_list_from_local(
                     path_to_model
                 )
+                file_list = [file_path.name for file_path in path_to_model.glob("*")]
                 config = None
+
                 try:
                     config_obj = PretrainedConfig.from_json_file(
                         str(path_to_model / "config.json")
@@ -120,6 +123,7 @@ class ModelMetadataService:
                 model_metadata = ModelMetadata(
                     id=path_or_id,
                     sha=None,
+                    file_list=file_list,
                     file_metadata_list=file_metadata_list,
                     config=config,
                     hf_exists=False,

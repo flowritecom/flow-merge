@@ -6,9 +6,8 @@ from typing import Any
 import safetensors.torch
 import torch
 
-from flow_merge.lib.logger import get_logger
+from flow_merge.lib.logger import Logger
 
-logger = get_logger(__name__)
 
 
 # TODO - Test this class with .bin files

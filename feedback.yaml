@@ -7,6 +7,18 @@ loops:
     description: Test normalizer of the project
     command: pytest tests/lib/test_normalizer*.py tests/lib/normalizer/*.py --verbose
 
+  test-model-metadata:
+    description: Test model metadata, metadata service and file validators
+    command: pytest tests/lib/metadata/*.py --verbose
+
+  test-model:
+    description: Test model
+    command: pytest tests/lib/test_model.py --verbose
+
+  test-resolver:
+    description: Test resolver layer extraction
+    command: pytest tests/lib/test_resolver.py --verbose
+
   test-harness:
     description: Test some more
     script: |

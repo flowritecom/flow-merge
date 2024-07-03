@@ -66,7 +66,7 @@ class Model(ModelBase, arbitrary_types_allowed=True):
 
         shards = ModelService.create_shard_files(
             model_metadata=metadata,
-            device=env.device,
+            env=env,
             layers_to_download=None
         )
 

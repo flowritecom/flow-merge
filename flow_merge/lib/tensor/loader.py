@@ -6,8 +6,8 @@ from pydantic import BaseModel
 from safetensors import safe_open
 
 from flow_merge.lib.constants import DeviceIdentifier
-from flow_merge.lib.types import TensorKey
 
+TensorKey = str
 
 class ShardFile(BaseModel):
     filename: str

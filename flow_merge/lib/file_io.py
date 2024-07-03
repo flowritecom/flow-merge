@@ -4,19 +4,20 @@ from pathlib import Path
 from huggingface_hub import hf_hub_download
 
 from flow_merge.lib.model.metadata import ModelMetadata
+from flow_merge.lib.config import ApplicationConfig
 
 class FileRepository:
     """Immutable repository for handling file operations."""
 
     @staticmethod
-    def download_file(repo_id: str, filename: str, local_dir: Path) -> Path:
+    def download_file(repo_id: str, filename: str, local_dir: Path, env: ApplicationConfig) -> Path:
         try:
             file_path = hf_hub_download(
                 repo_id,
                 filename,
                 local_dir=str(local_dir),  # Convert Path to str for hf_hub_download
                 resume_download=True,
-                token=config.hf_token,
+                token=env.hf_token,
             )
             return Path(file_path)  # Convert returned file_path to Path
 
@@ -39,7 +40,7 @@ class FileRepository:
             raise RuntimeError(f"Error loading index from {file_path}: {e}")
 
     @staticmethod
-    def download_required_files(metadata: "ModelMetadata"):
+    def download_required_files(metadata: "ModelMetadata", env: ApplicationConfig):
         required_files = [
             "config.json",
             "tokenizer.json",
@@ -50,15 +51,16 @@ class FileRepository:
         for filename in required_files:
             if filename in metadata.file_list:
                 FileRepository.download_file(
-                    metadata.id, filename, metadata.directory_settings.local_dir
+                    metadata.id, filename, metadata.directory_settings.local_dir, env
                 )
 
     @staticmethod
-    def download_adapter_files(model_metadata: "ModelMetadata"):
+    def download_adapter_files(model_metadata: "ModelMetadata", env: ApplicationConfig):
         adapter_files = [f for f in model_metadata.file_list if "adapter" in f]
         for adapter_file in adapter_files:
             FileRepository.download_file(
                 model_metadata.id,
                 adapter_file,
                 model_metadata.directory_settings.local_dir,
+                env
             )

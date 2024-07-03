@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Dict, Optional
 
-from flow_merge.lib.model.metadata import FileRepository, ModelMetadata
+from flow_merge.lib.model.metadata import ModelMetadata
+from flow_merge.lib.file_io import FileRepository
 
 
 class TensorIndexService:

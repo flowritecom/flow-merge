@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 from huggingface_hub.hf_api import ModelInfo, RepoSibling, RepositoryNotFoundError
 
-from flow_merge.lib.merge_settings import DirectorySettings
-from flow_merge.lib.model_metadata import (
+from flow_merge.lib.validators._directory_settings import DirectorySettings
+from flow_merge.lib.model.metadata import (
     FileMetadata,
     ModelMetadata,
     ModelMetadataService,
@@ -62,7 +62,7 @@ def test_generate_content_hash():
 
 
 @patch("huggingface_hub.hf_hub_download")
-@patch("flow_merge.lib.model_metadata.config")
+@patch("flow_merge.lib.model.metadata.model_metadata.config")
 def test_download_hf_file(mock_config, mock_download):
     directory_settings = create_directory_settings()
 
@@ -84,7 +84,7 @@ def test_download_hf_file(mock_config, mock_download):
 
 
 @patch("huggingface_hub.hf_api.repo_info")
-@patch("flow_merge.lib.model_metadata.config")
+@patch("flow_merge.lib.model.metadata.model_metadata.config")
 def test_fetch_hf_model_info(mock_config, mock_repo_info):
     service = create_model_metadata_service()
     mock_repo_info.return_value = ModelInfo(
@@ -110,7 +110,7 @@ def test_fetch_hf_model_info(mock_config, mock_repo_info):
 # Medium Priority Tests
 @patch.object(ModelMetadataService, "download_hf_file")
 @patch.object(ModelMetadataService, "generate_content_hash")
-@patch("flow_merge.lib.model_metadata.config")
+@patch("flow_merge.lib.model.metadata.model_metadata.config")
 def test_create_file_metadata_list_from_hf(
     mock_config, mock_generate_content_hash, mock_download_hf_file
 ):
@@ -140,9 +140,9 @@ def test_create_file_metadata_list_from_hf(
     mock_generate_content_hash.assert_called_once_with("path/to/downloaded/file")
 
 
-@patch("flow_merge.lib.model_metadata.ModelMetadataService.generate_content_hash")
+@patch("flow_merge.lib.model.metadata.service.ModelMetadataService.generate_content_hash")
 @patch("pathlib.Path.glob")
-@patch("flow_merge.lib.model_metadata.config")
+@patch("flow_merge.lib.model.metadata.model_metadata.config")
 def test_create_file_metadata_list_from_local(
     mock_config, mock_glob, mock_generate_content_hash
 ):
@@ -168,7 +168,7 @@ def test_create_file_metadata_list_from_local(
 # Low Priority Tests
 @patch.object(ModelMetadataService, "fetch_hf_model_info")
 @patch.object(ModelMetadataService, "create_file_metadata_list_from_hf")
-@patch("flow_merge.lib.model_metadata.config")
+@patch("flow_merge.lib.model.metadata.model_metadata.config")
 def test_load_model_info_hf(
     mock_config, mock_create_file_metadata_list_from_hf, mock_fetch_hf_model_info
 ):
@@ -193,7 +193,7 @@ def test_load_model_info_hf(
 @patch.object(ModelMetadataService, "create_file_metadata_list_from_local")
 @patch.object(ModelMetadataService, "fetch_hf_model_info")
 @patch("transformers.PretrainedConfig.from_json_file")
-@patch("flow_merge.lib.model_metadata.config")
+@patch("flow_merge.lib.model.metadata.model_metadata.config")
 def test_load_model_info_local(
     mock_config,
     mock_from_pretrained,
@@ -228,7 +228,7 @@ def test_load_model_info_local(
 @patch.object(ModelMetadataService, "fetch_hf_model_info")
 @patch.object(ModelMetadataService, "download_hf_file")
 @patch.object(ModelMetadataService, "generate_content_hash")
-@patch("flow_merge.lib.model_metadata.config")
+@patch("flow_merge.lib.model.metadata.model_metadata.config")
 def test_end_to_end_hf_model(
     mock_config,
     mock_generate_content_hash,
@@ -256,7 +256,7 @@ def test_end_to_end_hf_model(
 
 @patch.object(ModelMetadataService, "create_file_metadata_list_from_local")
 @patch("transformers.PretrainedConfig.from_json_file")
-@patch("flow_merge.lib.model_metadata.config")
+@patch("flow_merge.lib.model.metadata.model_metadata.config")
 def test_end_to_end_local_model(
     mock_config, mock_from_pretrained, mock_create_file_metadata_list_from_local
 ):

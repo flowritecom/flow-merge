@@ -16,10 +16,11 @@ from flow_merge.lib.model.metadata.file_metadata import FileMetadata
 
 class ModelMetadata(BaseModel):
     id: str
-    sha: Optional[str]
-    config: Optional[Dict]
     file_metadata_list: List[FileMetadata] = Field(default_factory=list)
     file_list: List[str] = Field(default_factory=list)
+    
+    sha: Optional[str] = None
+    config: Optional[Dict] = None
     safetensors_info: Optional[SafeTensorsInfo] = Field(
         alias="safetensors", default=None
     ) 

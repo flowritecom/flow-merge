@@ -5,11 +5,13 @@ import torch
 from peft import PeftConfig, PeftModel
 
 from flow_merge.lib.architecture import ModelWeight
+from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.constants import DeviceIdentifier
-from flow_merge.lib.model.metadata import FileRepository, ModelMetadata
+from flow_merge.lib.model.metadata import ModelMetadata
 from flow_merge.lib.tensor.index import TensorIndexService
 from flow_merge.lib.tensor.loader import ShardFile, TensorRepository
 from flow_merge.lib.tensor.writer import TensorWriter
+from flow_merge.lib.file_io import FileRepository
 
 
 class ModelService:
@@ -108,16 +110,16 @@ class ModelService:
 
     @staticmethod
     def merge_and_save_model(
-        model_metadata: ModelMetadata, device: DeviceIdentifier
+        model_metadata: ModelMetadata, env: ApplicationConfig
     ) -> List[ShardFile]:
-        FileRepository.download_adapter_files(model_metadata)
+        FileRepository.download_adapter_files(model_metadata, env)
         base_model_shards = ModelService.determine_base_model_shards(model_metadata)
         adapter_files = [f for f in model_metadata.file_list if "adapter" in f]
 
         base_model = ModelService.load_and_apply_adapters(
             adapter_files=adapter_files,
             base_model_shards=base_model_shards,
-            device=device,
+            device=env.device,
             repo_id=model_metadata.id,
             local_dir=model_metadata.directory_settings.local_dir,
         )
@@ -180,16 +182,16 @@ class ModelService:
 
     @staticmethod
     def create_shard_files(
-        model_metadata: ModelMetadata, device: DeviceIdentifier, layers_to_download: List[str] = None
+        model_metadata: ModelMetadata, env: ApplicationConfig, layers_to_download: List[str] = None,
     ) -> List[ShardFile]:
         output_model_path = ModelService.get_output_model_path(model_metadata)
 
         ModelService.validate_config(model_metadata)
 
-        FileRepository.download_required_files(model_metadata)
+        FileRepository.download_required_files(model_metadata, env)
 
         if model_metadata.has_adapter:
-            return ModelService.merge_and_save_model(model_metadata, device)
+            return ModelService.merge_and_save_model(model_metadata, env)
 
         file_index = TensorIndexService.create_file_to_tensor_index(model_metadata)
         if file_index:
@@ -199,7 +201,7 @@ class ModelService:
                     file_index,
                     output_model_path,
                     model_metadata.id,
-                    device
+                    env.device
                 )
 
             file_index = TensorIndexService.flip_keys(file_index)

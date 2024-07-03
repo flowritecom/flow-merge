@@ -6,12 +6,10 @@ from pydantic import BaseModel
 from transformers import AutoConfig, AutoTokenizer, PreTrainedTokenizerBase
 
 from flow_merge.lib.constants import ADDITIONAL_SPECIAL_TOKENS_KEY
-from flow_merge.lib.logger import get_logger
+from flow_merge.lib.config import ApplicationConfig
+from flow_merge.lib.logger import Logger
 from flow_merge.lib.enriched_snapshot import EnrichedSnapshot
-from flow_merge.lib.merge_config import MergeConfig
 from flow_merge.lib.model import Model
-
-logger = get_logger(__name__)
 
 
 class Tokenizer(BaseModel):
@@ -22,173 +20,103 @@ class Tokenizer(BaseModel):
         allow_mutation = False
 
 
-def get_vocab_size(model: Model, trust_remote_code: bool) -> Optional[int]:
-    """
-    Get tokenizer vocabulary size from model config.
-
-    Args:
-        model: The model to get the vocabulary size from.
-        trust_remote_code: Whether to trust remote code.
-
-    Returns:
-        The vocabulary size of the tokenizer, or None if it cannot be obtained.
-    """
-    try:
-        model_config = AutoConfig.from_pretrained(
-            model.path, trust_remote_code=trust_remote_code
-        )
-        return model_config.vocab_size
-    except Exception as e:
-        logger.warning(f"Can't get vocab size for {model}: {e}")
-        return None
+class TokenizerLoader:
+    @staticmethod
+    def load_all_tokenizers(enriched_snapshot: EnrichedSnapshot, env: ApplicationConfig, logger: Logger) -> Dict[Model, PreTrainedTokenizerBase]:
+        all_tokenizers = {}
+        for model in enriched_snapshot.models + [enriched_snapshot.base_model]:
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(
+                    model.path,
+                    trust_remote_code=enriched_snapshot.settings.hf_hub_settings.trust_remote_code,
+                )
+            except Exception as e:
+                error_message = f"Error loading tokenizer for {model}: {e}"
+                logger.error(error_message)
+                raise RuntimeError(error_message)
+            all_tokenizers[model] = tokenizer
+        return all_tokenizers
 
 
-def check_tokenizers_for_differences(
-    tokenizers: Dict[Model, PreTrainedTokenizerBase],
-) -> bool:
-    """
-    Check if any tokenizer has different tokens, vocab, or added tokens compared to other tokenizers.
+class TokenizerValidator:
+    @staticmethod
+    def check_tokenizers_for_differences(tokenizers: Dict[Model, PreTrainedTokenizerBase], logger: Logger) -> bool:
+        differences_found = False
 
-    Args:
-        tokenizers: A dictionary of tokenizers with Model's as keys.
+        for (model_a, tokenizer_a), (model_b, tokenizer_b) in combinations(tokenizers.items(), 2):
+            differences_found |= TokenizerValidator._compare_tokenizer_vocabs(model_a, tokenizer_a, model_b, tokenizer_b, logger)
+            differences_found |= TokenizerValidator._compare_special_tokens(model_a, tokenizer_a, model_b, tokenizer_b, logger)
+            differences_found |= TokenizerValidator._compare_added_tokens_encoders(model_a, tokenizer_a, model_b, tokenizer_b, logger)
 
-    Returns:
-        True if there are differences in tokens, vocab, or added tokens, False otherwise.
-    """
-    differences_found = False
+        return differences_found
 
-    for (model_a, tokenizer_a), (model_b, tokenizer_b) in combinations(
-        tokenizers.items(), 2
-    ):
-        differences_found |= compare_tokenizer_vocabs(
-            model_a, tokenizer_a, model_b, tokenizer_b
-        )
-        differences_found |= compare_special_tokens(
-            model_a, tokenizer_a, model_b, tokenizer_b
-        )
-        differences_found |= compare_added_tokens_encoders(
-            model_a, tokenizer_a, model_b, tokenizer_b
-        )
+    @staticmethod
+    def _compare_tokenizer_vocabs(
+        model_a: Model,
+        tokenizer_a: PreTrainedTokenizerBase,
+        model_b: Model,
+        tokenizer_b: PreTrainedTokenizerBase,
+        logger: Logger
+    ) -> bool:
+        vocab_a = tokenizer_a.get_vocab()
+        vocab_b = tokenizer_b.get_vocab()
 
-    return differences_found
+        if vocab_a != vocab_b:
+            logger.info(f"Tokenizer for model {model_a} has different vocab compared to model {model_b}.")
+            return True
+        return False
 
+    @staticmethod
+    def _compare_special_tokens(
+        model_a: Model,
+        tokenizer_a: PreTrainedTokenizerBase,
+        model_b: Model,
+        tokenizer_b: PreTrainedTokenizerBase,
+        logger: Logger
+    ) -> bool:
+        special_tokens_a = tokenizer_a.special_tokens_map
+        special_tokens_b = tokenizer_b.special_tokens_map
 
-def compare_tokenizer_vocabs(
-    model_a: Model,
-    tokenizer_a: PreTrainedTokenizerBase,
-    model_b: Model,
-    tokenizer_b: PreTrainedTokenizerBase,
-) -> bool:
-    """
-    Compare vocabularies of two tokenizers.
+        if special_tokens_a != special_tokens_b:
+            logger.info(f"Tokenizer for model {model_a} has different special tokens compared to model {model_b}.")
+            return True
+        return False
 
-    Args:
-        model_a: The first model.
-        tokenizer_a: The first tokenizer.
-        model_b: The second model.
-        tokenizer_b: The second tokenizer.
+    @staticmethod
+    def _compare_added_tokens_encoders(
+        model_a: Model,
+        tokenizer_a: PreTrainedTokenizerBase,
+        model_b: Model,
+        tokenizer_b: PreTrainedTokenizerBase,
+        logger: Logger
+    ) -> bool:
+        added_tokens_encoder_a = tokenizer_a.added_tokens_encoder
+        added_tokens_encoder_b = tokenizer_b.added_tokens_encoder
 
-    Returns:
-        True if vocabularies are different, False otherwise.
-    """
-    vocab_a = tokenizer_a.get_vocab()
-    vocab_b = tokenizer_b.get_vocab()
-
-    if vocab_a != vocab_b:
-        logger.info(
-            f"Tokenizer for model {model_a} has different vocab compared to model {model_b}."
-        )
-        return True
-    return False
-
-
-def compare_special_tokens(
-    model_a: Model,
-    tokenizer_a: PreTrainedTokenizerBase,
-    model_b: Model,
-    tokenizer_b: PreTrainedTokenizerBase,
-) -> bool:
-    """
-    Compare special tokens of two tokenizers.
-
-    Args:
-        model_a: The first model.
-        tokenizer_a: The first tokenizer.
-        model_b: The second model.
-        tokenizer_b: The second tokenizer.
-
-    Returns:
-        True if special tokens are different, False otherwise.
-    """
-    special_tokens_a = tokenizer_a.special_tokens_map
-    special_tokens_b = tokenizer_b.special_tokens_map
-
-    if special_tokens_a != special_tokens_b:
-        logger.info(
-            f"Tokenizer for model {model_a} has different special tokens compared to model {model_b}."
-        )
-        return True
-    return False
+        if added_tokens_encoder_a != added_tokens_encoder_b:
+            logger.info(f"Tokenizer for model {model_a} has different added tokens encoder compared to model {model_b}.")
+            return True
+        return False
 
 
-def compare_added_tokens_encoders(
-    model_a: Model,
-    tokenizer_a: PreTrainedTokenizerBase,
-    model_b: Model,
-    tokenizer_b: PreTrainedTokenizerBase,
-) -> bool:
-    """
-    Compare added tokens encoders of two tokenizers.
-
-    Args:
-        model_a: The first model.
-        tokenizer_a: The first tokenizer.
-        model_b: The second model.
-        tokenizer_b: The second tokenizer.
-
-    Returns:
-        True if added tokens encoders are different, False otherwise.
-    """
-    added_tokens_encoder_a = tokenizer_a.added_tokens_encoder
-    added_tokens_encoder_b = tokenizer_b.added_tokens_encoder
-
-    if added_tokens_encoder_a != added_tokens_encoder_b:
-        logger.info(
-            f"Tokenizer for model {model_a} has different added tokens encoder compared to model {model_b}."
-        )
-        return True
-    return False
-
-
-class MergedTokenizerBuilder(BaseModel):
-    base_model: Model
-    tokenizers: Dict[Model, PreTrainedTokenizerBase]
+class TokenizerMerger:
+    def __init__(
+            self, 
+            base_model: Model, 
+            tokenizers: Dict[Model, PreTrainedTokenizerBase],
+            env: ApplicationConfig,
+            logger: Logger
+        ):
+        self.base_model = base_model
+        self.tokenizers = tokenizers
+        self.env = env
+        self.logger = logger
 
     def construct_merged_tokenizer(self) -> PreTrainedTokenizerBase:
-        """
-        Constructs a tokenizer with a vocab that contains all tokens from all models involved in the merge.
+        merged_vocab, merged_added_tokens, merged_special_tokens = self._merge_tokenizer_components()
+        return self._create_merged_tokenizer(merged_vocab, merged_added_tokens, merged_special_tokens)
 
-        Returns:
-            The merged tokenizer.
-        """
-        (
-            merged_vocab,
-            merged_added_tokens,
-            merged_special_tokens,
-        ) = self._merge_tokenizer_components()
-        return self._create_merged_tokenizer(
-            merged_vocab, merged_added_tokens, merged_special_tokens
-        )
-
-    def _merge_tokenizer_components(
-        self,
-    ) -> Tuple[Dict[str, int], Dict[str, str], Dict[str, str]]:
-        """
-        Merge components of tokenizers including vocab, added tokens, and special tokens.
-
-        Returns:
-            A tuple of merged vocab, merged added tokens, and merged special tokens.
-        """
+    def _merge_tokenizer_components(self) -> Tuple[Dict[str, int], Dict[str, str], Dict[str, str]]:
         merged_vocab = {}
         merged_added_tokens = {}
         merged_special_tokens = {}
@@ -202,21 +130,12 @@ class MergedTokenizerBuilder(BaseModel):
             special_tokens = tokenizer.special_tokens_map
 
             self._merge_vocab(merged_vocab, vocab)
-            self._merge_added_tokens(
-                merged_added_tokens, added_tokens, duplicate_added_tokens
-            )
+            self._merge_added_tokens(merged_added_tokens, added_tokens, duplicate_added_tokens)
             self._merge_special_tokens(merged_special_tokens, special_tokens)
 
         return merged_vocab, merged_added_tokens, merged_special_tokens
 
     def _merge_vocab(self, merged_vocab: Dict[str, int], vocab: Dict[str, int]) -> None:
-        """
-        Merge the vocabulary of a tokenizer into the merged vocabulary.
-
-        Args:
-            merged_vocab: The merged vocabulary.
-            vocab: The vocabulary of a tokenizer.
-        """
         for token, input_id in vocab.items():
             if token not in merged_vocab:
                 merged_vocab[token] = len(merged_vocab)
@@ -225,26 +144,13 @@ class MergedTokenizerBuilder(BaseModel):
         self,
         merged_added_tokens: Dict[str, str],
         added_tokens: Dict[int, str],
-        duplicate_added_tokens: set,
+        duplicate_added_tokens: set
     ) -> None:
-        """
-        Merge the added tokens of a tokenizer into the merged added tokens.
-
-        Args:
-            merged_added_tokens: The merged added tokens.
-            added_tokens: The added tokens of a tokenizer.
-            duplicate_added_tokens: A set to track duplicate added tokens.
-        """
         for input_id, added_token in added_tokens.items():
             token = added_token.content
             if token in merged_added_tokens:
-                if (
-                    merged_added_tokens[token] != added_token
-                    and token not in duplicate_added_tokens
-                ):
-                    logger.warning(
-                        f"Token {token} added with multiple different settings, using the first one by default."
-                    )
+                if merged_added_tokens[token] != added_token and token not in duplicate_added_tokens:
+                    self.logger.warning(f"Token {token} added with multiple different settings, using the first one by default.")
                     duplicate_added_tokens.add(token)
             else:
                 merged_added_tokens[token] = added_token
@@ -252,20 +158,9 @@ class MergedTokenizerBuilder(BaseModel):
     def _merge_special_tokens(
         self, merged_special_tokens: Dict[str, str], special_tokens: Dict[str, str]
     ) -> None:
-        """
-        Merge the special tokens of a tokenizer into the merged special tokens.
-
-        Args:
-            merged_special_tokens: The merged special tokens.
-            special_tokens: The special tokens of a tokenizer.
-        """
         for special_token_type, special_token in special_tokens.items():
-            if special_token_type == ADDITIONAL_SPECIAL_TOKENS_KEY and isinstance(
-                special_token, list
-            ):
-                merged_special_tokens.setdefault(special_token_type, []).extend(
-                    special_token
-                )
+            if special_token_type == ADDITIONAL_SPECIAL_TOKENS_KEY and isinstance(special_token, list):
+                merged_special_tokens.setdefault(special_token_type, []).extend(special_token)
             else:
                 merged_special_tokens[special_token_type] = special_token
 
@@ -275,17 +170,6 @@ class MergedTokenizerBuilder(BaseModel):
         merged_added_tokens: Dict[str, str],
         merged_special_tokens: Dict[str, str],
     ) -> PreTrainedTokenizerBase:
-        """
-        Create the merged tokenizer using the merged components.
-
-        Args:
-            merged_vocab: The merged vocabulary.
-            merged_added_tokens: The merged added tokens.
-            merged_special_tokens: The merged special tokens.
-
-        Returns:
-            The merged tokenizer.
-        """
         base_tokenizer = self.tokenizers[self.base_model]
         merged_tokenizer = deepcopy(base_tokenizer)
 
@@ -303,151 +187,94 @@ class MergedTokenizerBuilder(BaseModel):
         merged_tokenizer.add_tokens(tokens_to_add_with_settings)
 
         for special_token_type, special_token in merged_special_tokens.items():
-            if special_token_type == ADDITIONAL_SPECIAL_TOKENS_KEY and isinstance(
-                special_token, list
-            ):
-                logger.info(f"Adding additional special tokens: {special_token}.")
-                merged_tokenizer.add_special_tokens(
-                    {ADDITIONAL_SPECIAL_TOKENS_KEY: special_token}
-                )
+            if special_token_type == ADDITIONAL_SPECIAL_TOKENS_KEY and isinstance(special_token, list):
+                self.logger.info(f"Adding additional special tokens: {special_token}.")
+                merged_tokenizer.add_special_tokens({ADDITIONAL_SPECIAL_TOKENS_KEY: special_token})
             else:
-                logger.warning(
-                    f"Overriding {special_token_type} with {special_token}. When a conflict occurs, the last one takes priority."
-                )
+                self.logger.warning(f"Overriding {special_token_type} with {special_token}. When a conflict occurs, the last one takes priority.")
                 merged_tokenizer.add_special_tokens({special_token_type: special_token})
 
         return merged_tokenizer
 
 
-def get_merge_tokenizer(
-        enriched_snapshot: EnrichedSnapshot, 
-        env, logger) -> Tokenizer:
-    """
-    Returns a tokenizer for the merged model based on the provided configuration.
+class InputIDsMapper:
+    @staticmethod
+    def create_input_ids_mappings(
+        enriched_snapshot: EnrichedSnapshot,
+        all_tokenizers: Dict[Model, PreTrainedTokenizerBase],
+        merge_tokenizer: PreTrainedTokenizerBase,
+        logger: Logger
+    ) -> Dict[Model, Dict[int, int]]:
+        logger.info("Creating input ids mappings for interpolation of `embed_tokens` and `lm_head` layers.")
+        input_ids_mappings = {}
+        merge_tokenizer_vocab = merge_tokenizer.get_vocab()
 
-    Args:
-        merge_config: The configuration object containing the merge configuration.
+        for model in enriched_snapshot.models + [enriched_snapshot.base_model]:
+            vocab = all_tokenizers[model].get_vocab()
+            vocab_size = InputIDsMapper.get_vocab_size(
+                model=model,
+                trust_remote_code=enriched_snapshot.hf_hub_settings.trust_remote_code,
+                logger=logger
+            ) or len(vocab)
 
-    Returns:
-        The tokenizer for the merged model with the inputs_ids_mappings if available.
-    """
-    
-    # FIXME uses models + base_model from merge_config
-    all_tokenizers = load_all_tokenizers(enriched_snapshot)
+            model_input_ids_mappings = {}
+            for token, new_input_id in merge_tokenizer_vocab.items():
+                old_input_id = vocab.get(token, -1)
+                if old_input_id >= vocab_size:
+                    raise RuntimeError(f"{model} token {token} has input id {old_input_id} > {vocab_size-1} due to trimming or modification.")
+                model_input_ids_mappings[new_input_id] = old_input_id
 
-    if not check_tokenizers_for_differences(all_tokenizers):
-        logger.info(
-            f"No differences in tokens or vocab among tokenizers. Using {enriched_snapshot.base_model.path} for the tokenizer."
-        )
-        return Tokenizer(tokenizer=all_tokenizers[enriched_snapshot.base_model])
+            assert len(merge_tokenizer_vocab) == len(model_input_ids_mappings), "Lengths of merge_tokenizer_vocab and model_input_ids_mappings must be equal."
 
-    logger.info(
-        "Different tokens or vocab among tokenizers. Building the tokenizer for the merged model."
-    )
+            input_ids_mappings[model] = model_input_ids_mappings
 
-    # FIXME requires tokenizer_settings, base_model from merge_config 
-    merge_tokenizer = construct_appropriate_tokenizer(merge_config, all_tokenizers)
-    
-    # FIXME requires models + base_model, hf_hub_settings 
-    input_ids_mappings = create_input_ids_mappings(
-        merge_config, all_tokenizers, merge_tokenizer
-    )
+        return input_ids_mappings
 
-    return Tokenizer(tokenizer=merge_tokenizer, input_ids_mappings=input_ids_mappings)
-
-
-def load_all_tokenizers(
-    merge_config: MergeConfig,
-) -> Dict[Model, PreTrainedTokenizerBase]:
-    """
-    Load all tokenizers for the given merge configuration.
-
-    Args:
-        merge_config: The configuration object containing the merge configuration.
-
-    Returns:
-        A dictionary of all loaded tokenizers.
-    """
-    all_tokenizers = {}
-    for model in merge_config.models + [merge_config.base_model]:
+    @staticmethod
+    def get_vocab_size(model: Model, trust_remote_code: bool, logger: Logger) -> Optional[int]:
         try:
-            # FIXME trust_remote_code from merge config
-            tokenizer = AutoTokenizer.from_pretrained(
-                model.path,
-                trust_remote_code=merge_config.hf_hub_settings.trust_remote_code,
-            )
+            model_config = AutoConfig.from_pretrained(model.path, trust_remote_code=trust_remote_code)
+            return model_config.vocab_size
         except Exception as e:
-            error_message = f"Error loading tokenizer for {model}: {e}"
-            logger.error(error_message)
-            raise RuntimeError(error_message)
-        all_tokenizers[model] = tokenizer
-    return all_tokenizers
+            logger.warning(f"Can't get vocab size for {model}: {e}")
+            return None
 
 
-def construct_appropriate_tokenizer(
-    merge_config: MergeConfig, all_tokenizers: Dict[Model, PreTrainedTokenizerBase]
-) -> PreTrainedTokenizerBase:
-    """
-    Construct the appropriate tokenizer based on the merge configuration.
+class MergeTokenizerService:
 
-    Args:
-        merge_config: The configuration object containing the merge configuration.
-        all_tokenizers: A dictionary of all loaded tokenizers.
+    def __init__(self, env: ApplicationConfig, logger: Logger):
+        self.env = env
+        self.logger = logger
 
-    Returns:
-        The appropriate tokenizer for the merged model.
-    """
-    if merge_config.tokenizer_settings.mode == "base":
-        return all_tokenizers[merge_config.base_model]
+    def get_merge_tokenizer(self, enriched_snapshot: EnrichedSnapshot) -> Tokenizer:
+        all_tokenizers = TokenizerLoader.load_all_tokenizers(enriched_snapshot, self.env, self.logger)
 
-    builder = MergedTokenizerBuilder(
-        base_model=merge_config.base_model, tokenizers=all_tokenizers
-    )
-    return builder.construct_merged_tokenizer()
+        if not TokenizerValidator.check_tokenizers_for_differences(all_tokenizers, self.logger):
+            self.logger.info(f"No differences in tokens or vocab among tokenizers. Using {enriched_snapshot.base_model.path} for the tokenizer.")
+            return Tokenizer(tokenizer=all_tokenizers[enriched_snapshot.base_model])
 
+        self.logger.info("Different tokens or vocab among tokenizers. Building the tokenizer for the merged model.")
 
-def create_input_ids_mappings(
-    c: MergeConfig,
-    all_tokenizers: Dict[Model, PreTrainedTokenizerBase],
-    merge_tokenizer: PreTrainedTokenizerBase,
-) -> Dict[Model, Dict[int, int]]:
-    """
-    Create input IDs mappings for interpolation of `embed_tokens` and `lm_head` layers.
+        merge_tokenizer = self.construct_appropriate_tokenizer(enriched_snapshot, all_tokenizers)
+        input_ids_mappings = InputIDsMapper.create_input_ids_mappings(
+            enriched_snapshot, 
+            all_tokenizers, 
+            merge_tokenizer, 
+            self.logger
+        )
 
-    Args:
-        merge_config: The configuration object containing the merge configuration.
-        all_tokenizers: A dictionary of all tokenizers.
-        merge_tokenizer: The merged tokenizer.
+        return Tokenizer(tokenizer=merge_tokenizer, input_ids_mappings=input_ids_mappings)
 
-    Returns:
-        A dictionary of input IDs mappings.
-    """
-    logger.info(
-        "Creating input ids mappings for interpolation of `embed_tokens` and `lm_head` layers."
-    )
-    input_ids_mappings = {}
-    merge_tokenizer_vocab = merge_tokenizer.get_vocab()
+    def construct_appropriate_tokenizer(
+        self, enriched_snapshot: EnrichedSnapshot, all_tokenizers: Dict[Model, PreTrainedTokenizerBase]
+    ) -> PreTrainedTokenizerBase:
+        if enriched_snapshot.tokenizer_settings.mode == "base":
+            return all_tokenizers[enriched_snapshot.base_model]
 
-    for model in merge_config.models + [merge_config.base_model]:
-        vocab = all_tokenizers[model].get_vocab()
-        vocab_size = get_vocab_size(
-            model=model,
-            trust_remote_code=merge_config.hf_hub_settings.trust_remote_code,
-        ) or len(vocab)
-
-        model_input_ids_mappings = {}
-        for token, new_input_id in merge_tokenizer_vocab.items():
-            old_input_id = vocab.get(token, -1)
-            if old_input_id >= vocab_size:
-                raise RuntimeError(
-                    f"{model} token {token} has input id {old_input_id} > {vocab_size-1} due to trimming or modification."
-                )
-            model_input_ids_mappings[new_input_id] = old_input_id
-
-        assert (
-            len(merge_tokenizer_vocab) == len(model_input_ids_mappings)
-        ), "Lengths of merge_tokenizer_vocab and model_input_ids_mappings must be equal."
-
-        input_ids_mappings[model] = model_input_ids_mappings
-
-    return input_ids_mappings
+        builder = TokenizerMerger(
+            base_model=enriched_snapshot.base_model, 
+            tokenizers=all_tokenizers,
+            env=self.env,
+            logger=self.logger
+            )
+        return builder.construct_merged_tokenizer()
