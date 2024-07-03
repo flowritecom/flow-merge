@@ -93,7 +93,7 @@ class Planner:
     def _load_models(self):
         normalized_slices = self.snapshot.normalized
 
-        models_by_layers = extract_models_by_layers(normalized_slices)
+        models_by_layers = extract_models_by_layers(normalized_slices, self.logger)
 
         # Is there an instance when we wouldn't have the base model in normalized slices?
 
