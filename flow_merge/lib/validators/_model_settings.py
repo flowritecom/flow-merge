@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator, ConfigDict
 import logging
 from flow_merge.lib.validators._method_settings import MergeMethodIdentifier
 
@@ -66,5 +66,4 @@ class ModelSettings(BaseModel):
                 )
         return self
 
-    class Config:
-        frozen = True  # Make this model immutable
+    model_config = ConfigDict(frozen=True)  # Make this model immutable

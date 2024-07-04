@@ -1,10 +1,9 @@
-from typing import List
+from typing import List, Any
 
-from flow_merge.lib.snapshot import Snapshot
+from flow_merge.lib.snapshot.data_architecture.snapshot import Snapshot
 from flow_merge.lib.model.model import Model
-from flow_merge.lib.tokenizer_old import Tokenizer
 
 class EnrichedSnapshot(Snapshot):
     models: List[Model]
     base_model: Model
-    tokenizer: Tokenizer = None
+    tokenizer: Any = None

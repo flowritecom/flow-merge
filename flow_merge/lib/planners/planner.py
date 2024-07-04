@@ -78,7 +78,7 @@ class Planner:
     def plan(self):
         (base_model, models) = self._load_models()
         enriched_snapshot = EnrichedSnapshot(
-            **self.snapshot, 
+            **self.snapshot.model_dump(), 
             base_model=base_model, 
             models=models
         )
@@ -100,7 +100,7 @@ class Planner:
         # Enriched snapshot passing for models?
         base_model = self.model_class.from_path(
             path=models_by_layers.base_model,
-            directory_settings=self.snapshot.directory_settings,
+            directory_settings=self.snapshot.settings.directory_settings,
             env=self.env,
             logger=self.logger
         )
@@ -111,7 +111,7 @@ class Planner:
             models[model_id_or_path] = self.model_class.from_layers(
                 layers_to_download=layers,
                 path=model_id_or_path,
-                directory_settings=self.snapshot.directory_settings,
+                directory_settings=self.snapshot.settings.directory_settings,
                 env=self.env,
                 logger=self.logger
             )

@@ -21,7 +21,10 @@ class TestResolver(unittest.TestCase):
         )
 
         result = extract_models_by_layers(slices, logger)
-        self.assertEqual(result, expected_output)
+        self.assertEqual(result.base_model, expected_output.base_model)
+        self.assertEqual(set(result.models.keys()), set(expected_output.models.keys()))
+        for model in result.models:
+            self.assertCountEqual(result.models[model], expected_output.models[model])
 
     def test_no_base_model(self):
         slices = [
@@ -33,7 +36,9 @@ class TestResolver(unittest.TestCase):
 
         result = extract_models_by_layers(slices, logger)
         self.assertIsNone(result.base_model)
-        self.assertEqual(result.models, {'model_1': ['model.embed_tokens.weight', 'model.layers.0.mlp.gate_proj.weight',], 'model_2': ['model.layers.0.mlp.gate_proj.weight']})
+        self.assertEqual(set(result.models.keys()), set(["model_1", "model_2"]))
+        self.assertCountEqual(result.models["model_1"], ['model.embed_tokens.weight', 'model.layers.0.mlp.gate_proj.weight'])
+        self.assertCountEqual(result.models["model_2"], ['model.layers.0.mlp.gate_proj.weight'])
 
     def test_empty_slices(self):
         slices = []

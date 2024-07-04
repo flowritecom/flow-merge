@@ -2,7 +2,7 @@ from copy import deepcopy
 from itertools import combinations
 from typing import Dict, Optional, Tuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from transformers import AutoConfig, AutoTokenizer, PreTrainedTokenizerBase
 
 from flow_merge.lib.constants import ADDITIONAL_SPECIAL_TOKENS_KEY
@@ -16,9 +16,7 @@ class Tokenizer(BaseModel):
     tokenizer: PreTrainedTokenizerBase
     input_ids_mappings: Optional[Dict[Model, Dict[int, int]]] = None
 
-    class Config:
-        allow_mutation = False
-
+    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
 class TokenizerLoader:
     @staticmethod

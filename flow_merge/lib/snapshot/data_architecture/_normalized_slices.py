@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, model_validator
 
 from ..hash import create_content_hash
 
@@ -13,24 +13,26 @@ class MergeMethodIdentifier(str, Enum):
     PASSTHROUGH = "passthrough"
 
 class NormalizedSource(BaseModel):
-    model: str
-    layer: str
+    model: Optional[str]
+    layer: Optional[str]
     base_model: Optional[bool]
 
 class NormalizedSlice(BaseModel):
-    merge_method: MergeMethodIdentifier
+    merge_method: Optional[MergeMethodIdentifier]
     sources: List[NormalizedSource]
 
 class NormalizedSlices(BaseModel):
     slices: List[NormalizedSlice]
     sha: Optional[str]
 
-    @field_validator('sha', mode='after')
-    def compute_sha(cls, values: Dict[str, Any]):
+    @model_validator(mode="after")
+    def compute_sha(self):
         # Convert all fields except 'sha' to a dictionary
-        data_dict = {k: v for k, v in values.items() if k != 'sha'}
+        data_dict = self.model_dump()
+        data_dict.pop("sha")
         content_hash = create_content_hash(data_dict)
-        values['sha'] = content_hash
-        return values
+        self.sha = content_hash
+
+        return self
 
     
