@@ -13,6 +13,7 @@ class MergeMethodIdentifier(str, Enum):
     PASSTHROUGH = "passthrough"
 
 class NormalizedSource(BaseModel):
+    weight: Optional[int]
     model: Optional[str]
     layer: Optional[str]
     base_model: Optional[bool]

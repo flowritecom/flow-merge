@@ -2,11 +2,13 @@ from pathlib import Path
 from typing import List, NewType, Optional, Dict
 
 from pydantic import BaseModel
+from transformers import PretrainedConfig
 
 from flow_merge.lib.logger import Logger
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.validators import DirectorySettings
 from flow_merge.lib.model.service import ModelService
+from flow_merge.lib.model.architecture import ModelArchitecture
 from flow_merge.lib.model.metadata import ModelMetadataService, ModelMetadata
 from flow_merge.lib.tensor.index import TensorIndexService
 from flow_merge.lib.tensor.loader import ShardFile
@@ -31,6 +33,7 @@ class Model(ModelBase, arbitrary_types_allowed=True):
     metadata: ModelMetadata
     file_to_tensor_index: Optional[Dict]
     shards: List[ShardFile]
+    architecture: ModelArchitecture
 
     is_partial: bool = False
     
@@ -51,6 +54,19 @@ class Model(ModelBase, arbitrary_types_allowed=True):
         
         return metadata
     
+    @staticmethod
+    def _create_architecture(
+        metadata: ModelMetadata,
+        env: ApplicationConfig,
+        logger: Logger
+    ):
+        try:
+            config = PretrainedConfig.from_dict(metadata.config)
+            return ModelArchitecture.from_config(config)
+        except EnvironmentError as e:
+            logger.warn(f"Error while fetching config for local model: {e}")
+            
+    
     @classmethod
     def from_path(
         cls, 
@@ -70,12 +86,15 @@ class Model(ModelBase, arbitrary_types_allowed=True):
             layers_to_download=None
         )
 
+        architecture = cls._create_architecture(metadata)
+
         return cls(
             id=model_id,
             path=path.resolve(),
             metadata=metadata,
             file_to_tensor_index=file_to_tensor_index,
             shards=shards,
+            architecture=architecture
         )
     
     @classmethod
@@ -98,13 +117,16 @@ class Model(ModelBase, arbitrary_types_allowed=True):
             layers_to_download=layers_to_download
         )
 
+        architecture = cls._create_architecture(metadata)
+
         return cls(
             id=model_id,
             path=path.resolve(),
             metadata=metadata,
             file_to_tensor_index=file_to_tensor_index,
             shards=shards,
-            is_partial=False if metadata.has_adapter and file_to_tensor_index is None else True
+            is_partial=False if metadata.has_adapter and file_to_tensor_index is None else True,
+            architecture=architecture
         )
 
     def __hash__(self):

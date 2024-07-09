@@ -4,10 +4,14 @@ from enum import Enum
 from importlib.resources import contents, read_text
 from typing import Dict, List, Optional
 
+from pathlib import Path
+
 from pydantic import BaseModel, ConfigDict
 from transformers import PretrainedConfig
 
 import flow_merge.data.architectures
+from flow_merge.lib.file_io import FileRepository
+from flow_merge.lib.config import ApplicationConfig
 
 
 class ArchitectureType(str, Enum):
@@ -86,6 +90,26 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
     weights: List[ModelWeight]
     model_type: ModelType
     config: PretrainedConfig
+
+    @classmethod
+    def from_path_or_id(
+        cls, 
+        path_or_id: str, 
+        local_dir: Path, 
+        env: ApplicationConfig
+    ):
+        path_to_config = FileRepository.download_file(
+            repo_id=path_or_id,
+            filename="config.json",
+            local_dir=local_dir,
+            env=env
+        )
+
+        config = PretrainedConfig.from_json_file(
+            path_to_config
+        )
+
+        return cls.from_config(config)
 
     @classmethod
     def from_config(cls, config: PretrainedConfig) -> "ModelArchitecture":
@@ -222,3 +246,12 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
             for weight in self.weights
             if weight.layer_type == ModelWeightLayerType.decoder
         ]
+    
+    def get_weight(
+        self, 
+        weight_name: str
+    ) -> ModelWeight:
+        for weight in self.weights:
+            if weight.name == weight_name:
+                return weight
+        return None

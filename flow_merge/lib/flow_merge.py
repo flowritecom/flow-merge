@@ -22,6 +22,9 @@ class FlowMerge:
     def save(self):
         self.logger.info("Saving")
 
+    def eval(self):
+        self.logger.info("evaluate")
+
 
 class FlowMergeManager:
     def __init__(self, default_logger: Logger = None):

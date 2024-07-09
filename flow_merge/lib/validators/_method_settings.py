@@ -11,6 +11,7 @@ class MergeMethodIdentifier(str, Enum):
     DARE_TIES_MERGING = "dare-ties-merging"
     MODEL_SOUP = "model-soup"
     PASSTHROUGH = "passthrough"
+    INTERPOLATE = "interpolate"
 
 
 class MethodGlobalParameters(BaseModel):

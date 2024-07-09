@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 import torch
 from peft import PeftConfig, PeftModel
 
-from flow_merge.lib.architecture import ModelWeight
+from flow_merge.lib.model.architecture import ModelWeight
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.constants import DeviceIdentifier
 from flow_merge.lib.model.metadata import ModelMetadata
@@ -207,7 +207,7 @@ class ModelService:
             file_index = TensorIndexService.flip_keys(file_index)
 
             return ModelService.gather_shard_files(
-                file_index, output_model_path, model_metadata.id, device
+                file_index, output_model_path, model_metadata.id, env.device
             )
         else:
             print("Index files not found, using single shard file fallback.")
@@ -217,7 +217,7 @@ class ModelService:
                 else "pytorch_model.bin"
             )
             shard_file = ModelService.create_shard_file(
-                output_model_path, model_metadata.id, device, single_file
+                output_model_path, model_metadata.id, env.device, single_file
             )
             return [shard_file]
         

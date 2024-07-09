@@ -4,7 +4,6 @@ import yaml
 
 from flow_merge.lib.validators.runner import ValidationRunner
 
-
 # these might get configs of their own
 # FIXME: takes a normalizer ?
 class ConfigLoader:
