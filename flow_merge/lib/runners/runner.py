@@ -32,9 +32,6 @@ class Runner:
             if model.id == path_or_id:
                 return model
         return None
-    
-    def _get_task_weights(self):
-        pass
 
     def _get_merge_method(self, merge_method: MethodSettings):
         method_class = method_classes[merge_method.merge_method]
@@ -53,9 +50,8 @@ class Runner:
         }
 
         return method_config
-        
-
-    def run(self):
+    
+    def _merge_sources(self):
         for slice in self.enriched_snapshot.normalized:
             merge_method = slice["merge_method"]
             method_config = self._get_merge_method(merge_method)
@@ -82,5 +78,8 @@ class Runner:
                 method_config=method_config,
                 sources=slice["sources"]
             )
+        
+    def run(self):
+        self._merge_sources()
                 
 

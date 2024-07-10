@@ -10,7 +10,6 @@ class InterpolationRunner:
 
     @staticmethod
     def _map_tensors(
-        cls,
         tensors: Dict[Model, torch.Tensor],
         input_ids_mappings: Dict[Model, Dict[int, int]],
         hidden_size: int
@@ -36,7 +35,6 @@ class InterpolationRunner:
     
     @staticmethod
     def _compute_weights(
-        cls,
         sources: List[NormalizedSource],
         method_config
     ):
@@ -48,7 +46,7 @@ class InterpolationRunner:
 
         return torch.tensor(weights, dtype=torch.float32)
 
-    @staticmethod
+    @classmethod
     def interpolate(
         cls,
         base_model: Model,
