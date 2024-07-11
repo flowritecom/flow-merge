@@ -1,10 +1,15 @@
 import os
 import re
+from enum import Enum
 from pydantic import BaseModel, Field, field_validator, ValidationError
 import logging
 from huggingface_hub import login, logout
 
-from flow_merge.lib.constants import DeviceIdentifier
+# from flow_merge.lib.constants import DeviceIdentifier
+
+class DeviceIdentifier(str, Enum):
+    CPU = "cpu"
+    CUDA = "cuda"
 
 logger = logging.getLogger(__name__)
 

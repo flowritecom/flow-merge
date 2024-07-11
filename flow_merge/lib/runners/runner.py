@@ -6,7 +6,9 @@ from flow_merge.lib.validators._method_settings import MethodSettings
 from flow_merge.lib.constants import method_classes, method_configs
 
 slices = [
-    {'output_later_id': 0, 'merge_method': 'passthrough', 'sources': [{'base_model': True, 'layer': 'model.embed_tokens.weight', 'model': 'model_1'}]},
+    # output_layer_id is per decoder block
+    # FIXME base_model is now is_base: Boolean
+    {'output_later_id': 0, 'merge_method': 'passthrough', 'sources': [{'base_model': True, 'layer': 'model.embed_tokens.weight', 'model': 'model_1', 'weight': 1.0}]},
     {'output_later_id': 7, 'merge_method': 'passthrough', 'sources': [{'base_model': True, 'layer': 'model.layers.0.mlp.gate_proj.weight', 'model': 'model_1'}, {'layer': 'model.layers.0.mlp.gate_proj.weight', 'model': 'model_2'}]},
     {'output_later_id': 28, 'merge_method': 'passthrough', 'sources': [{'base_model': True, 'layer': 'model.norm.weight', 'model': 'model_1'}, {'layer': 'model.norm.weight', 'model': 'model_2'}]},
     # Add more entries as needed
@@ -34,6 +36,7 @@ class Runner:
         return None
 
     def _get_merge_method(self, merge_method: MethodSettings):
+        # FIXME merge_method needs to be updated {name, params}
         method_class = method_classes[merge_method.merge_method]
         method_config = method_configs[merge_method.merge_method]
 

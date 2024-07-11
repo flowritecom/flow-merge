@@ -3,8 +3,7 @@ from typing import Any, Dict, List, Optional, Type
 import torch
 
 from flow_merge.lib.model.architecture import ModelWeight
-from flow_merge.lib.constants import ConfigKeys, MergeMethodIdentifier
-from flow_merge.lib.logger import get_logger
+# from flow_merge.lib.logger import get_logger
 from flow_merge.lib.merge_methods.merge_method import (
     BaseMergeMethodSettings,
     MergeMethod,
@@ -12,7 +11,7 @@ from flow_merge.lib.merge_methods.merge_method import (
 from flow_merge.lib.model import Model
 
 # FIXME new flow-merge repo format
-logger = get_logger(__name__)
+# logger = get_logger(__name__)
 
 
 class Linear(MergeMethod):

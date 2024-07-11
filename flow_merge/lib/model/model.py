@@ -86,7 +86,7 @@ class Model(ModelBase, arbitrary_types_allowed=True):
             layers_to_download=None
         )
 
-        architecture = cls._create_architecture(metadata)
+        architecture = cls._create_architecture(metadata, env, logger)
 
         return cls(
             id=model_id,
@@ -117,7 +117,7 @@ class Model(ModelBase, arbitrary_types_allowed=True):
             layers_to_download=layers_to_download
         )
 
-        architecture = cls._create_architecture(metadata)
+        architecture = cls._create_architecture(metadata, env, logger)
 
         return cls(
             id=model_id,

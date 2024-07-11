@@ -3,8 +3,8 @@ from typing import Dict, Optional, Tuple, Type, Union
 import torch
 from pydantic import ValidationError, field_validator
 
-from flow_merge.lib.architecture import ModelWeight
-from flow_merge.lib.logger import get_logger
+from flow_merge.lib.model.architecture import ModelWeight
+# from flow_merge.lib.logger import get_logger
 from flow_merge.lib.merge_methods.merge_method import (
     BaseMergeMethodSettings,
     MergeMethod,
@@ -12,7 +12,7 @@ from flow_merge.lib.merge_methods.merge_method import (
 from flow_merge.lib.model import Model
 
 # FIXME new flow-merge repo format
-logger = get_logger(__name__)
+# logger = get_logger(__name__)
 
 
 class TaskArithmeticSettings(BaseMergeMethodSettings):

@@ -5,7 +5,7 @@ import torch
 from pydantic import BaseModel
 from safetensors import safe_open
 
-from flow_merge.lib.constants import DeviceIdentifier
+from flow_merge.lib.config import DeviceIdentifier
 
 TensorKey = str
 

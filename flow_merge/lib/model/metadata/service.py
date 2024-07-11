@@ -13,8 +13,8 @@ from flow_merge.lib.model.metadata import FileMetadata
 from flow_merge.lib.model.metadata import ModelMetadata
 from flow_merge.lib.validators import DirectorySettings
 from flow_merge.lib.model.metadata.file_validators import FileListValidator
-from flow_merge.lib.constants import CHUNK_SIZE
 
+CHUNK_SIZE = 64 * 1024
 
 class ModelMetadataService:
     def __init__(self, env, logger, directory_settings: DirectorySettings):

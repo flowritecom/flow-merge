@@ -11,6 +11,7 @@ from flow_merge.lib.logger import Logger
 
 
 # TODO - Test this class with .bin files
+#   - restructure class for piecewise
 class TensorWriter:
     def __init__(
         self,

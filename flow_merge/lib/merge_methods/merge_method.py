@@ -5,10 +5,11 @@ import torch
 from pydantic import BaseModel, ValidationError, field_validator
 
 from flow_merge.lib.model.architecture import ModelWeight
-from flow_merge.lib.logger import get_logger
+# from flow_merge.lib.logger import get_logger
 from flow_merge.lib.model import Model
 
-logger = get_logger(__name__)
+# FIXME new flow-merge repo format
+# logger = get_logger(__name__)
 
 
 class BaseMergeMethodSettings(BaseModel):

@@ -5,8 +5,7 @@ import torch
 from peft import PeftConfig, PeftModel
 
 from flow_merge.lib.model.architecture import ModelWeight
-from flow_merge.lib.config import ApplicationConfig
-from flow_merge.lib.constants import DeviceIdentifier
+from flow_merge.lib.config import ApplicationConfig, DeviceIdentifier
 from flow_merge.lib.model.metadata import ModelMetadata
 from flow_merge.lib.tensor.index import TensorIndexService
 from flow_merge.lib.tensor.loader import ShardFile, TensorRepository
