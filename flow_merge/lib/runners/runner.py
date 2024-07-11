@@ -54,6 +54,17 @@ class Runner:
 
         return method_config
     
+    def _get_merged_config(self):
+        merged_model_config = self.enriched_snapshot.base_model.architecture.config
+        merged_model_config.num_hidden_layers = self.enriched_snapshot.num_hidden_layers
+
+        if self.enriched_snapshot.tokenizer.input_ids_mappings:
+            merged_model_config.vocab_size = len(
+                self.enriched_snapshot.tokenizer.tokenizer.get_vocab()
+            )
+
+        return merged_model_config
+    
     def _merge_sources(self):
         for slice in self.enriched_snapshot.normalized:
             merge_method = slice["merge_method"]
@@ -84,5 +95,7 @@ class Runner:
         
     def run(self):
         self._merge_sources()
+        # Pass along to 'save'
+        merged_model_config = self._get_merged_config()
                 
 

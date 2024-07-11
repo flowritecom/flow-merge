@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 from flow_merge.lib.snapshot.data_architecture._metadata import SnapshotMetadata
@@ -9,4 +10,6 @@ class Snapshot(BaseModel):
     metadata: SnapshotMetadata
     settings: MergeSettings
     normalized: NormalizedSlices
+    # FIXME remove optional once finalized in normalization
+    num_hidden_layers: Optional[int] = None
 
