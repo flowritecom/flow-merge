@@ -62,7 +62,8 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        processed = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+        processed, num_hidden_layers = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+        self.assertEqual(2, num_hidden_layers)
         self.assertEqual(expected, processed)
 
     @patch('flow_merge.lib.loaders.normalizer.load_architecture')
@@ -113,7 +114,8 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        processed = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+        processed, num_hidden_layers = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+        self.assertEqual(2, num_hidden_layers)
         self.assertEqual(expected, processed)
 
     def test_no_slices_defined(self):
@@ -161,7 +163,8 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        processed = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+        processed, num_hidden_layers = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+        self.assertEqual(1, num_hidden_layers)
         self.assertEqual(expected, processed)
 
     @patch('flow_merge.lib.loaders.normalizer.load_architecture')
@@ -214,7 +217,8 @@ class TestNormalizationRunner(unittest.TestCase):
 
         yaml_loaded = yaml.safe_load(yaml_input)
         runner = NormalizationRunner(ApplicationConfig(), logger=None)
-        processed = runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+        processed, num_hidden_layers = runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
 
+        self.assertEqual(1, num_hidden_layers)
         self.assertEqual(2, len(processed))
         self.assertEqual(expected, processed)

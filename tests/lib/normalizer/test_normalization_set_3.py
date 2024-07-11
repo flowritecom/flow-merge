@@ -95,7 +95,9 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        processed = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+        processed, num_hidden_layers = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+
+        self.assertEqual(2, num_hidden_layers)
         self.assertEqual(expected, processed)
 
     @patch('flow_merge.lib.loaders.normalizer.load_architecture')
