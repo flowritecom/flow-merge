@@ -33,15 +33,17 @@ class TestNormalizationRunner(unittest.TestCase):
               - model: A
                 base_model: True
                 range: [0, 1]
+                weight: 0.5
               - model: B
                 range: [0, 1]
+                weight: 1.0
         """
         expected = [
             {
                 "output_layer_id": 0,
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
-                    {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", "weight": 0.5},
+                    {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", "weight": 1.0},
                 ],
                 "merge_method": {
                     "name": "slerp",
@@ -50,8 +52,8 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 1,
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
-                    {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", "weight": 0.5},
+                    {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", "weight": 1.0},
                 ],
                 "merge_method": {
                     "name": "slerp"
@@ -82,15 +84,17 @@ class TestNormalizationRunner(unittest.TestCase):
               - model: A
                 base_model: True
                 range: [0, 1]
+                weight: 0.5
               - model: B
                 range: [5, 6]
+                weight: 1.0
         """
         expected = [
             {
                 "output_layer_id": 0,
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
-                    {"layer": "model.layers.5.self_attn.k_proj.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", "weight": 0.5},
+                    {"layer": "model.layers.5.self_attn.k_proj.weight", "model": "B", "weight": 1.0},
                 ],
                 "merge_method": {
                     "name": "slerp"
@@ -99,8 +103,8 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 1,
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
-                    {"layer": "model.layers.6.self_attn.k_proj.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", "weight": 0.5},
+                    {"layer": "model.layers.6.self_attn.k_proj.weight", "model": "B", "weight": 1.0},
                 ],
                 "merge_method": {
                     "name": "slerp"
@@ -138,15 +142,17 @@ class TestNormalizationRunner(unittest.TestCase):
             sources:
               - model: A
                 layer: "model.layers.0.self_attn.k_proj.weight"
+                weight: 0.5
               - model: B
                 layer: "model.layers.0.self_attn.k_proj.weight"
+                weight: 1.0
         """
         expected = [
             {
                 "output_layer_id": 0,
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
-                    {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", "weight": 0.5},
+                    {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", "weight": 1.0},
                 ],
                 "merge_method": {
                     "name": "slerp"
@@ -179,15 +185,17 @@ class TestNormalizationRunner(unittest.TestCase):
             sources:
               - model: A
                 layer: "model.layers.12.self_attn.k_proj.weight"
+                weight: 1.0
               - model: B
                 layer: "model.layers.12.self_attn.k_proj.weight"
+                weight: 0.5
         """
         expected = [
             {
                 "output_layer_id": 0,
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.12.self_attn.k_proj.weight", "model": "A", },
-                    {"layer": "model.layers.12.self_attn.k_proj.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.layers.12.self_attn.k_proj.weight", "model": "A", "weight": 1.0},
+                    {"layer": "model.layers.12.self_attn.k_proj.weight", "model": "B", "weight": 0.5},
                 ],
                 "merge_method": {
                     "name": "slerp"
@@ -196,7 +204,7 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 0,
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.12.mlp.weight", "model": "A", },
+                    {"is_base": True, "layer": "model.layers.12.mlp.weight", "model": "A", "weight": 1.0},
                 ],
                 "merge_method": {
                     "name": "passthrough"

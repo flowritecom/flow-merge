@@ -16,16 +16,21 @@ class Source:
     range: Optional[List[int]]
     model: str
     is_base: Optional[bool]
+    weight: float
 
     def __init__(self, **kwargs):
         self.layer = kwargs["layer"] if "layer" in kwargs else None
         self.range = kwargs["range"] if "range" in kwargs else None
         self.model = kwargs["model"] if "model" in kwargs else None
         self.is_base = kwargs["is_base"] if "is_base" in kwargs else None
+        self.weight = kwargs["weight"] if "weight" in kwargs else None
 
     def update(self, attr: str, value: Any):
         self.__setattr__(attr, value)
         return self
+
+    def todict(self) -> Dict[str, Any]:
+        return {k: v for k, v in self.__dict__.items() if v}
 
 
 class MergeMethod:
@@ -62,7 +67,7 @@ class Slice:
     def to_dict(self) -> Dict[str, Any]:
         return {
             **self.__dict__,
-            **{"sources": [s.__dict__ for s in self.sources]},
+            **{"sources": [s.todict() for s in self.sources]},
             **{"merge_method": self.merge_method.to_dict()},
         }
 

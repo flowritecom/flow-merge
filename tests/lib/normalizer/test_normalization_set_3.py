@@ -36,15 +36,17 @@ class TestNormalizationRunner(unittest.TestCase):
               - model: A
                 is_base: True
                 range: [0, 1]
+                weight: 1.0
               - model: B
                 range: [0, 1]
+                weight: 0.5
         """
         expected = [
             {
                 "output_layer_id": 0,
                 "sources": [
-                    {"is_base": True, "layer": "model.embed_tokens.weight", "model": "A", },
-                    {"layer": "model.embed_tokens.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.embed_tokens.weight", "model": "A"},
+                    {"layer": "model.embed_tokens.weight", "model": "B"},
                 ],
                 "merge_method": {
                     "name": "interpolate"
@@ -53,8 +55,8 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 1,
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
-                    {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", "weight": 1.0},
+                    {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", "weight": 0.5},
                 ],
                 "merge_method": {
                     "name": "slerp"
@@ -63,8 +65,8 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 2,
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
-                    {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", "weight": 1.0},
+                    {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", "weight": 0.5},
                 ],
                 "merge_method": {
                     "name": "slerp"
@@ -73,8 +75,8 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 3,
                 "sources": [
-                    {"is_base": True, "layer": "model.norm.weight", "model": "A", },
-                    {"layer": "model.norm.weight", "model": "B", },
+                    {"is_base": True, "layer": "model.norm.weight", "model": "A"},
+                    {"layer": "model.norm.weight", "model": "B"},
                 ],
                 "merge_method": {
                     "name": "interpolate"
@@ -83,8 +85,8 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 4,
                 "sources": [
-                    {"is_base": True, "layer": "lm_head.weight", "model": "A", },
-                    {"layer": "lm_head.weight", "model": "B", },
+                    {"is_base": True, "layer": "lm_head.weight", "model": "A"},
+                    {"layer": "lm_head.weight", "model": "B"},
                 ],
                 "merge_method": {
                     "name": "interpolate"
