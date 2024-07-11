@@ -4,10 +4,6 @@ import yaml
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from unittest.mock import patch
 
-
-#import pydevd_pycharm
-#pydevd_pycharm.settrace('172.17.0.1', port=9898, stdoutToServer=True, stderrToServer=True)
-
 class TestNormalizationRunner(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
@@ -29,7 +25,8 @@ class TestNormalizationRunner(unittest.TestCase):
         yaml_input = """
         base_model: A
         definition:
-          - merge_method: slerp
+          - merge_method:
+              name: slerp
             sources:
               - model: A
                 is_base: True
@@ -44,7 +41,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.embed_tokens.weight", "model": "A", },
                     {"layer": "model.embed_tokens.weight", "model": "B", },
                 ],
-                "merge_method": "interpolate"
+                "merge_method": {
+                    "name": "interpolate"
+                }
             },
             {
                 "output_layer_id": 1,
@@ -52,7 +51,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
                     {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
                 ],
-                "merge_method": "slerp"
+                "merge_method": {
+                    "name": "slerp"
+                }
             },
             {
                 "output_layer_id": 2,
@@ -60,7 +61,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
                     {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
                 ],
-                "merge_method": "slerp"
+                "merge_method": {
+                    "name": "slerp"
+                }
             },
             {
                 "output_layer_id": 3,
@@ -68,7 +71,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.norm.weight", "model": "A", },
                     {"layer": "model.norm.weight", "model": "B", },
                 ],
-                "merge_method": "interpolate"
+                "merge_method": {
+                    "name": "interpolate"
+                }
             },
             {
                 "output_layer_id": 4,
@@ -76,7 +81,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "lm_head.weight", "model": "A", },
                     {"layer": "lm_head.weight", "model": "B", },
                 ],
-                "merge_method": "interpolate"
+                "merge_method": {
+                    "name": "interpolate"
+                }
             },
         ]
 
@@ -93,7 +100,8 @@ class TestNormalizationRunner(unittest.TestCase):
         }
         yaml_input = """
             definition:
-              - merge_method: slerp
+              - merge_method: 
+                  name: slerp
                 sources:
                   - model: A
                     is_base: True
@@ -116,7 +124,8 @@ class TestNormalizationRunner(unittest.TestCase):
         yaml_input = """
             base_model: A
             definition:
-              - merge_method: slerp
+              - merge_method:
+                  name: slerp
                 sources:
                   - model: A
                     is_base: False
@@ -139,7 +148,8 @@ class TestNormalizationRunner(unittest.TestCase):
         yaml_input = """
             base_model: A
             definition:
-              - merge_method: slerp
+              - merge_method:
+                  name: slerp
                 sources:
                   - model: A
                     is_base: True
@@ -161,7 +171,8 @@ class TestNormalizationRunner(unittest.TestCase):
         yaml_input = """
             base_model: A
             definition:
-              - merge_method: slerp
+              - merge_method:
+                  name: slerp
                 sources:
                   - model: A
                     is_base: True

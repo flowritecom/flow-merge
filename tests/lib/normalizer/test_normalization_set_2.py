@@ -21,7 +21,8 @@ class TestNormalizationRunner(unittest.TestCase):
         yaml_input = """
         base_model: A
         definition:
-          - merge_method: slerp
+          - merge_method:
+              name: slerp
             sources:
               - model: A
                 is_base: True
@@ -36,7 +37,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
                     {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
                 ],
-                "merge_method": "slerp"
+                "merge_method": {
+                    "name": "slerp",
+                }
             },
             {
                 "output_layer_id": 0,
@@ -44,7 +47,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.layers.0.mlp.weight", "model": "A", },
                     {"layer": "model.layers.0.mlp.weight", "model": "B", },
                 ],
-                "merge_method": "slerp"
+                "merge_method": {
+                    "name": "slerp"
+                }
             },
             {
                 "output_layer_id": 1,
@@ -52,7 +57,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
                     {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
                 ],
-                "merge_method": "slerp"
+                "merge_method": {
+                    "name": "slerp"
+                }
             },
             {
                 "output_layer_id": 1,
@@ -60,7 +67,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.layers.1.mlp.weight", "model": "A", },
                     {"layer": "model.layers.1.mlp.weight", "model": "B", },
                 ],
-                "merge_method": "slerp"
+                "merge_method": {
+                    "name": "slerp"
+                }
             },
         ]
 
@@ -80,7 +89,8 @@ class TestNormalizationRunner(unittest.TestCase):
         yaml_input = """
         base_model: A
         definition:
-          - merge_method: slerp
+          - merge_method: 
+              name: slerp
             layers: ["attn"]
             sources:
               - model: A
@@ -96,7 +106,9 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", },
                     {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", },
                 ],
-                "merge_method": "slerp"
+                "merge_method": {
+                    "name": "slerp"
+                }
             },
             {
                 "output_layer_id": 1,
@@ -104,21 +116,27 @@ class TestNormalizationRunner(unittest.TestCase):
                     {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", },
                     {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", },
                 ],
-                "merge_method": "slerp"
+                "merge_method": {
+                    "name": "slerp"
+                }
             },
             {
                 "output_layer_id": 0,
                 "sources": [
                     {"is_base": True, "layer": "model.layers.0.mlp.weight", "model": "A", },
                 ],
-                "merge_method": "passthrough"
+                "merge_method": {
+                    "name": "passthrough"
+                }
             },
             {
                 "output_layer_id": 1,
                 "sources": [
                     {"is_base": True, "layer": "model.layers.1.mlp.weight", "model": "A", },
                 ],
-                "merge_method": "passthrough"
+                "merge_method": {
+                    "name": "passthrough"
+                }
             },
         ]
 
@@ -137,7 +155,8 @@ class TestNormalizationRunner(unittest.TestCase):
         yaml_input = """
         base_model: A
         definition:
-          - merge_method: slerp
+          - merge_method: 
+              name: slerp
             layers: ["xyz_not_existing"]
             sources:
               - model: A

@@ -30,7 +30,7 @@ class Source:
 
 class MergeMethod:
     name: str
-    params: Optional[Dict[str, Any]]
+    params: Optional[Dict[str, Any]] = None
 
     def __init__(self, **kwargs):
         if "name" not in kwargs:
@@ -38,6 +38,9 @@ class MergeMethod:
 
         self.name = kwargs["name"]
         self.params = kwargs["params"] if "params" in kwargs else None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {k: v for k, v in self.__dict__.items() if v}
 
 
 class Slice:
@@ -53,12 +56,13 @@ class Slice:
             Source(**source) if isinstance(source, dict) else Source(**source.__dict__)
             for source in kwargs["sources"]
         ]
-        self.merge_method = MergeMethod(**kwargs["merge_method"])
+        self.merge_method = MergeMethod(**kwargs["merge_method"]) if isinstance(kwargs["merge_method"], dict) else kwargs["merge_method"]
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             **self.__dict__,
-            **{"sources": [s.__dict__ for s in self.sources]}
+            **{"sources": [s.__dict__ for s in self.sources]},
+            **{"merge_method": self.merge_method.to_dict()},
         }
 
 
