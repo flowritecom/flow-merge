@@ -155,7 +155,7 @@ class NormalizationRunner:
         # Removes all unnecessary attributes for special layer slices sources
         def get_plain_sources(sources: List[Source]) -> List[Source]:
             return [
-                Source(model=source.model, is_base=source.is_base)
+                Source(model=source.model, is_base=source.is_base, weight=source.weight)
                 for source in sources
             ]
 

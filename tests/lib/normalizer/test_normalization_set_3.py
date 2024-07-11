@@ -45,8 +45,8 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 0,
                 "sources": [
-                    {"is_base": True, "layer": "model.embed_tokens.weight", "model": "A"},
-                    {"layer": "model.embed_tokens.weight", "model": "B"},
+                    {"is_base": True, "layer": "model.embed_tokens.weight", "model": "A", "weight": 1.0},
+                    {"layer": "model.embed_tokens.weight", "model": "B", "weight": 0.5},
                 ],
                 "merge_method": {
                     "name": "interpolate"
@@ -75,8 +75,8 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 3,
                 "sources": [
-                    {"is_base": True, "layer": "model.norm.weight", "model": "A"},
-                    {"layer": "model.norm.weight", "model": "B"},
+                    {"is_base": True, "layer": "model.norm.weight", "model": "A", "weight": 1.0},
+                    {"layer": "model.norm.weight", "model": "B", "weight": 0.5},
                 ],
                 "merge_method": {
                     "name": "interpolate"
@@ -85,8 +85,8 @@ class TestNormalizationRunner(unittest.TestCase):
             {
                 "output_layer_id": 4,
                 "sources": [
-                    {"is_base": True, "layer": "lm_head.weight", "model": "A"},
-                    {"layer": "lm_head.weight", "model": "B"},
+                    {"is_base": True, "layer": "lm_head.weight", "model": "A", "weight": 1.0},
+                    {"layer": "lm_head.weight", "model": "B", "weight": 0.5},
                 ],
                 "merge_method": {
                     "name": "interpolate"
