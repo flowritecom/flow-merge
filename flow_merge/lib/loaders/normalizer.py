@@ -28,11 +28,23 @@ class Source:
         return self
 
 
+class MergeMethod:
+    name: str
+    params: Optional[Dict[str, Any]]
+
+    def __init__(self, **kwargs):
+        if "name" not in kwargs:
+            raise Exception("Missing 'name' parameter for merge method")
+
+        self.name = kwargs["name"]
+        self.params = kwargs["params"] if "params" in kwargs else None
+
+
 class Slice:
     output_layer_id: int
     layers: Optional[List[str]] = None
     sources: List[Source] = None
-    merge_method: str
+    merge_method: MergeMethod
 
     def __init__(self, **kwargs):
         self.output_layer_id = kwargs["output_layer_id"] if "output_layer_id" in kwargs else None
@@ -41,7 +53,7 @@ class Slice:
             Source(**source) if isinstance(source, dict) else Source(**source.__dict__)
             for source in kwargs["sources"]
         ]
-        self.merge_method = kwargs["merge_method"] if "merge_method" in kwargs else None
+        self.merge_method = MergeMethod(**kwargs["merge_method"])
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -144,7 +156,7 @@ class NormalizationRunner:
                 embed_slice = self._create_slice(
                     get_plain_sources(normalized_data[0].sources),
                     special_layer_name,
-                    "interpolate",
+                    MergeMethod(name="interpolate"),
                     0
                 )
                 normalized_data.append(embed_slice)
@@ -153,7 +165,7 @@ class NormalizationRunner:
                 norm_slice = self._create_slice(
                     get_plain_sources(normalized_data[len(normalized_data) - 1].sources),
                     special_layer_name,
-                    "interpolate",
+                    MergeMethod(name="interpolate"),
                     self._get_last_output_slice_id(normalized_data) + 1
                 )
                 normalized_data.append(norm_slice)
@@ -162,7 +174,7 @@ class NormalizationRunner:
                 lm_head_slice = self._create_slice(
                     get_plain_sources(normalized_data[len(normalized_data) - 1].sources),
                     special_layer_name,
-                    "interpolate",
+                    MergeMethod(name="interpolate"),
                     self._get_last_output_slice_id(normalized_data) + 1
                 )
                 normalized_data.append(lm_head_slice)
@@ -222,7 +234,7 @@ class NormalizationRunner:
             remaining_slices = [
                 Slice(
                     output_layer_id=slice.output_layer_id + i,
-                    merge_method="passthrough",
+                    merge_method=MergeMethod(name="passthrough"),
                     sources=[
                         Source(model=base_model, is_base=True,
                                layer=lnt.format(layer_index=base_source.range[0] + i))
@@ -246,7 +258,7 @@ class NormalizationRunner:
                 self._create_slice(
                     [base_source],
                     layer.format(layer_index=user_defined_layer_id[0]),
-                    "passthrough",
+                    MergeMethod(name="passthrough"),
                     slice.output_layer_id)
                 for layer in remaining_layers
             ]
@@ -261,7 +273,7 @@ class NormalizationRunner:
                 raise Exception(f"Layer '{l}' does not exist in the model")
 
     def _create_slice(
-            self, sources: List[Source], layer: Optional[str], merge_method: str, output_layer_id: int
+            self, sources: List[Source], layer: Optional[str], merge_method: MergeMethod, output_layer_id: int
     ) -> Slice:
         # creates a slice, sets merge_method and layer
         # while making sure to keep all other keys.
@@ -338,15 +350,3 @@ class NormalizationRunner:
             ),
             None,
         )
-
-
-def _expand_range_slice() -> List[Dict[str, Any]]:
-    pass
-
-
-def _expand_range_slice_with_layers_filter() -> List[Dict[str, Any]]:
-    pass
-
-
-def _expand_layer_slice() -> List[Dict[str, Any]]:
-    pass
