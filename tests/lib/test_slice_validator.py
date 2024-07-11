@@ -207,3 +207,77 @@ class TestSliceValidator(unittest.TestCase):
             validator.validate(yaml_loaded["definition"][0])
 
         self.assertEqual("All `range` must be of the same length", e.exception.__str__())
+
+    def test_merge_method_syntax_invalid_str(self):
+        # Merge method must be a dict with `name` and optional `params` field
+        yaml_input = """
+        definition:
+          - merge_method: "asd"
+            sources:
+              - model: A
+                range: [0, 1]
+        """
+
+        yaml_loaded = yaml.safe_load(yaml_input)
+        validator = SliceValidator()
+
+        with self.assertRaises(Exception) as e:
+            validator.validate(yaml_loaded["definition"][0])
+
+        self.assertEqual("`merge_method` must be a dictionary with `name` field and optional `params` field", e.exception.__str__())
+
+    def test_merge_method_syntax_invalid_no_name(self):
+        # Merge method must be a dict with `name` and optional `params` field
+        yaml_input = """
+        definition:
+          - merge_method:
+              params: "asd"
+            sources:
+              - model: A
+                range: [0, 1]
+        """
+
+        yaml_loaded = yaml.safe_load(yaml_input)
+        validator = SliceValidator()
+
+        with self.assertRaises(Exception) as e:
+            validator.validate(yaml_loaded["definition"][0])
+
+        self.assertEqual("`merge_method` must be a dictionary with `name` field and optional `params` field", e.exception.__str__())
+
+    def test_merge_method_syntax_invalid_params_string(self):
+        # Merge method must be a dict with `name` and optional `params` field
+        yaml_input = """
+        definition:
+          - merge_method:
+              name: "slerp"
+              params: "asd"
+            sources:
+              - model: A
+                range: [0, 1]
+        """
+
+        yaml_loaded = yaml.safe_load(yaml_input)
+        validator = SliceValidator()
+
+        with self.assertRaises(Exception) as e:
+            validator.validate(yaml_loaded["definition"][0])
+
+        self.assertEqual("`merge_method.params` must be a dictionary", e.exception.__str__())
+
+    def test_merge_method_syntax_valid(self):
+        # Merge method must be a dict with `name` and optional `params` field
+        yaml_input = """
+        definition:
+          - merge_method:
+              name: "slerp"
+              params:
+                weight: 0.3
+            sources:
+              - model: A
+                range: [0, 1]
+        """
+
+        yaml_loaded = yaml.safe_load(yaml_input)
+        validator = SliceValidator()
+        self.assertTrue(validator.validate(yaml_loaded["definition"][0]))

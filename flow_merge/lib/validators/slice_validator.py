@@ -2,7 +2,7 @@ from typing import Dict, Any
 
 
 class SliceValidator:
-    def validate(self, s: Dict[str, Any]):
+    def validate(self, s: Dict[str, Any]) -> bool:
         # Check that at least model is allowed as base
         if all("base_model" in source and source["base_model"] is False for source in s["sources"]):
             raise ValueError("No valid source found to set as base_model")
@@ -44,4 +44,10 @@ class SliceValidator:
                 if src["range"][1] - src["range"][0] is not l:
                     raise ValueError("All `range` must be of the same length")
 
+        if "merge_method" not in s or not isinstance(s["merge_method"], dict) or "name" not in s["merge_method"]:
+            raise ValueError("`merge_method` must be a dictionary with `name` field and optional `params` field")
 
+        if "params" in s["merge_method"] and not isinstance(s["merge_method"]["params"], dict):
+            raise ValueError("`merge_method.params` must be a dictionary")
+
+        return True
