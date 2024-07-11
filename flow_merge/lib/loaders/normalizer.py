@@ -1,12 +1,14 @@
-# from flow_merge.lib.model.architecture import ModelArchitecture
+from flow_merge.lib.model.architecture import ModelArchitecture
 from typing import Any, Dict, List, Optional
 from functools import reduce
 import re
 
+from flow_merge.lib.config import ApplicationConfig
+from flow_merge.lib.validators import DirectorySettings
 
-def load_architecture(model_id: str):
-    # return ModelArchitecture.from_path_or_id(path_or_id=model_id, local_dir=None, env=None)
-    pass
+
+def load_architecture(model_id: str, directory_settings: DirectorySettings, config: ApplicationConfig):
+    return ModelArchitecture.from_path_or_id(path_or_id=model_id, local_dir=directory_settings.local_dir, env=config)
 
 
 class Source:
@@ -68,12 +70,15 @@ class Slice:
 class NormalizationRunner:
     models_layers: Dict[str, Dict[str, Any]] = {}
     models_layers_by_type: Dict[str, Dict[str, List[str]]] = {}
+    config: ApplicationConfig
 
-    def __init__(self):
+    def __init__(self, config: ApplicationConfig, logger):
         self.transformations = [self._ensure_base_model]
+        self.config = config
+        self.logger = logger
 
-    def normalize(self, raw_data: Dict) -> List[Dict[str, Any]]:
-        self._load_models_layers(raw_data)
+    def normalize(self, raw_data: Dict, directory_settings: DirectorySettings) -> List[Dict[str, Any]]:
+        self._load_models_layers(raw_data, directory_settings)
 
         if "base_model" not in raw_data:
             raise ValueError("Base model is missing")
@@ -204,7 +209,8 @@ class NormalizationRunner:
                     output_layer_id=_slice.output_layer_id + i,
                     merge_method=_slice.merge_method,
                     sources=[
-                        Source(**{**src.__dict__, **{"layer": lnt["name"].format(layer_index=src.range[0] + i), "range": None}})
+                        Source(**{**src.__dict__,
+                                  **{"layer": lnt["name"].format(layer_index=src.range[0] + i), "range": None}})
                         # src.update("layer", lnt.format(layer_index=src.range[0] + i)).update("range", None)
                         for src in _slice.sources
                     ],
@@ -305,7 +311,7 @@ class NormalizationRunner:
             if src.is_base is True:
                 return src
 
-    def _load_models_layers(self, raw_data: Dict[str, Any]):
+    def _load_models_layers(self, raw_data: Dict[str, Any], directory_settings: DirectorySettings):
         all_models = [raw_data["base_model"]] if "base_model" in raw_data else []
         all_models.extend([
             src["model"]
@@ -314,7 +320,7 @@ class NormalizationRunner:
         ])
 
         for m in all_models:
-            arch = load_architecture(m)
+            arch = load_architecture(m, directory_settings, self.config)
             self.models_layers[m] = {
                 weight["name"]: weight for weight in arch["weights"]
             }

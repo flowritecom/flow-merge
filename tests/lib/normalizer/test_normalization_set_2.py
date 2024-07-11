@@ -1,11 +1,13 @@
 import unittest
 
 import yaml
+
+from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from unittest.mock import patch
 
-import pydevd_pycharm
-pydevd_pycharm.settrace('172.17.0.1', port=9898, stdoutToServer=True, stderrToServer=True)
+from flow_merge.lib.validators import DirectorySettings
+
 
 class TestNormalizationRunner(unittest.TestCase):
 
@@ -76,8 +78,8 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        normalizer = NormalizationRunner()
-        processed = normalizer.normalize(yaml_loaded)
+        normalizer = NormalizationRunner(ApplicationConfig(), None)
+        processed = normalizer.normalize(yaml_loaded, directory_settings=DirectorySettings())
         self.assertEqual(expected, processed)
 
     @patch('flow_merge.lib.loaders.normalizer.load_architecture')
@@ -143,8 +145,8 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        normalizer = NormalizationRunner()
-        processed = normalizer.normalize(yaml_loaded)
+        normalizer = NormalizationRunner(ApplicationConfig(), None)
+        processed = normalizer.normalize(yaml_loaded, directory_settings=DirectorySettings())
         self.assertEqual(expected, processed)
 
     @patch('flow_merge.lib.loaders.normalizer.load_architecture')
@@ -169,8 +171,8 @@ class TestNormalizationRunner(unittest.TestCase):
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        normalizer = NormalizationRunner()
+        normalizer = NormalizationRunner(ApplicationConfig(), None)
 
         with self.assertRaises(Exception) as e:
-            normalizer.normalize(yaml_loaded)
+            normalizer.normalize(yaml_loaded, directory_settings=DirectorySettings())
         self.assertEqual("Layer 'xyz_not_existing' does not exist in the model", e.exception.__str__())

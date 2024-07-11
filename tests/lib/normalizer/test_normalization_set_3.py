@@ -1,13 +1,18 @@
 import unittest
 
 import yaml
+
+from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from unittest.mock import patch
+
+from flow_merge.lib.validators import DirectorySettings
+
 
 class TestNormalizationRunner(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
-        self.runner = NormalizationRunner()
+        self.runner = NormalizationRunner(ApplicationConfig(), None)
 
     @patch('flow_merge.lib.loaders.normalizer.load_architecture')
     def test_special_layers_are_added_with_range_syntax(self, mock_load_architecture):
@@ -88,7 +93,7 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        processed = self.runner.normalize(yaml_loaded)
+        processed = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
         self.assertEqual(expected, processed)
 
     @patch('flow_merge.lib.loaders.normalizer.load_architecture')
@@ -110,7 +115,7 @@ class TestNormalizationRunner(unittest.TestCase):
 
         yaml_loaded = yaml.safe_load(yaml_input)
         with self.assertRaises(Exception) as e:
-            self.runner.normalize(yaml_loaded)
+            self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
 
         self.assertEqual("Base model is missing", e.exception.__str__())
 
@@ -134,7 +139,7 @@ class TestNormalizationRunner(unittest.TestCase):
 
         yaml_loaded = yaml.safe_load(yaml_input)
         with self.assertRaises(Exception) as e:
-            self.runner.normalize(yaml_loaded)
+            self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
 
         self.assertEqual("No valid source found to set as base_model", e.exception.__str__())
 
@@ -157,7 +162,7 @@ class TestNormalizationRunner(unittest.TestCase):
 
         yaml_loaded = yaml.safe_load(yaml_input)
         with self.assertRaises(Exception) as e:
-            self.runner.normalize(yaml_loaded)
+            self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
 
         self.assertEqual("Neither range or layers defined for merging", e.exception.__str__())
 
@@ -181,6 +186,6 @@ class TestNormalizationRunner(unittest.TestCase):
 
         yaml_loaded = yaml.safe_load(yaml_input)
         with self.assertRaises(Exception) as e:
-            self.runner.normalize(yaml_loaded)
+            self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
 
         self.assertEqual("Layer defined for merging must be a hidden layer (pattern layer)", e.exception.__str__())
