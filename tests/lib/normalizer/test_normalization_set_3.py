@@ -16,10 +16,10 @@ class TestNormalizationRunner(unittest.TestCase):
         """
         mock_load_architecture.return_value = {
             "weights": [
-                {"name": "model.embed_tokens.weight", "type": "embed"},
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
-                {"name": "model.norm.weight", "type": "norm"},
-                {"name": "lm_head.weight", "type": "lm_head"},
+                {"name": "model.embed_tokens.weight", "type": "embed", "layer_type": "embedding"},
+                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
+                {"name": "model.norm.weight", "type": "norm", "layer_type": "post_norm"},
+                {"name": "lm_head.weight", "type": "lm_head", "layer_type": "head"},
             ]
         }
         yaml_input = """
@@ -95,7 +95,7 @@ class TestNormalizationRunner(unittest.TestCase):
     def test_lack_of_global_base_model(self, mock_load_architecture):
         mock_load_architecture.return_value = {
             "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
+                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
             ]
         }
         yaml_input = """
@@ -118,7 +118,7 @@ class TestNormalizationRunner(unittest.TestCase):
     def test_no_source_available_for_base(self, mock_load_architecture):
         mock_load_architecture.return_value = {
             "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
+                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
             ]
         }
         yaml_input = """
@@ -142,7 +142,7 @@ class TestNormalizationRunner(unittest.TestCase):
     def test_slice_without_range_and_layer(self, mock_load_architecture):
         mock_load_architecture.return_value = {
             "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
+                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
             ]
         }
         yaml_input = """
@@ -165,7 +165,7 @@ class TestNormalizationRunner(unittest.TestCase):
     def test_not_mergable_layer_used(self, mock_load_architecture):
         mock_load_architecture.return_value = {
             "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
+                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
             ]
         }
         yaml_input = """

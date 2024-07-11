@@ -1,14 +1,12 @@
-import json
+# from flow_merge.lib.model.architecture import ModelArchitecture
 from typing import Any, Dict, List, Optional
 from functools import reduce
 import re
 
-from importlib import resources
 
-
-def load_architecture(file_path: str) -> Dict[str, Any]:
-    with resources.open_text("flow_merge.data.architectures", file_path) as file:
-        return json.load(file)
+def load_architecture(model_id: str):
+    # return ModelArchitecture.from_path_or_id(path_or_id=model_id, local_dir=None, env=None)
+    pass
 
 
 class Source:
@@ -56,7 +54,8 @@ class Slice:
             Source(**source) if isinstance(source, dict) else Source(**source.__dict__)
             for source in kwargs["sources"]
         ]
-        self.merge_method = MergeMethod(**kwargs["merge_method"]) if isinstance(kwargs["merge_method"], dict) else kwargs["merge_method"]
+        self.merge_method = MergeMethod(**kwargs["merge_method"]) if isinstance(kwargs["merge_method"], dict) else \
+            kwargs["merge_method"]
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -149,35 +148,35 @@ class NormalizationRunner:
                 for source in sources
             ]
 
-        special_layer_names = [
-            item
-            for item in list(self.models_layers[base_model].keys())
-            if "{" not in item and "}" not in item
+        special_layers = [
+            layer
+            for name, layer in self.models_layers[base_model].items()
+            if layer["layer_type"] != "decoder"
         ]
 
-        for special_layer_name in special_layer_names:
-            if "embed" in special_layer_name:
+        for special_layer in special_layers:
+            if special_layer["layer_type"] == "embedding":
                 embed_slice = self._create_slice(
                     get_plain_sources(normalized_data[0].sources),
-                    special_layer_name,
+                    special_layer["name"],
                     MergeMethod(name="interpolate"),
                     0
                 )
                 normalized_data.append(embed_slice)
 
-            if "norm" in special_layer_name:
+            if special_layer["layer_type"] == "post_norm":
                 norm_slice = self._create_slice(
                     get_plain_sources(normalized_data[len(normalized_data) - 1].sources),
-                    special_layer_name,
+                    special_layer["name"],
                     MergeMethod(name="interpolate"),
                     self._get_last_output_slice_id(normalized_data) + 1
                 )
                 normalized_data.append(norm_slice)
 
-            if "lm_head" in special_layer_name:
+            if special_layer["layer_type"] == "head":
                 lm_head_slice = self._create_slice(
                     get_plain_sources(normalized_data[len(normalized_data) - 1].sources),
-                    special_layer_name,
+                    special_layer["name"],
                     MergeMethod(name="interpolate"),
                     self._get_last_output_slice_id(normalized_data) + 1
                 )
@@ -196,7 +195,7 @@ class NormalizationRunner:
         base_model = self._determine_base_model(slice.sources)
         base_source = self._determine_base_source(slice.sources)
         layer_name_templates = [
-            item for item in list(self.models_layers[base_model]) if "{" in item and "}" in item
+            layer for _, layer in self.models_layers[base_model].items() if layer["layer_type"] == "decoder"
         ]
 
         def get_slices_for_all_layers(start, end, _slice: Slice, layers):
@@ -205,7 +204,7 @@ class NormalizationRunner:
                     output_layer_id=_slice.output_layer_id + i,
                     merge_method=_slice.merge_method,
                     sources=[
-                        Source(**{**src.__dict__, **{"layer": lnt.format(layer_index=src.range[0] + i), "range": None}})
+                        Source(**{**src.__dict__, **{"layer": lnt["name"].format(layer_index=src.range[0] + i), "range": None}})
                         # src.update("layer", lnt.format(layer_index=src.range[0] + i)).update("range", None)
                         for src in _slice.sources
                     ],
@@ -232,7 +231,8 @@ class NormalizationRunner:
                 for requested_layer_type in slice.layers
                 for layer in self.models_layers_by_type[base_model][requested_layer_type]
             ]
-            remaining_layers = list(set(self.models_layers[base_model]) - set(user_requested_layers))
+
+            remaining_layers = [l for _, l in self.models_layers[base_model].items() if l not in user_requested_layers]
 
             user_requested_slices = get_slices_for_all_layers(start, end, slice, user_requested_layers)
             remaining_slices = [
@@ -241,7 +241,7 @@ class NormalizationRunner:
                     merge_method=MergeMethod(name="passthrough"),
                     sources=[
                         Source(model=base_model, is_base=True,
-                               layer=lnt.format(layer_index=base_source.range[0] + i))
+                               layer=lnt["name"].format(layer_index=base_source.range[0] + i))
                     ],
                 )
                 for i in range(end - start + 1)
@@ -253,15 +253,16 @@ class NormalizationRunner:
             user_defined_layer_id = re.findall(r'\.(\d+)\.', base_source.layer)
             if len(user_defined_layer_id) == 0:
                 raise Exception("Layer defined for merging must be a hidden layer (pattern layer)")
+
             user_defined_layer = re.sub(r'\.\d+\.', ".{layer_index}.", base_source.layer)
-            remaining_layers = [l for l in self.models_layers[base_model] if l != user_defined_layer]
+            remaining_layers = [l for _, l in self.models_layers[base_model].items() if l["name"] != user_defined_layer]
 
             user_defined_slice = [
                 self._create_slice(slice.sources, None, slice.merge_method, slice.output_layer_id)]
             remaining_slices = [
                 self._create_slice(
                     [base_source],
-                    layer.format(layer_index=user_defined_layer_id[0]),
+                    layer["name"].format(layer_index=user_defined_layer_id[0]),
                     MergeMethod(name="passthrough"),
                     slice.output_layer_id)
                 for layer in remaining_layers
@@ -315,13 +316,13 @@ class NormalizationRunner:
         for m in all_models:
             arch = load_architecture(m)
             self.models_layers[m] = {
-                weight["name"]: weight["type"] for weight in arch["weights"]
+                weight["name"]: weight for weight in arch["weights"]
             }
 
             # Group weights in type groups
             self.models_layers_by_type[m] = {
                 weight["type"]: [
-                    w["name"] for w in arch["weights"] if w["type"] is weight["type"]
+                    w for w in arch["weights"] if w["type"] is weight["type"]
                 ]
                 for weight in arch["weights"]
             }

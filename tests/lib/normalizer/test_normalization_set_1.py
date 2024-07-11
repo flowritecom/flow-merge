@@ -4,6 +4,9 @@ import yaml
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from unittest.mock import patch
 
+import pydevd_pycharm
+pydevd_pycharm.settrace('172.17.0.1', port=9898, stdoutToServer=True, stderrToServer=True)
+
 class TestNormalizationRunner(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
@@ -16,7 +19,7 @@ class TestNormalizationRunner(unittest.TestCase):
         """
         mock_load_architecture.return_value = {
             "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
+                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
             ]
         }
         yaml_input = """
@@ -65,7 +68,7 @@ class TestNormalizationRunner(unittest.TestCase):
         """
         mock_load_architecture.return_value = {
             "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
+                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
             ]
         }
         yaml_input = """
@@ -122,7 +125,7 @@ class TestNormalizationRunner(unittest.TestCase):
         """
         mock_load_architecture.return_value = {
             "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
+                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
             ]
         }
         yaml_input = """
@@ -162,8 +165,8 @@ class TestNormalizationRunner(unittest.TestCase):
         """
         mock_load_architecture.return_value = {
             "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn"},
-                {"name": "model.layers.{layer_index}.mlp.weight", "type": "mlp"},
+                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
+                {"name": "model.layers.{layer_index}.mlp.weight", "type": "mlp", "layer_type": "decoder"},
             ]
         }
         yaml_input = """
