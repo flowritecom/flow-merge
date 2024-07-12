@@ -2,8 +2,8 @@ from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.logger import Logger
 from flow_merge.lib.enriched_snapshot import EnrichedSnapshot
 from flow_merge.lib.merger import Merger
-from flow_merge.lib.validators._method_settings import MethodSettings
-from flow_merge.lib.constants import method_classes, method_configs
+from flow_merge.lib.loaders.normalizer import MergeMethod
+from flow_merge.lib.merge_methods import method_classes, method_configs, MergeMethodIdentifier
 
 slices = [
     # output_layer_id is per decoder block
@@ -35,19 +35,27 @@ class Runner:
                 return model
         return None
 
-    def _get_merge_method(self, merge_method: MethodSettings):
-        # FIXME merge_method needs to be updated {name, params}
-        method_class = method_classes[merge_method.merge_method]
-        method_config = method_configs[merge_method.merge_method]
+    def _get_merge_method(self, merge_method: MergeMethod):
+        
+        if (merge_method.name == MergeMethodIdentifier.INTERPOLATE):
+            return {
+                "name": merge_method.name,
+                "method": None,
+                "settings": None
+            }
+
+        method_class = method_classes[merge_method.name]
+        method_config = method_configs[merge_method.name]
 
         try:
-            settings = method_config(**merge_method.method_global_parameters)
+            settings = method_config(**merge_method.params)
         except Exception as e:
             raise RuntimeError(
                 f"Can not instantiate merge method {merge_method.merge_method} parameters"
             )
         
         method_config = {
+            "name": merge_method.name,
             "method": method_class,
             "settings": settings
         }

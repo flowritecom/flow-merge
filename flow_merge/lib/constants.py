@@ -1,26 +1,7 @@
 from enum import Enum
-from typing import Dict
-
-from flow_merge.lib.validators._method_settings import MergeMethodIdentifier
-from flow_merge.lib.merge_methods.linear import Linear
-# from flow_merge.lib.merge_methods.merge_method import BaseMergeMethodSettings
-# from flow_merge.lib.merge_methods.slerp import Slerp, SlerpSettings
-# from flow_merge.lib.merge_methods.task_arithmetic import (
-#     TaskArithmetic, 
-#     TaskArithmeticSettings, 
-#     TiesMergingSettings, 
-#     DareTiesMergingSettings
-# )
 
 # from transformers library special tokens map
 ADDITIONAL_SPECIAL_TOKENS_KEY = "additional_special_tokens"
-CHUNK_SIZE = 64 * 1024  # 64KB
-
-
-class DeviceIdentifier(str, Enum):
-    CPU = "cpu"
-    CUDA = "cuda"
-
 
 class ConfigKeys(str, Enum):
     METHOD = "method"
@@ -45,19 +26,3 @@ class ConfigKeys(str, Enum):
     LOCAL_DIR = "local_dir"
     TOKEN = "token"
     TRUST_REMOTE_CODE = "trust_remote_code"
-
-# method_classes: Dict[MergeMethodIdentifier, TaskArithmetic | Linear | Slerp] = {
-#     MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC.value: TaskArithmetic,
-#     MergeMethodIdentifier.MODEL_SOUP.value: Linear,
-#     MergeMethodIdentifier.TIES_MERGING.value: TaskArithmetic,
-#     MergeMethodIdentifier.DARE_TIES_MERGING.value: TaskArithmetic,
-#     MergeMethodIdentifier.SLERP.value: Slerp,
-# }
-
-# method_configs: Dict[MergeMethodIdentifier, BaseMergeMethodSettings] = {
-#     MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC.value: TaskArithmeticSettings,
-#     MergeMethodIdentifier.MODEL_SOUP.value: BaseMergeMethodSettings,
-#     MergeMethodIdentifier.TIES_MERGING.value: TiesMergingSettings,
-#     MergeMethodIdentifier.DARE_TIES_MERGING.value: DareTiesMergingSettings,
-#     MergeMethodIdentifier.SLERP.value: SlerpSettings,
-# }

@@ -7,8 +7,9 @@ from flow_merge.lib.tokenizer import Tokenizer
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.logger import Logger
 from flow_merge.lib.model.architecture import ModelWeight
-from flow_merge.lib.tensor.loader import TensorRepository, ShardFile
+from flow_merge.lib.tensor.loader import TensorRepository
 from flow_merge.lib.merger.interpolation import InterpolationRunner
+from flow_merge.lib.merge_methods import MergeMethodIdentifier
 from flow_merge.lib.snapshot.data_architecture._normalized_slices import NormalizedSource
 
 class Merger:
@@ -94,11 +95,7 @@ class Merger:
             base_model_layer_type=task_base_model_weight.layer_type
         )
         # FIXME we want to temp save here
-        # convert to merge_method == "interpolate" test
-        if tokenizer.input_ids_mappings and (
-            task_base_model_weight.layer_type == "embedding" or 
-            task_base_model_weight.layer_type == "head"
-        ):
+        if tokenizer.input_ids_mappings and method_config.name == MergeMethodIdentifier.INTERPOLATE:
             return self.interpolation_runner.interpolate(
                 base_model=base_model,
                 all_tensors=all_tensors,

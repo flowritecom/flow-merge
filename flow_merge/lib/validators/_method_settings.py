@@ -2,16 +2,7 @@ from enum import Enum
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field, model_validator
-
-
-class MergeMethodIdentifier(str, Enum):
-    ADDITION_TASK_ARITHMETIC = "addition-task-arithmetic"
-    TIES_MERGING = "ties-merging"
-    SLERP = "slerp"
-    DARE_TIES_MERGING = "dare-ties-merging"
-    MODEL_SOUP = "model-soup"
-    PASSTHROUGH = "passthrough"
-    INTERPOLATE = "interpolate"
+from flow_merge.lib.merge_methods import MergeMethodIdentifier
 
 
 class MethodGlobalParameters(BaseModel):
