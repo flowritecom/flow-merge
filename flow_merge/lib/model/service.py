@@ -26,7 +26,7 @@ class ModelService:
     ) -> ShardFile:
         output_path = output_dir / shard_filename
         FileRepository.download_file(
-            repo_id=repo_id, filename=shard_filename, local_dir=output_dir
+            repo_id=repo_id, filename=shard_filename, download_dir=output_dir
         )
 
         if keys is None:
@@ -87,6 +87,7 @@ class ModelService:
         repo_id: str,
         local_dir: Path,
     ) -> torch.nn.Module:
+        print("Loading and applying adapters: load_and_apply_adapters")
         shard_paths = []
         for shard_file in base_model_shards:
             shard_path = FileRepository.download_file(repo_id, shard_file, local_dir)
@@ -99,6 +100,7 @@ class ModelService:
     def save_model_shards(
         base_model: torch.nn.Module, output_dir: Path
     ) -> List[ShardFile]:
+        print("Saving model shard files: save_model_shards")
         shard_files = []
         with TensorWriter(output_dir) as writer:
             for name, param in base_model.named_parameters():
@@ -111,6 +113,7 @@ class ModelService:
     def merge_and_save_model(
         model_metadata: ModelMetadata, env: ApplicationConfig
     ) -> List[ShardFile]:
+        print("Merging adapter and saving model: merge_and_save_model")
         FileRepository.download_adapter_files(model_metadata, env)
         base_model_shards = ModelService.determine_base_model_shards(model_metadata)
         adapter_files = [f for f in model_metadata.file_list if "adapter" in f]
@@ -129,7 +132,7 @@ class ModelService:
     @staticmethod
     def get_output_model_path(model_metadata: ModelMetadata):
         return (
-            model_metadata.directory_settings.output_dir / model_metadata.id
+            model_metadata.directory_settings.local_dir / model_metadata.id
         )
     
     @staticmethod
@@ -179,6 +182,8 @@ class ModelService:
                 f"Error gathering shard files from layers {e}"
             )
 
+    # FIXME: THIS IS NOT CREATING, IT IS DOWNLOADING
+    # FIXME: DON"T HANDLE get_output_model_path like this
     @staticmethod
     def create_shard_files(
         model_metadata: ModelMetadata, env: ApplicationConfig, layers_to_download: List[str] = None,

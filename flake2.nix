@@ -57,16 +57,55 @@
           pkgs.python311
           pkgs.ruff
           pkgs.nodejs
-          pkgs.nodePackages.pyright
+          pkgs.pyright
           pkgs.jq
         ];
         cudaDeps = with pkgs; [
+          autoconf
+          binutils
+          curl
+          freeglut
+          gcc11
+          git
+          gitRepo
+          gnumake
+          gnupg
+          gperf
+          libGLU
+          libGL
+          libselinux
+          m4
+          ncurses5
+          procps
+          stdenv.cc
+          unzip
+          util-linux
+          wget
+          xorg.libICE
+          xorg.libSM
+          xorg.libX11
+          xorg.libXext
+          xorg.libXi
+          xorg.libXmu
+          xorg.libXrandr
+          xorg.libXrender
+          xorg.libXv
+          zlib
+          pkgs.linuxPackages_latest.nvidia_x11
+          cudaPackages_12_1.cudatoolkit
           customConda
           file
+          ocrmypdf
+          tesseract
+          ghostscript
         ];
 
         libInputs = with pkgs; [
+          pkgs.linuxPackages_latest.nvidia_x11
           file
+          ocrmypdf
+          tesseract
+          ghostscript
           stdenv.cc
           stdenv.cc.cc.lib
         ];
@@ -87,7 +126,23 @@
                 export NIX_CFLAGS_LINK="-L${installationPath}lib"
                 export FONTCONFIG_FILE=/etc/fonts/fonts.conf
                 export QTCOMPOSE=${pkgs.xorg.libX11}/share/X11/locale
+
+                # cuda
+                export CUDA_PATH="${pkgs.cudaPackages_12_1.cudatoolkit}"
+                export EXTRA_LDFLAGS="-L/lib -L${
+                  pkgs.linuxPackages_latest.nvidia_x11
+                }/lib"
+                export EXTRA_CCFLAGS="-I/usr/include"
                 export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath libInputs}"
+                export CUDA_VISIBLE_DEVICES="0,1,2"
+
+                # python
+                export TORCH_USE_CUDA_DSA="1"
+                export TORCH_DEVICE="cuda"
+                export TESSDATA_PREFIX="${pkgs.tesseract}/share/tessdata"
+                export INFERENCE_RAM="22"
+                export DEFAULT_LANG="Finnish"
+                export NUM_DEVICES="3"
 
                 export UID_DOCKER=$(id -u)
                 export GID_DOCKER=$(id -g)

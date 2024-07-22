@@ -15,5 +15,4 @@ directory_settings:
   local_dir: ./models
   output_dir: ./model_soup
 hf_hub_settings:
-  token: null
   trust_remote_code: False

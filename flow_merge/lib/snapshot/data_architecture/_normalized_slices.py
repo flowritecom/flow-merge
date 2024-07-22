@@ -13,11 +13,11 @@ class MergeMethodIdentifier(str, Enum):
     PASSTHROUGH = "passthrough"
 
 class NormalizedSource(BaseModel):
-    weight: Optional[int] = None
+    weight: Optional[float] = None
     model: Optional[str]
     layer: Optional[str]
     # FIXME base_model is now is_base
-    base_model: Optional[bool]
+    is_base: Optional[bool]
 
 class NormalizedSlice(BaseModel):
     # FIXME merge method is a new type with {name, params}

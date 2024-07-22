@@ -23,24 +23,28 @@ class ModelMetadataService:
         self.directory_settings = directory_settings
         self.metadata_files_validator = FileListValidator(env=env, logger=logger)
 
-    @staticmethod
-    def generate_content_hash(file_path: str) -> str:
+    def generate_content_hash(self, file_path: str) -> str:
+        self.logger.info("Generating Content Hash: generate_content_hash")
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as file:
             for chunk in iter(lambda: file.read(CHUNK_SIZE), b""):
                 sha256_hash.update(chunk)
         return sha256_hash.hexdigest()
 
+    ## FIXME: WHY THIS NOT USING FILEIO REPOSITORY !!?
     def download_hf_file(self, repo_id: str, filename: str) -> str:
+        self.logger.info("Downloading a file from HF: download_hf_file")
+        self.logger.info(f"Downloading {filename} into {str(self.directory_settings.local_dir / repo_id)}")
         return huggingface_hub.hf_hub_download(
             repo_id,
             filename,
-            local_dir=self.directory_settings.local_dir,
+            local_dir=self.directory_settings.local_dir / repo_id,
             resume_download=True,
             token=self.env.hf_token,
         )
 
     def fetch_hf_model_info(self, repo_id: str) -> ModelInfo:
+        self.logger.info("Fetching model info from HF: fetch_hf_model_info")
         return huggingface_hub.hf_api.repo_info(
             repo_id=repo_id,
             repo_type="model",
@@ -51,6 +55,7 @@ class ModelMetadataService:
     def create_file_metadata_list_from_hf(
         self, hf_model_info: ModelInfo, repo_id: str
     ) -> List[FileMetadata]:
+        self.logger.info("Creating File Metadata_list from HF: create_file_metadata_list_from_hf")
         def create_file_metadata(sibling: RepoSibling) -> FileMetadata:
             if sibling.lfs is None:
                 path_to_downloaded_file = self.download_hf_file(
@@ -72,6 +77,7 @@ class ModelMetadataService:
     def create_file_metadata_list_from_local(
         self, path_to_model: Path
     ) -> List[FileMetadata]:
+        self.logger.info("Creating File Metadata_list from Local: create_file_metadata_list_from_local")
         return [
             FileMetadata(
                 sha=self.generate_content_hash(str(file_path)),
@@ -82,6 +88,7 @@ class ModelMetadataService:
         ]
 
     def load_model_info(self, path_or_id: str) -> ModelMetadata:
+        self.logger.info("Loading Model Info: load_model_info")
         path = Path(path_or_id)
         try:
             hf_model_info = self.fetch_hf_model_info(path_or_id)
@@ -133,6 +140,7 @@ class ModelMetadataService:
                 )
                 self.metadata_files_validator.check(metadata=model_metadata)
                 # model_metadata.update_checks()
+                self.logger.info(f"Loaded model info successfully for {model_metadata.id}")
                 return model_metadata
             else:
                 self.logger.warn("Model not found locally, cannot create model metadata.")

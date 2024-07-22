@@ -44,6 +44,7 @@ class Model(ModelBase, arbitrary_types_allowed=True):
         env: ApplicationConfig,
         logger: Logger
         ):
+        print("Creating metadata: _create_metadata")
         metadata_service = ModelMetadataService(
             directory_settings=directory_settings,
             env=env,
@@ -60,6 +61,7 @@ class Model(ModelBase, arbitrary_types_allowed=True):
         env: ApplicationConfig,
         logger: Logger
     ):
+        print("Creating architecture: _create_architecture")
         try:
             config = PretrainedConfig.from_dict(metadata.config)
             return ModelArchitecture.from_config(config)
@@ -75,6 +77,7 @@ class Model(ModelBase, arbitrary_types_allowed=True):
         env: ApplicationConfig, 
         logger: Logger
     ):
+        print("Loading Model from path: from_path")
         metadata = cls._create_metadata(path, directory_settings, env, logger)
 
         model_id = ModelId(str(path))
@@ -88,9 +91,10 @@ class Model(ModelBase, arbitrary_types_allowed=True):
 
         architecture = cls._create_architecture(metadata, env, logger)
 
+        print("Creating the Model class: from_path")
         return cls(
             id=model_id,
-            path=path.resolve(),
+            path=Path(directory_settings.local_dir, path).resolve(),
             metadata=metadata,
             file_to_tensor_index=file_to_tensor_index,
             shards=shards,
@@ -106,6 +110,7 @@ class Model(ModelBase, arbitrary_types_allowed=True):
         env: ApplicationConfig,
         logger: Logger
     ):
+        print("Loading Model from layers: from_layers")
         metadata = cls._create_metadata(path, directory_settings, env, logger)
 
         model_id = ModelId(str(path))
@@ -113,15 +118,16 @@ class Model(ModelBase, arbitrary_types_allowed=True):
 
         shards = ModelService.create_shard_files(
             model_metadata=metadata,
-            device=env.device,
+            env=env,
             layers_to_download=layers_to_download
         )
 
         architecture = cls._create_architecture(metadata, env, logger)
 
+        print("Creating the Model class: from_layers")
         return cls(
             id=model_id,
-            path=path.resolve(),
+            path=Path(directory_settings.local_dir, path).resolve(),
             metadata=metadata,
             file_to_tensor_index=file_to_tensor_index,
             shards=shards,

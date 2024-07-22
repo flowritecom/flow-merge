@@ -31,11 +31,11 @@ class ModelSettings(BaseModel):
         return v
 
     # FIXME: This is about legality -> postpone this to normalization
-    @model_validator(mode="after")
-    def validate_models_given_method(self):
-        if len(self.models) > 2 and self.method == MergeMethodIdentifier.SLERP.value:
-            raise TypeError("Slerp method requires exactly two models for merging.")
-        return self
+    # @model_validator(mode="after")
+    # def validate_models_given_method(self):
+    #     if len(self.models) > 2 and self.method == MergeMethodIdentifier.SLERP.value:
+    #         raise TypeError("Slerp method requires exactly two models for merging.")
+    #     return self
 
     # FIXME: this is also about normalization -> defer?
     @model_validator(mode="after")

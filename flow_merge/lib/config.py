@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field, field_validator, ValidationError
 import logging
 from huggingface_hub import login, logout
 
-# from flow_merge.lib.constants import DeviceIdentifier
 
 class DeviceIdentifier(str, Enum):
     CPU = "cpu"

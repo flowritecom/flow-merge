@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Type, Literal
 
 from pydantic import BaseModel, Field, model_validator
 from flow_merge.lib.merge_methods import MergeMethodIdentifier
@@ -14,7 +14,7 @@ class MethodGlobalParameters(BaseModel):
     weights: Optional[Dict[Any, float]] = {}
 
 
-class MethodSettings(BaseModel):
+class MethodSettings(BaseModel, arbitrary_types_allowed=True):
     merge_method: MergeMethodIdentifier = Field(alias="method")
     method_global_parameters: Optional[MethodGlobalParameters] = None
 

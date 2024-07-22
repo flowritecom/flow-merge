@@ -12,7 +12,7 @@ class ValidationRunner:
     def __init__(self, raw_data: Dict[str, Any], env, logger):
         self.env = env
         self.logger = logger
-        self.raw_data = raw_data
+        self.raw_data = raw_data        
         self.merge_method, self.method_global_parameters = self.validate(
             MethodSettings, ["method", "method_global_parameters"]
         )._unpack()
@@ -30,6 +30,12 @@ class ValidationRunner:
         return settings_class(
             **{k: self.raw_data[k] for k in keys if k in self.raw_data}
         )
+
+    def show(self) -> None:
+        self.logger.info(self.raw_data)
+
+    def get_dict(self) -> Dict[str, Any]:
+        return self.raw_data
 
     # FIXME: can base_level key be at the top level -> fix this in Normalization also if yes
 

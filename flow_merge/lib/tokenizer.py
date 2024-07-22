@@ -211,7 +211,7 @@ class InputIDsMapper:
             vocab = all_tokenizers[model].get_vocab()
             vocab_size = InputIDsMapper.get_vocab_size(
                 model=model,
-                trust_remote_code=enriched_snapshot.hf_hub_settings.trust_remote_code,
+                trust_remote_code=enriched_snapshot.settings.hf_hub_settings.trust_remote_code,
                 logger=logger
             ) or len(vocab)
 
@@ -266,7 +266,7 @@ class MergeTokenizerService:
     def construct_appropriate_tokenizer(
         self, enriched_snapshot: EnrichedSnapshot, all_tokenizers: Dict[Model, PreTrainedTokenizerBase]
     ) -> PreTrainedTokenizerBase:
-        if enriched_snapshot.tokenizer_settings.mode == "base":
+        if enriched_snapshot.settings.tokenizer_settings.mode == "base":
             return all_tokenizers[enriched_snapshot.base_model]
 
         builder = TokenizerMerger(

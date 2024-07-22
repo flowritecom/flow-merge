@@ -13,6 +13,9 @@ class FlowMerge:
     def load(self):
         self.logger.info("Loading")
 
+    def snap(self):
+        self.logger.info("Snapshotting")
+
     def plan(self):
         self.logger.info("Planning")
 
@@ -49,6 +52,10 @@ class FlowMergeManager:
 
         if hasattr(service, "load"):
             self.load = service.load
+        if hasattr(service, "snap"):
+            self.snap = service.snap
+        if hasattr(service, "plan"):
+            self.plan = service.plan
         if hasattr(service, "run"):
             self.run = service.run
         if hasattr(service, "eval"):

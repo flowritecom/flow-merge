@@ -5,17 +5,23 @@ from .data_architecture.snapshot import Snapshot
 from .hash import create_content_hash
 
 class SnapshotService:
-    snapshot: Snapshot = None
+    snapshot: Snapshot
 
     def __init__(self,  env, logger):
         self.env = env
         self.logger = logger
 
-    def create(self) -> Snapshot:
-        pass
+    def snap(self) -> Dict[str, Any]:
+        return {"sha": "sha", "metadata": "metadata", "settings": "settings", "normalized": "normalized"} 
+        #Snapshot(
+        #    sha=pass,
+        #    metadata=pass,
+        #    settings=pass,
+        #    normalized=pass
+        #)
 
-    def load(self, snapshot: Dict[str, Any]) -> None:
-        pass
+    #def load(self, snapshot: Dict[str, Any]) -> None:
+    #    pass
         # 1. run validation checks on the content hashes recursively
         # 2. load into pydantic classes - legality checks
         # 3. finally create and load into class

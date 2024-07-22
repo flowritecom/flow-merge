@@ -29,7 +29,7 @@ class ModelMetadata(BaseModel):
     absolute_path: Optional[Path] = None
 
     # TODO: How are we passing directory settings via the snapshot?
-    directory_settings: Optional[DirectorySettings] = None
+    directory_settings: Optional[DirectorySettings] = DirectorySettings()
 
     hf_author: Optional[str] = Field(alias="author", default=None)
     hf_created_at: Optional[datetime] = Field(alias="created_at", default=None)

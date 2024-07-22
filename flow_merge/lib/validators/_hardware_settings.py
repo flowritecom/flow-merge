@@ -2,10 +2,12 @@
 from typing import Optional
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from flow_merge.lib.constants import DeviceIdentifier
+import torch
 
-class HardwareSettings(BaseModel):
-    device: Optional[DeviceIdentifier] = Field(
+class HardwareSettings(BaseModel, arbitrary_types_allowed=True):
+    device: Optional[torch.device] = Field(
+        # FIXME set auto-recognize 
+        default = "cpu",
         description=str("The device to use for tensor operations." +
         "Defaults to 'cuda' if available, otherwise 'cpu'.")
     )

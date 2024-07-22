@@ -16,12 +16,11 @@ class ConfigLoader:
         self.logger.info("Validating configuration")
         try:
             validated_data = self.validation_runner(
-                **raw_data, env=self.env, logger=self.logger
-            )
-            print(validated_data)
+                raw_data, env=self.env, logger=self.logger
+            ).get_dict()
             return validated_data
         except ValueError as e:
-            print(f"Validation error: {e}")
+            self.logger.error(f"Validation error: {e}")
 
     def load(self, config: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
         self.logger.info("Loading configuration")
