@@ -42,6 +42,7 @@
             chmod +x $out/miniconda.sh
           '';
         };
+        zfsCompat = pkgs.zfs_unstable.latestCompatibleLinuxPackages;
         customConda =
           pkgs.runCommand "conda-install"
           {buildInputs = [pkgs.makeWrapper minicondaScript];}
@@ -91,14 +92,14 @@
           xorg.libXrender
           xorg.libXv
           zlib
-          pkgs.linuxPackages_latest.nvidia_x11
+          zfsCompat.nvidia_x11
           cudaPackages_12_1.cudatoolkit
           customConda
           file
         ];
 
         libInputs = with pkgs; [
-          pkgs.linuxPackages_latest.nvidia_x11
+          zfsCompat.nvidia_x11
           file
           stdenv.cc
           stdenv.cc.cc.lib
@@ -124,7 +125,7 @@
                 # cuda
                 export CUDA_PATH="${pkgs.cudaPackages_12_1.cudatoolkit}"
                 export EXTRA_LDFLAGS="-L/lib -L${
-                  pkgs.linuxPackages_latest.nvidia_x11
+                  zfsCompat.nvidia_x11
                 }/lib"
                 export EXTRA_CCFLAGS="-I/usr/include"
                 export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath libInputs}"

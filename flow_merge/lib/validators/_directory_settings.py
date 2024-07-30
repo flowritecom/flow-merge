@@ -21,21 +21,9 @@ class DirectorySettings(BaseModel):
     def _unpack(self):
         return self.cache_dir, self.local_dir, self.output_dir
 
-    @field_validator("cache_dir")
+    @field_validator("cache_dir", "local_dir", "output_dir")
     def validate_cache_dir(cls, v):
         if v:
             v = Path(v).resolve()
             v.mkdir(parents=True, exist_ok=True)
             return v
-
-    @field_validator("local_dir")
-    def validate_local_dir(cls, v):
-        v = Path(v).resolve()
-        v.mkdir(parents=True, exist_ok=True)
-        return v
-
-    @field_validator("output_dir")
-    def validate_output_dir(cls, v):
-        v = Path(v).resolve()
-        v.mkdir(parents=True, exist_ok=True)
-        return v

@@ -5,18 +5,42 @@ from pydantic import BaseModel, Field, model_validator
 from flow_merge.lib.merge_methods import MergeMethodIdentifier
 
 
-class MethodGlobalParameters(BaseModel):
+# class MethodGlobalParameters(BaseModel):
+#     scaling_coefficient: Optional[float] = None
+#     normalize: Optional[bool] = None
+#     p: Optional[float] = None
+#     t: Optional[float] = None
+#     top_k: Optional[float] = None
+#     weights: Optional[Dict[Any, float]] = {}
+
+
+# sources:
+#     slice:
+#         layers: [ {model: XYZ, weight: 0.5, layer: 123}, {model:ABC, weight: 0.3, layer: 321} ]
+#         output_layer_id: 12
+#         merge_method:
+#             name: slerp
+#             p: 0.3
+
+# slice:
+#     source1(w)
+#     source2(w)
+#     method
+#     method_settings # weights don't exist here
+
+# Loader --->> Validator --->> Normalizer
+
+# validation (??) --> Normalizer  --> (business logic validation) --> MethodSettings per slice
+
+
+
+class MethodSettings(BaseModel, arbitrary_types_allowed=True):
+    merge_method: MergeMethodIdentifier = Field(alias="method")
     scaling_coefficient: Optional[float] = None
     normalize: Optional[bool] = None
     p: Optional[float] = None
     t: Optional[float] = None
     top_k: Optional[float] = None
-    weights: Optional[Dict[Any, float]] = {}
-
-
-class MethodSettings(BaseModel, arbitrary_types_allowed=True):
-    merge_method: MergeMethodIdentifier = Field(alias="method")
-    method_global_parameters: Optional[MethodGlobalParameters] = None
 
     def _unpack(self):
         return self.merge_method, self.method_global_parameters
@@ -31,17 +55,6 @@ class MethodSettings(BaseModel, arbitrary_types_allowed=True):
             self._validate_t(params.t)
             self._validate_top_k(params.top_k)
         return self
-
-    def _validate_weights(self, weights: Optional[Dict[Any, float]]):
-        if weights:
-            total_weight = sum(weights.values())
-            if total_weight > 1.0:
-                raise ValueError("The combined weights cannot exceed 1.0.")
-            for model, weight in weights.items():
-                if weight <= 0.0:
-                    raise ValueError(
-                        f"Weight for model '{model}' must be greater than 0."
-                    )
 
     def _validate_scaling_coefficient(self, scaling_coefficient: Optional[float]):
         if self.merge_method == MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC:

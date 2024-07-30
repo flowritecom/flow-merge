@@ -1,16 +1,3 @@
-## Thursday
-- [] NormalizedSource
-    - is_base vs base_model
+## Tuesday 30/07
 
-
-- [] MethodSettings
-    - merge_method and global_params
-
-
-- [] We are adding interpolate
-
-
-- [] 4
-
-
-- [] 5
+- Go through the sdk.py
