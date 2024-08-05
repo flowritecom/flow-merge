@@ -12,6 +12,7 @@ from transformers import PretrainedConfig
 import flow_merge.data.architectures
 from flow_merge.lib.file_io import FileRepository
 from flow_merge.lib.config import ApplicationConfig
+from flow_merge.lib.merge_settings import MergeSettings
 
 
 class ArchitectureType(str, Enum):
@@ -63,11 +64,23 @@ class ModelWeight(BaseModel):
         layer_type: The layer of the model (e.g., 'decoder', 'embedding', etc.).
         projection: The projection of the weight if applicable. For self_attn and mlp only. Default to None.
     """
-
     name: str
     type: ModelWeightType
     layer_type: ModelWeightLayerType
     projection: Optional[ProjectionType] = None
+
+
+class ModelArchitectureProvider:
+    app_config: ApplicationConfig
+
+    def __init__(self, app_config: ApplicationConfig):
+        self.app_config = app_config
+
+    def get_by_path(self, path: Path):
+        return ModelArchitecture.from_path_or_id(path.__str__(), self.app_config.local_dir, self.app_config)
+
+    def get_by_id(self, model_id: str):
+        return ModelArchitecture.from_path_or_id(model_id, self.app_config.local_dir, self.app_config)
 
 
 class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
@@ -84,7 +97,7 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
         model_type: The type of the model (e.g., 'llama').
         config: The config object of the transformers model.
     """
-    model_config  = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(protected_namespaces=())
 
     architectures: List[ArchitectureType]
     weights: List[ModelWeight]
@@ -93,10 +106,10 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
 
     @classmethod
     def from_path_or_id(
-        cls, 
-        path_or_id: str, 
-        local_dir: Path, 
-        env: ApplicationConfig
+            cls,
+            path_or_id: str,
+            local_dir: Path,
+            env: ApplicationConfig
     ):
         print(f"Loading config with id: {path_or_id} from {local_dir}")
         path_to_config = FileRepository.download_file(
@@ -144,7 +157,7 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
 
     @staticmethod
     def _generate_model_weights(
-        arch: dict, config: PretrainedConfig
+            arch: dict, config: PretrainedConfig
     ) -> List[ModelWeight]:
         print("Generating model weights: _generate_model_weights")
         model_weights: List[ModelWeight] = []
@@ -178,7 +191,7 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
 
     @staticmethod
     def _create_decoder_weights(weight: dict, config: PretrainedConfig
-    ) -> List[ModelWeight]:
+                                ) -> List[ModelWeight]:
         print("Creating decoder weights: _create_decoder_weights")
         decoder_weights: List[ModelWeight] = []
         config.num_hidden_layers = 20
@@ -255,10 +268,10 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
             for weight in self.weights
             if weight.layer_type == ModelWeightLayerType.decoder
         ]
-    
+
     def get_weight(
-        self, 
-        weight_name: str
+            self,
+            weight_name: str
     ) -> ModelWeight:
         for weight in self.weights:
             if weight.name == weight_name:

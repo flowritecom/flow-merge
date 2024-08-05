@@ -1,6 +1,9 @@
 import os
 import re
 from enum import Enum
+from pathlib import Path
+from typing import Optional
+
 from pydantic import BaseModel, Field, field_validator, ValidationError
 import logging
 from huggingface_hub import login, logout
@@ -10,12 +13,21 @@ class DeviceIdentifier(str, Enum):
     CPU = "cpu"
     CUDA = "cuda"
 
+
 logger = logging.getLogger(__name__)
 
 
 class ApplicationConfig(BaseModel):
     device: DeviceIdentifier = Field(default=DeviceIdentifier.CPU)
     hf_token: str = Field(..., default_factory=lambda: os.getenv("HF_TOKEN"))
+    cache_dir: Optional[Path] = Field(
+        default=None,
+        description="Directory for caching models and tokenizers with the transformers library.",
+    )
+    local_dir: Path = Field(
+        default=Path("./models").resolve(),
+        description="Directory for loading models from local.",
+    )
 
     def __post_init__(self):
         os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
@@ -28,7 +40,6 @@ class ApplicationConfig(BaseModel):
 
     def set_device(self, device: str):
         self.device = device
-
 
     @field_validator("hf_token")
     def validate_hf_token(cls, v):
@@ -48,4 +59,17 @@ class ApplicationConfig(BaseModel):
                     f"Failed to login to the Hugging Face Hub with the provided token: {e}"
                 )
                 raise ValueError("Failed to authenticate with the provided token")
+        return v
+
+    @field_validator("cache_dir")
+    def validate_cache_dir(cls, v):
+        if v:
+            v = Path(v).resolve()
+            v.mkdir(parents=True, exist_ok=True)
+            return v
+
+    @field_validator("local_dir")
+    def validate_local_dir(cls, v):
+        v = Path(v).resolve()
+        v.mkdir(parents=True, exist_ok=True)
         return v

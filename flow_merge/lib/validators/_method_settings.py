@@ -5,7 +5,8 @@ from pydantic import BaseModel, Field, model_validator
 from flow_merge.lib.merge_methods import MergeMethodIdentifier
 
 
-class MethodGlobalParameters(BaseModel):
+class MethodSettings(BaseModel, arbitrary_types_allowed=True):
+    merge_method: MergeMethodIdentifier = Field(alias="method")
     scaling_coefficient: Optional[float] = None
     normalize: Optional[bool] = None
     p: Optional[float] = None
@@ -13,23 +14,21 @@ class MethodGlobalParameters(BaseModel):
     top_k: Optional[float] = None
     weights: Optional[Dict[Any, float]] = {}
 
-
-class MethodSettings(BaseModel, arbitrary_types_allowed=True):
-    merge_method: MergeMethodIdentifier = Field(alias="method")
-    method_global_parameters: Optional[MethodGlobalParameters] = None
-
     def _unpack(self):
-        return self.merge_method, self.method_global_parameters
+        return (self.merge_method, self.scaling_coefficient, self.normalize,
+                self.p,
+                self.t,
+                self.top_k,
+                self.weights,)
 
     @model_validator(mode="after")
     def validate_method_and_params(self):
-        params = self.method_global_parameters
         if params:
-            self._validate_weights(params.weights)
-            self._validate_scaling_coefficient(params.scaling_coefficient)
-            self._validate_p(params.p)
-            self._validate_t(params.t)
-            self._validate_top_k(params.top_k)
+            self._validate_weights(self.weights)
+            self._validate_scaling_coefficient(self.scaling_coefficient)
+            self._validate_p(self.p)
+            self._validate_t(self.t)
+            self._validate_top_k(self.top_k)
         return self
 
     def _validate_weights(self, weights: Optional[Dict[Any, float]]):
@@ -46,8 +45,8 @@ class MethodSettings(BaseModel, arbitrary_types_allowed=True):
     def _validate_scaling_coefficient(self, scaling_coefficient: Optional[float]):
         if self.merge_method == MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC:
             if (
-                scaling_coefficient is not None
-                and not 0.0 <= scaling_coefficient <= 1.0
+                    scaling_coefficient is not None
+                    and not 0.0 <= scaling_coefficient <= 1.0
             ):
                 raise ValueError(
                     "Scaling coefficient should be a value between 0.0 and 1.0."

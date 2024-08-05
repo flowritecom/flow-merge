@@ -1,14 +1,9 @@
-from flow_merge.lib.model.architecture import ModelArchitecture
+from flow_merge.lib.model.architecture import ModelArchitectureProvider
 from typing import Any, Dict, List, Optional
 from functools import reduce
 import re
 
 from flow_merge.lib.config import ApplicationConfig
-from flow_merge.lib.validators import DirectorySettings
-
-
-def load_architecture(model_id: str, directory_settings: DirectorySettings, config: ApplicationConfig):
-    return ModelArchitecture.from_path_or_id(path_or_id=model_id, local_dir=directory_settings.local_dir, env=config)
 
 
 class Source:
@@ -73,17 +68,18 @@ class Slice:
 
 
 class NormalizationRunner:
+    model_arch_provider: ModelArchitectureProvider = None
     models_layers: Dict[str, Dict[str, Any]] = {}
     models_layers_by_type: Dict[str, Dict[str, List[str]]] = {}
     config: ApplicationConfig
 
-    def __init__(self, config: ApplicationConfig, logger):
+    def __init__(self, model_arch_provider: ModelArchitectureProvider, logger: object) -> object:
         self.transformations = [self._ensure_base_model]
-        self.config = config
+        self.model_arch_provider = model_arch_provider
         self.logger = logger
 
-    def normalize(self, raw_data: Dict, directory_settings: DirectorySettings) -> (List[Dict[str, Any]], int):
-        self._load_models_layers(raw_data, directory_settings)
+    def normalize(self, raw_data: Dict) -> (List[Dict[str, Any]], int):
+        self._load_models_layers(raw_data)
 
         if "base_model" not in raw_data:
             raise ValueError("Base model is missing")
@@ -317,7 +313,7 @@ class NormalizationRunner:
             if src.is_base is True:
                 return src
 
-    def _load_models_layers(self, raw_data: Dict[str, Any], directory_settings: DirectorySettings):
+    def _load_models_layers(self, raw_data: Dict[str, Any]):
         all_models = [raw_data["base_model"]] if "base_model" in raw_data else []
         all_models.extend([
             src["model"]
@@ -326,7 +322,7 @@ class NormalizationRunner:
         ])
 
         for m in all_models:
-            arch = load_architecture(m, directory_settings, self.config)
+            arch = self.model_arch_provider.get_by_id(m)
             self.models_layers[m] = {
                 weight["name"]: weight for weight in arch["weights"]
             }
