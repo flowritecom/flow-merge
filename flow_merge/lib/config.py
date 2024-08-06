@@ -28,6 +28,10 @@ class ApplicationConfig(BaseModel):
         default=Path("./models").resolve(),
         description="Directory for loading models from local.",
     )
+    output_dir: Path = Field(
+        default=Path("./merged_model").resolve(),
+        description="Directory for saving the merged model, tokenizer, and metadata.",
+    )
 
     def __post_init__(self):
         os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"
@@ -73,3 +77,8 @@ class ApplicationConfig(BaseModel):
         v = Path(v).resolve()
         v.mkdir(parents=True, exist_ok=True)
         return v
+
+    @field_validator("output_dir")
+    def validate_output_dir(cls, v):
+        v = Path(v).resolve()
+        v.mkdir(parents=True, exist_ok=True)

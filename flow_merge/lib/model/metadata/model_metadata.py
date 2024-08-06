@@ -11,7 +11,6 @@ from huggingface_hub.hf_api import (
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Literal, Optional
 
-from flow_merge.lib.validators import DirectorySettings
 from flow_merge.lib.model.metadata.file_metadata import FileMetadata
 
 class ModelMetadata(BaseModel):
@@ -27,9 +26,6 @@ class ModelMetadata(BaseModel):
 
     relative_path: Optional[Path] = None
     absolute_path: Optional[Path] = None
-
-    # TODO: How are we passing directory settings via the snapshot?
-    directory_settings: Optional[DirectorySettings] = DirectorySettings()
 
     hf_author: Optional[str] = Field(alias="author", default=None)
     hf_created_at: Optional[datetime] = Field(alias="created_at", default=None)

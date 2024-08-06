@@ -3,6 +3,9 @@ from typing import Dict, Any
 
 class SliceValidator:
     def validate(self, s: Dict[str, Any]) -> bool:
+        if "sources" not in s:
+            raise ValueError("Sources not defined for slice")
+
         # Check that at least model is allowed as base
         if all("base_model" in source and source["base_model"] is False for source in s["sources"]):
             raise ValueError("No valid source found to set as base_model")

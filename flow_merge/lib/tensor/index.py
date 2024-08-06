@@ -27,7 +27,7 @@ class TensorIndexService:
                 index_path = FileRepository.download_file(
                     repo_id=str(metadata.id),
                     filename="model.safetensors.index.json",
-                    local_dir=metadata.directory_settings.local_dir,
+                    download_dir=metadata.directory_settings.local_dir,
                 )
             except Exception as e:
                 print(f"Safetensors index not found: {e}")
@@ -37,7 +37,7 @@ class TensorIndexService:
                 index_path = FileRepository.download_file(
                     repo_id=str(metadata.id),
                     filename="pytorch_model.bin.index.json",
-                    local_dir=metadata.directory_settings.local_dir,
+                    download_dir=metadata.directory_settings.local_dir,
                 )
             except Exception as e:
                 print(f"Pytorch bin index not found: {e}")

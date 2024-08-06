@@ -6,7 +6,6 @@ from transformers import PretrainedConfig
 
 from flow_merge.lib.logger import Logger
 from flow_merge.lib.config import ApplicationConfig
-from flow_merge.lib.validators import DirectorySettings
 from flow_merge.lib.model.service import ModelService
 from flow_merge.lib.model.architecture import ModelArchitecture
 from flow_merge.lib.model.metadata import ModelMetadataService, ModelMetadata
@@ -39,14 +38,12 @@ class Model(ModelBase, arbitrary_types_allowed=True):
     
     @staticmethod
     def _create_metadata(
-        path: Path, 
-        directory_settings: DirectorySettings,
+        path: Path,
         env: ApplicationConfig,
         logger: Logger
         ):
         print("Creating metadata: _create_metadata")
         metadata_service = ModelMetadataService(
-            directory_settings=directory_settings,
             env=env,
             logger=logger
         )
@@ -72,13 +69,12 @@ class Model(ModelBase, arbitrary_types_allowed=True):
     @classmethod
     def from_path(
         cls, 
-        path: Path, 
-        directory_settings: DirectorySettings, 
+        path: Path,
         env: ApplicationConfig, 
         logger: Logger
     ):
         print("Loading Model from path: from_path")
-        metadata = cls._create_metadata(path, directory_settings, env, logger)
+        metadata = cls._create_metadata(path, env, logger)
 
         model_id = ModelId(str(path))
         file_to_tensor_index = TensorIndexService.create_file_to_tensor_index(metadata)

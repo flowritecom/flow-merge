@@ -12,7 +12,6 @@ from transformers import PretrainedConfig
 import flow_merge.data.architectures
 from flow_merge.lib.file_io import FileRepository
 from flow_merge.lib.config import ApplicationConfig
-from flow_merge.lib.merge_settings import MergeSettings
 
 
 class ArchitectureType(str, Enum):
@@ -111,17 +110,15 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
             local_dir: Path,
             env: ApplicationConfig
     ):
-        print(f"Loading config with id: {path_or_id} from {local_dir}")
         path_to_config = FileRepository.download_file(
             repo_id=path_or_id,
             filename="config.json",
-            local_dir=local_dir,
+            download_dir=local_dir,
             env=env
         )
         config = PretrainedConfig.from_json_file(
             path_to_config
         )
-        print(f"Loaded config. Success!")
         return cls.from_config(config)
 
     @classmethod
@@ -132,8 +129,6 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
                 template_archs = set(arch["architectures"])
                 if config_archs.intersection(template_archs):
                     returnable = cls._subst(arch, config)
-                    print("Created architecture by substituting layers")
-                    print("Returning it.")
                     return returnable
             raise RuntimeError(
                 "Architecture not found in flow-merge supported architectures."
@@ -145,9 +140,7 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
 
     @staticmethod
     def _subst(arch: dict, config: PretrainedConfig) -> "ModelArchitecture":
-        print("Substitute the layer templates")
         model_weights = ModelArchitecture._generate_model_weights(arch, config)
-        print("Success! Generated model weights.")
         return ModelArchitecture(
             architectures=arch["architectures"],
             weights=model_weights,
@@ -159,7 +152,6 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
     def _generate_model_weights(
             arch: dict, config: PretrainedConfig
     ) -> List[ModelWeight]:
-        print("Generating model weights: _generate_model_weights")
         model_weights: List[ModelWeight] = []
 
         for weight in arch["weights"]:
@@ -177,7 +169,6 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
                     f"Invalid weight type {weight_type} in model {arch['model_type']} template."
                 )
 
-        print("Success: _generate_model_weights")
         return model_weights
 
     @staticmethod
@@ -192,7 +183,6 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
     @staticmethod
     def _create_decoder_weights(weight: dict, config: PretrainedConfig
                                 ) -> List[ModelWeight]:
-        print("Creating decoder weights: _create_decoder_weights")
         decoder_weights: List[ModelWeight] = []
         config.num_hidden_layers = 20
         for layer_index in range(config.num_hidden_layers):
@@ -203,7 +193,6 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
                 projection=weight.get("projection", None),
             )
             decoder_weights.append(decoder_weight)
-        print("Success: _create_decoder_weights")
         return decoder_weights
 
     @staticmethod

@@ -1,8 +1,7 @@
 from enum import Enum
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 
-from ..hash import create_content_hash
 
 class MergeMethodIdentifier(str, Enum):
     ADDITION_TASK_ARITHMETIC = "addition-task-arithmetic"
@@ -11,31 +10,25 @@ class MergeMethodIdentifier(str, Enum):
     DARE_TIES_MERGING = "dare-ties-merging"
     MODEL_SOUP = "model-soup"
     PASSTHROUGH = "passthrough"
+    INTERPOLATE = "interpolate"
+
 
 class NormalizedSource(BaseModel):
     weight: Optional[float] = None
     model: Optional[str]
     layer: Optional[str]
-    # FIXME base_model is now is_base
     is_base: Optional[bool]
 
+
+class MergeMethod(BaseModel):
+    name: MergeMethodIdentifier
+    params: Optional[Dict[str, Any]] = None
+
+
 class NormalizedSlice(BaseModel):
-    # FIXME merge method is a new type with {name, params}
-    merge_method: Optional[MergeMethodIdentifier]
+    merge_method: MergeMethod
     sources: List[NormalizedSource]
+
 
 class NormalizedSlices(BaseModel):
     slices: List[NormalizedSlice]
-    sha: Optional[str]
-
-    @model_validator(mode="after")
-    def compute_sha(self):
-        # Convert all fields except 'sha' to a dictionary
-        data_dict = self.model_dump()
-        data_dict.pop("sha")
-        content_hash = create_content_hash(data_dict)
-        self.sha = content_hash
-
-        return self
-
-    

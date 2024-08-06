@@ -12,7 +12,6 @@ class FileRepository:
     @staticmethod
     def download_file(repo_id: str, filename: str, download_dir: Path, env: ApplicationConfig = ApplicationConfig()) -> Path:
         try:
-            print(f"Downloading {filename} file into {str(download_dir)}")
             # FIXME: local_dir arg should be called download_dir so we know it shouldn't be modified after given as arg
             file_path = hf_hub_download(
                 repo_id,
