@@ -99,8 +99,8 @@ class TokenizerValidator:
 
 class TokenizerMerger:
     def __init__(
-            self, 
-            base_model: Model, 
+            self,
+            base_model: Model,
             tokenizers: Dict[Model, PreTrainedTokenizerBase],
             env: ApplicationConfig,
             logger: Logger
@@ -255,9 +255,9 @@ class MergeTokenizerService:
 
         merge_tokenizer = self.construct_appropriate_tokenizer(enriched_snapshot, all_tokenizers)
         input_ids_mappings = InputIDsMapper.create_input_ids_mappings(
-            enriched_snapshot, 
-            all_tokenizers, 
-            merge_tokenizer, 
+            enriched_snapshot,
+            all_tokenizers,
+            merge_tokenizer,
             self.logger
         )
 
@@ -270,7 +270,7 @@ class MergeTokenizerService:
             return all_tokenizers[enriched_snapshot.base_model]
 
         builder = TokenizerMerger(
-            base_model=enriched_snapshot.base_model, 
+            base_model=enriched_snapshot.base_model,
             tokenizers=all_tokenizers,
             env=self.env,
             logger=self.logger

@@ -112,7 +112,7 @@ class TaskArithmetic(MergeMethod):
         self,
         weight: ModelWeight,
         base_model_tensor: torch.Tensor,
-        models_tensors: Dict[Model, torch.Tensor],
+        models_tensors: Dict[Model, torch.Tensor], # Using the Model object as a key needs to go
         merge_method_settings: Union[TaskArithmeticSettings, TiesMergingSettings],
         base_model: Model,
     ) -> torch.Tensor:

@@ -1,0 +1,2978 @@
+example_slices = {
+    "created_at": "2024-08-06T14:18:00.103013",
+    "base_model": "Qwen/Qwen1.5-0.5B",
+    "tokenizer_mode": "base",
+    "tokenizer_interpolation_method": "linear",
+    "slices": [
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.embed_tokens.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "slerp"
+            },
+            "sources": [
+                {
+                    "weight": 0.2,
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.input_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.self_attn.q_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.self_attn.q_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.self_attn.k_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.self_attn.k_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.self_attn.v_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.self_attn.v_proj.bias",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.self_attn.o_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.post_attention_layernorm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.mlp.gate_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.mlp.up_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.0.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.1.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.2.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.3.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.4.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.5.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.6.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.7.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.8.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.9.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.10.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.11.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.12.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.13.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.14.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.15.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.16.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.17.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.18.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.layers.19.mlp.down_proj.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.norm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "passthrough"
+            },
+            "sources": [
+                {
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "lm_head.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "interpolate"
+            },
+            "sources": [
+                {
+                    "weight": 0.2,
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.embed_tokens.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "interpolate"
+            },
+            "sources": [
+                {
+                    "weight": 0.2,
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "model.norm.weight",
+                    "is_base": True
+                }
+            ]
+        },
+        {
+            "merge_method": {
+                "name": "interpolate"
+            },
+            "sources": [
+                {
+                    "weight": 0.2,
+                    "model": "Qwen/Qwen1.5-0.5B",
+                    "layer": "lm_head.weight",
+                    "is_base": True
+                }
+            ]
+        }
+    ],
+    "lib_version": "0.0.1",
+    "sha": "e68cdc501253e16f1a539a2bc3190e4b"
+}

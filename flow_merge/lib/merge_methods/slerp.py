@@ -53,7 +53,7 @@ class Slerp(MergeMethod):
         base_model_tensor: torch.Tensor,
         models_tensors: Dict[Model, torch.Tensor],
         merge_method_settings: SlerpSettings,
-        base_model: Model,
+        base_model: Model, # why do we pass this?
     ) -> torch.Tensor:
         base_tensor_dtype = base_model_tensor.dtype
 

@@ -20,7 +20,6 @@ class ModelService:
     def create_shard_file(
         output_dir: Path,
         repo_id: str,
-        device: DeviceIdentifier,
         shard_filename: str,
         keys: Optional[List[str]] = None,
     ) -> ShardFile:
@@ -34,7 +33,7 @@ class ModelService:
                 "safetensors" if shard_filename.endswith(".safetensors") else "bin"
             )
             try:
-                keys = TensorRepository.get_tensor_keys(output_path, file_type, device)
+                keys = TensorRepository.get_tensor_keys(output_path, file_type, "cpu")
             except RuntimeError as e:
                 keys = []  # Default to an empty list if keys cannot be retrieved
 
@@ -45,12 +44,12 @@ class ModelService:
         file_to_tensor_index: Dict[str, List[str]],
         output_dir: Path,
         repo_id: str,
-        device: DeviceIdentifier,
     ) -> List[ShardFile]:
         try:
+
             return [
                 ModelService.create_shard_file(
-                    output_dir, repo_id, device, filename, keys
+                    output_dir, repo_id, filename, keys
                 )
                 for filename, keys in file_to_tensor_index.items()
                 if filename.endswith((".safetensors", ".bin"))
@@ -111,17 +110,16 @@ class ModelService:
 
     @staticmethod
     def merge_and_save_model(
-        model_metadata: ModelMetadata, env: ApplicationConfig
+        model_metadata: ModelMetadata,
     ) -> List[ShardFile]:
         print("Merging adapter and saving model: merge_and_save_model")
-        FileRepository.download_adapter_files(model_metadata, env)
+        FileRepository.download_adapter_files(model_metadata)
         base_model_shards = ModelService.determine_base_model_shards(model_metadata)
         adapter_files = [f for f in model_metadata.file_list if "adapter" in f]
 
         base_model = ModelService.load_and_apply_adapters(
             adapter_files=adapter_files,
             base_model_shards=base_model_shards,
-            device=env.device,
             repo_id=model_metadata.id,
             local_dir=model_metadata.directory_settings.local_dir,
         )
@@ -148,13 +146,11 @@ class ModelService:
         file_index: Dict
     ) -> List[str]:
         shard_filenames = set()
-
         (
             shard_filenames.add(file_index[layer]) 
             for layer in layers_to_download 
             if layer in file_index
         )
-        
         return list(shard_filenames)
         
     @staticmethod
@@ -163,7 +159,6 @@ class ModelService:
         file_index,
         output_model_path,
         repo_id,
-        device
     ) -> List[ShardFile]:
         shards_to_download = ModelService.get_shard_filenames_from_layers(
             layers_to_download,
@@ -173,7 +168,7 @@ class ModelService:
         try:
             return [
                 ModelService.create_shard_file(
-                    output_model_path, repo_id, device, filename
+                    output_model_path, repo_id, filename
                 )
                 for filename in shards_to_download
             ]
@@ -186,16 +181,16 @@ class ModelService:
     # FIXME: DON"T HANDLE get_output_model_path like this
     @staticmethod
     def create_shard_files(
-        model_metadata: ModelMetadata, env: ApplicationConfig, layers_to_download: List[str] = None,
+        model_metadata: ModelMetadata, layers_to_download: List[str] = None,
     ) -> List[ShardFile]:
         output_model_path = ModelService.get_output_model_path(model_metadata)
 
         ModelService.validate_config(model_metadata)
 
-        FileRepository.download_required_files(model_metadata, env)
+        FileRepository.download_required_files(model_metadata)
 
         if model_metadata.has_adapter:
-            return ModelService.merge_and_save_model(model_metadata, env)
+            return ModelService.merge_and_save_model(model_metadata)
 
         file_index = TensorIndexService.create_file_to_tensor_index(model_metadata)
         if file_index:
@@ -205,13 +200,12 @@ class ModelService:
                     file_index,
                     output_model_path,
                     model_metadata.id,
-                    env.device
                 )
 
             file_index = TensorIndexService.flip_keys(file_index)
 
             return ModelService.gather_shard_files(
-                file_index, output_model_path, model_metadata.id, env.device
+                file_index, output_model_path, model_metadata.id
             )
         else:
             print("Index files not found, using single shard file fallback.")
@@ -221,7 +215,7 @@ class ModelService:
                 else "pytorch_model.bin"
             )
             shard_file = ModelService.create_shard_file(
-                output_model_path, model_metadata.id, env.device, single_file
+                output_model_path, model_metadata.id, single_file
             )
             return [shard_file]
         

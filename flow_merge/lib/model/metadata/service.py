@@ -17,14 +17,12 @@ from flow_merge.lib.model.metadata.file_validators import FileListValidator
 CHUNK_SIZE = 64 * 1024
 
 class ModelMetadataService:
-    def __init__(self, env, logger, directory_settings: DirectorySettings):
-        self.env = env
-        self.logger = logger
+    def __init__(self, directory_settings: DirectorySettings):
         self.directory_settings = directory_settings
-        self.metadata_files_validator = FileListValidator(env=env, logger=logger)
+        self.metadata_files_validator = FileListValidator()
 
     def generate_content_hash(self, file_path: str) -> str:
-        self.logger.info("Generating Content Hash: generate_content_hash")
+        print("Generating Content Hash: generate_content_hash")
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as file:
             for chunk in iter(lambda: file.read(CHUNK_SIZE), b""):
@@ -33,29 +31,29 @@ class ModelMetadataService:
 
     ## FIXME: WHY THIS NOT USING FILEIO REPOSITORY !!?
     def download_hf_file(self, repo_id: str, filename: str) -> str:
-        self.logger.info("Downloading a file from HF: download_hf_file")
-        self.logger.info(f"Downloading {filename} into {str(self.directory_settings.local_dir / repo_id)}")
+        print("Downloading a file from HF: download_hf_file")
+        print(f"Downloading {filename} into {str(self.directory_settings.local_dir / repo_id)}")
         return huggingface_hub.hf_hub_download(
             repo_id,
             filename,
             local_dir=self.directory_settings.local_dir / repo_id,
             resume_download=True,
-            token=self.env.hf_token,
+            #token=self.env.hf_token,
         )
 
     def fetch_hf_model_info(self, repo_id: str) -> ModelInfo:
-        self.logger.info("Fetching model info from HF: fetch_hf_model_info")
+        print("Fetching model info from HF: fetch_hf_model_info")
         return huggingface_hub.hf_api.repo_info(
             repo_id=repo_id,
             repo_type="model",
             files_metadata=True,
-            token=self.env.hf_token,
+            #token=self.env.hf_token,
         )
 
     def create_file_metadata_list_from_hf(
         self, hf_model_info: ModelInfo, repo_id: str
     ) -> List[FileMetadata]:
-        self.logger.info("Creating File Metadata_list from HF: create_file_metadata_list_from_hf")
+        print("Creating File Metadata_list from HF: create_file_metadata_list_from_hf")
         def create_file_metadata(sibling: RepoSibling) -> FileMetadata:
             if sibling.lfs is None:
                 path_to_downloaded_file = self.download_hf_file(
@@ -77,7 +75,7 @@ class ModelMetadataService:
     def create_file_metadata_list_from_local(
         self, path_to_model: Path
     ) -> List[FileMetadata]:
-        self.logger.info("Creating File Metadata_list from Local: create_file_metadata_list_from_local")
+        print("Creating File Metadata_list from Local: create_file_metadata_list_from_local")
         return [
             FileMetadata(
                 sha=self.generate_content_hash(str(file_path)),
@@ -88,7 +86,7 @@ class ModelMetadataService:
         ]
 
     def load_model_info(self, path_or_id: str) -> ModelMetadata:
-        self.logger.info("Loading Model Info: load_model_info")
+        print("Loading Model Info: load_model_info")
         path = Path(path_or_id)
         try:
             hf_model_info = self.fetch_hf_model_info(path_or_id)
@@ -107,7 +105,7 @@ class ModelMetadataService:
 
             return model_metadata
         except huggingface_hub.hf_api.RepositoryNotFoundError:
-            self.logger.info(
+            print(
                 "Model not found in Hugging face. Inferring from local model directory."
             )
             path_to_model = (self.directory_settings.local_dir / path_or_id).resolve()
@@ -125,7 +123,7 @@ class ModelMetadataService:
                     )
                     config = config_obj.to_dict()
                 except EnvironmentError as e:
-                    self.logger.warn(f"Error while fetching config for local model: {e}")
+                    print(f"Error while fetching config for local model: {e}")
 
                 model_metadata = ModelMetadata(
                     id=path_or_id,
@@ -140,11 +138,11 @@ class ModelMetadataService:
                 )
                 self.metadata_files_validator.check(metadata=model_metadata)
                 # model_metadata.update_checks()
-                self.logger.info(f"Loaded model info successfully for {model_metadata.id}")
+                print(f"Loaded model info successfully for {model_metadata.id}")
                 return model_metadata
             else:
-                self.logger.warn("Model not found locally, cannot create model metadata.")
+                print("Model not found locally, cannot create model metadata.")
                 return ModelMetadata(id=path_or_id, hf_exists=False)
         except Exception as e:
-            self.logger.error(f"Error fetching model info: {e}")
+            print(f"Error fetching model info: {e}")
             return ModelMetadata(id=path_or_id, hf_exists=False)

@@ -21,7 +21,7 @@ class Linear(MergeMethod):
         base_model_tensor: torch.Tensor,
         models_tensors: Dict[Model, torch.Tensor],
         merge_method_settings: BaseMergeMethodSettings,
-        base_model: Model,
+        base_model: Model, # passed here just to use it as accessor
     ) -> torch.Tensor:
         base_tensor_dtype = base_model_tensor.dtype
 

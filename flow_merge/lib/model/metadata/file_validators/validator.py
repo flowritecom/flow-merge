@@ -30,9 +30,7 @@ adapter_checks = [
 ]
 
 class FileListValidator:
-    def __init__(self, env, logger) -> None:
-        self.env = env
-        self.logger = logger
+    def __init__(self) -> None:
         self.checks = [
             integrity_checks,
             tokenizer_checks,
@@ -47,16 +45,16 @@ class FileListValidator:
                 file_metadata.filename for file_metadata in metadata.file_metadata_list
             ]
 
-        for check in self.checks:
-            for test_set in check:
-                attribute_name, test_func, missing_message = test_set
-                tested_outcome = test_func(file_list)
+            for check in self.checks:
+                for test_set in check:
+                    attribute_name, test_func, missing_message = test_set
+                    tested_outcome = test_func(file_list)
 
-                if tested_outcome is False:
-                    self.logger.info(missing_message)
+                    if tested_outcome is False:
+                        print(missing_message)
 
-                setattr(metadata, attribute_name, tested_outcome)
+                    setattr(metadata, attribute_name, tested_outcome)
         
-        return metadata
+            return metadata
                 
     
