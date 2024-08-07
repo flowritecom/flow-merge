@@ -1,12 +1,10 @@
 from typing import List, Tuple
-from pathlib import Path
 
-from flow_merge.lib.snapshot import Snapshot
 from flow_merge.lib.enriched_snapshot import EnrichedSnapshot
-from flow_merge.lib.planners.resolver import extract_models_by_layers, ModelLayers
-from flow_merge.lib.model.model import ModelBase, Model
+from flow_merge.lib.planners.resolver import extract_models_by_layers
+from flow_merge.lib.model.model import Model
 from flow_merge.lib.snapshot.data_architecture.snapshot import Snapshot
-from flow_merge.lib.tokenizer import MergeTokenizerService, Tokenizer
+from flow_merge.lib.tokenizer import get_merge_tokenizer
 
 
 # FIXME: takes a model, tokenizer?
@@ -89,4 +87,4 @@ class Planner:
         
 
     def _build_merge_tokenizer(self, enriched_snapshot: EnrichedSnapshot):
-        return MergeTokenizerService(env=self.env, logger=self.logger).get_merge_tokenizer(enriched_snapshot)
+        return get_merge_tokenizer(enriched_snapshot)

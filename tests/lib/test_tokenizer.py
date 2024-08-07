@@ -134,7 +134,7 @@ class TestMergeTokenizerService(unittest.TestCase):
         mock_check_tokenizers_for_differences.return_value = False
         
         service = MergeTokenizerService(mock_env, mock_logger)
-        tokenizer = service.get_merge_tokenizer(mock_enriched_snapshot)
+        tokenizer = get_merge_tokenizer(mock_enriched_snapshot)
         
         self.assertIsInstance(tokenizer.tokenizer, PreTrainedTokenizerBase)
         mock_load_all_tokenizers.assert_called()
