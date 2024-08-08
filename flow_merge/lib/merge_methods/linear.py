@@ -15,18 +15,17 @@ from flow_merge.lib.model import Model
 # logger = get_logger(__name__)
 
 def merge_linear(
-        base_model_tensor: torch.Tensor,
         merge_method_settings: Dict[str, bool],
-        tensors_weights_pairs: List[Tuple[torch.Tensor, float]],
-        base_model_weight: float,
+        tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool]],
 ) -> torch.Tensor:
-    base_tensor_dtype = base_model_tensor.dtype
+    base: Tuple[torch.Tensor, float, bool] = [t for t in tensors_weights_pairs if t[2] is True][0]  # little bit dirty with the tuple for now
+    base_tensor_dtype = base[0].dtype
 
-    weights = [p[1] for p in tensors_weights_pairs]
-    tensors = [p[0] for p in tensors_weights_pairs]
+    weights = [p[1] for p in tensors_weights_pairs if p[2] is False] # assuming that base model must be last on the list?
+    tensors = [p[0] for p in tensors_weights_pairs if p[2] is False]
 
-    weights.append(base_model_weight)
-    tensors.append(base_model_tensor)
+    weights.append(base[1])
+    tensors.append(base[0])
 
     if set(weights) == {1.0}:
         # uniform soup

@@ -1,16 +1,18 @@
-from typing import List
+from typing import List, Tuple
+
+import torch
 
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.merge_methods import MergeMethodIdentifier, TaskArithmetic, TiesMergingSettings, \
     DareTiesMergingSettings, TaskArithmeticSettings
 from flow_merge.lib.merge_methods.linear import merge_linear
-from flow_merge.lib.merge_methods.merge_method import MergeMethod
 from flow_merge.lib.merge_methods.slerp import merge_slerp, SlerpSettings
 from flow_merge.lib.merge_plan import MergePlan
 from flow_merge.lib.model.architecture import ModelArchitecture, ModelWeight
 from flow_merge.lib.snapshot.data_architecture._normalized_slices import NormalizedSource
 from flow_merge.lib.tensor.loader import TensorRepository
 from flow_merge.lib.tokenizer import Tokenizer
+from flow_merge.lib.merger.interpolation import InterpolationRunner
 
 config = ApplicationConfig()
 
@@ -27,41 +29,18 @@ def get_base_source(sources: List[NormalizedSource]) -> NormalizedSource:
 def merge(
         self,
         tokenizer: Tokenizer,
-        sources,
         merge_plan: MergePlan
 ):
-    base_model = merge_plan.base_model
-
     for s in merge_plan.slices:
         # Fixme: creating map of all models to their weights (layers names)
-        models_tensors = {}
-        tensors_weights_pairs = []
-        base_model_weight = 0.0
+        tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool]] = []
         for source in s.sources:
-            if source.is_base:
-                base_model_weight = source.weight
-                continue
-
             tensor = TensorRepository.get_tensor(
                 shards=source.model.shards,
                 tensor_key=get_model_weight(source.model, source.layer).name,
                 device=self.env.device
             )
-            models_tensors[source.model] = tensor
-            tensors_weights_pairs.append((tensor, source.weight))
-
-        # Fixme: Handling base model and it's tensor
-        task_base_model_weight = get_model_weight(base_model, get_base_source(s.sources).layer)
-        base_model_tensor = TensorRepository.get_tensor(
-            shards=base_model.shards,
-            tensor_key=task_base_model_weight.name,
-            device=self.env.device
-        )
-
-        all_tensors = {
-            base_model: base_model_tensor,
-            **models_tensors
-        }
+            tensors_weights_pairs.append((tensor, source.weight, source.is_base))
 
         # hidden_dim = self._validate_tensor_shapes(
         #     base_model_weight=task_base_model_weight,
@@ -70,27 +49,23 @@ def merge(
         # )
 
         # FIXME we want to temp save here
-        if tokenizer.input_ids_mappings and method_config.name == MergeMethodIdentifier.INTERPOLATE:
-            return self.interpolation_runner.interpolate(
-                base_model=base_model,
-                all_tensors=all_tensors,
-                merge_method=method_config,
+        if tokenizer.input_ids_mappings and s.merge_method.name == MergeMethodIdentifier.INTERPOLATE:
+            interpolation_runner = InterpolationRunner
+            return interpolation_runner.interpolate(
+                all_tensors=tensors_weights_pairs,
+                merge_method_name=s.merge_method.name,
                 input_ids_mappings=tokenizer.input_ids_mappings,
-                sources=sources,
                 hidden_dim=hidden_dim
             )
 
         if s.merge_method.name == MergeMethodIdentifier.MODEL_SOUP:
             return merge_linear(
-                base_model_tensor=base_model_tensor,
-                base_model_weight=base_model_weight,
                 tensors_weights_pairs=tensors_weights_pairs,
                 merge_method_settings={"normalize": s.merge_method.params["normalize"] or False}
             )
 
         if s.merge_method.name == MergeMethodIdentifier.SLERP:
             return merge_slerp(
-                base_model_tensor=base_model_tensor,
                 tensors_weights_pairs=tensors_weights_pairs,
                 merge_method_settings=SlerpSettings(**s.merge_method.params),
             )
@@ -107,8 +82,7 @@ def merge(
             }
 
             return task_arithmetic_merger.merge(
-                base_model_tensor=base_model_tensor,
-                tensor_weight_pairs=tensors_weights_pairs,
+                tensors_weights_pairs=tensors_weights_pairs,
                 merge_method_settings=settings_class[s.merge_method.name](**s.merge_method.params),
             )
 

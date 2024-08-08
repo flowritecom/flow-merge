@@ -111,19 +111,20 @@ class TiesMergingSettings(TaskArithmeticSettings):
 class TaskArithmetic:
     def merge(
             self,
-            base_model_tensor: torch.Tensor,
-            tensor_weight_pairs: List[Tuple[torch.Tensor, float]],
+            tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool]],
             merge_method_settings: Union[TaskArithmeticSettings, TiesMergingSettings],
     ) -> torch.Tensor:
-        base_tensor_dtype = base_model_tensor.dtype
+        # little bit dirty with the tuple for now
+        base: Tuple[torch.Tensor, float, bool] = [t for t in tensors_weights_pairs if t[2] is True][0]
+        base_tensor_dtype = base[0].dtype
 
         task_vectors: List[Tuple[torch.Tensor, float]] = self._get_task_vectors(
-            base_model_tensor, tensor_weight_pairs
+            base[0], tensors_weights_pairs
         )
 
         if not task_vectors:
             logger.warning("No task vectors. Returning the base model tensor.")
-            return base_model_tensor
+            return base[0]
 
         if type(merge_method_settings) == TiesMergingSettings:
             # Ties-merging top-k pruning
@@ -157,14 +158,13 @@ class TaskArithmetic:
 
         # Apply to base model tensor using scaling term as described in the paper Editing Models with Task Arithmetic (https://arxiv.org/abs/2212.04089)
         merged_tensor = (
-                base_model_tensor
-                + merge_method_settings.scaling_coefficient * new_task_vector
+                base[0] + merge_method_settings.scaling_coefficient * new_task_vector
         )
 
         return merged_tensor.to(dtype=base_tensor_dtype)
 
     def _get_task_vectors(
-            self, base_model_tensor: torch.Tensor, models_tensors: List[Tuple[torch.Tensor, float]]
+            self, base_model_tensor: torch.Tensor, models_tensors: List[Tuple[torch.Tensor, float, bool]]
     ) -> List[Tuple[torch.Tensor, float]]:
         """
         Obtain the task vectors (or deltas) from a pre-trained model tensor and a set of model tensors as described in the paper Editing Models with Task Arithmetic (https://arxiv.org/abs/2212.04089)
