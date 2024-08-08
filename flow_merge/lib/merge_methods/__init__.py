@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Type
 from enum import Enum
 
 from flow_merge.lib.merge_methods.linear import Linear
@@ -11,6 +11,7 @@ from flow_merge.lib.merge_methods.task_arithmetic import (
     TiesMergingSettings,
 )
 
+
 class MergeMethodIdentifier(str, Enum):
     ADDITION_TASK_ARITHMETIC = "addition-task-arithmetic"
     TIES_MERGING = "ties-merging"
@@ -19,6 +20,7 @@ class MergeMethodIdentifier(str, Enum):
     MODEL_SOUP = "model-soup"
     PASSTHROUGH = "passthrough"
     INTERPOLATE = "interpolate"
+
 
 method_classes: Dict[MergeMethodIdentifier, TaskArithmetic | Linear | Slerp] = {
     MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC.value: TaskArithmetic,

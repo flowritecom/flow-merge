@@ -53,7 +53,7 @@ class ModelWeightLayerType(str, Enum):
     post_norm = "post_norm"
 
 
-class ModelWeight(BaseModel):
+class ModelWeightArch(BaseModel):
     """
     Contains information about a weight in the model.
 
