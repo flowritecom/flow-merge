@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple, Type, Union
+from typing import Dict, Optional, Tuple, Type, Union, List
 
 import torch
 from pydantic import ValidationError, field_validator
@@ -10,6 +10,7 @@ from flow_merge.lib.merge_methods.merge_method import (
     MergeMethod,
 )
 from flow_merge.lib.model import Model
+
 
 # FIXME new flow-merge repo format
 # logger = get_logger(__name__)
@@ -107,19 +108,17 @@ class TiesMergingSettings(TaskArithmeticSettings):
             return v
 
 
-class TaskArithmetic(MergeMethod):
+class TaskArithmetic:
     def merge(
-        self,
-        weight: ModelWeight,
-        base_model_tensor: torch.Tensor,
-        models_tensors: Dict[Model, torch.Tensor],
-        merge_method_settings: Union[TaskArithmeticSettings, TiesMergingSettings],
-        base_model: Model,
+            self,
+            base_model_tensor: torch.Tensor,
+            tensor_weight_pairs: List[Tuple[torch.Tensor, float]],
+            merge_method_settings: Union[TaskArithmeticSettings, TiesMergingSettings],
     ) -> torch.Tensor:
         base_tensor_dtype = base_model_tensor.dtype
 
-        task_vectors: Dict[Model, torch.Tensor] = self._get_task_vectors(
-            base_model_tensor, models_tensors
+        task_vectors: List[Tuple[torch.Tensor, float]] = self._get_task_vectors(
+            base_model_tensor, tensor_weight_pairs
         )
 
         if not task_vectors:
@@ -134,9 +133,7 @@ class TaskArithmetic(MergeMethod):
             task_vectors = self._dare_pruning(task_vectors, merge_method_settings.p)
 
         # _apply_weights(task_vectors, merge_method_settings.weights)
-        weighted_task_vectors, weights_tensors = self._prepare_task_vectors(
-            task_vectors, merge_method_settings.weights
-        )
+        weighted_task_vectors, weights_tensors = self._prepare_task_vectors(task_vectors)
 
         if type(merge_method_settings) in [
             TiesMergingSettings,
@@ -160,15 +157,15 @@ class TaskArithmetic(MergeMethod):
 
         # Apply to base model tensor using scaling term as described in the paper Editing Models with Task Arithmetic (https://arxiv.org/abs/2212.04089)
         merged_tensor = (
-            base_model_tensor
-            + merge_method_settings.scaling_coefficient * new_task_vector
+                base_model_tensor
+                + merge_method_settings.scaling_coefficient * new_task_vector
         )
 
         return merged_tensor.to(dtype=base_tensor_dtype)
 
     def _get_task_vectors(
-        self, base_model_tensor: torch.Tensor, models_tensors: Dict[Model, torch.Tensor]
-    ) -> Dict[Model, torch.Tensor]:
+            self, base_model_tensor: torch.Tensor, models_tensors: List[Tuple[torch.Tensor, float]]
+    ) -> List[Tuple[torch.Tensor, float]]:
         """
         Obtain the task vectors (or deltas) from a pre-trained model tensor and a set of model tensors as described in the paper Editing Models with Task Arithmetic (https://arxiv.org/abs/2212.04089)
 
@@ -183,21 +180,22 @@ class TaskArithmetic(MergeMethod):
            A dictionary mapping models to their respective task vectors (deltas).
            If all task vectors are zero, an empty dictionary is returned.
         """
-        task_vectors: Dict[Model, torch.Tensor] = {}
+        task_vectors: List[Tuple[torch.Tensor, float]] = []
+
         all_zero = True
-        for model, tensor in models_tensors.items():
+        for (tensor, weight) in models_tensors:
             task_vector = tensor - base_model_tensor
-            task_vectors[model] = task_vector
+            task_vectors.append((task_vector, weight))
             if not torch.allclose(task_vector, torch.zeros_like(task_vector)):
                 all_zero = False
 
         if all_zero:
-            return {}
+            return []
         else:
             return task_vectors
 
     def _prepare_task_vectors(
-        self, task_vectors: Dict[Model, torch.Tensor], weights: Dict[Model, float]
+            self, task_vectors: List[Tuple[torch.Tensor, float]]
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Prepare task vectors for merging by applying weights to each task vector.
@@ -210,8 +208,9 @@ class TaskArithmetic(MergeMethod):
         Returns:
             The stacked weighted task vectors for each model and the weights tensors.
         """
-        weights = [weights[model] for model in task_vectors.keys()]
-        stacked_task_vectors = torch.stack(list(task_vectors.values()), dim=0)
+        weights = [v[1] for v in task_vectors]
+        vectors = [v[0] for v in task_vectors]
+        stacked_task_vectors = torch.stack(list(vectors), dim=0)
         weights_tensors = torch.tensor(
             weights,
             dtype=stacked_task_vectors.dtype,
@@ -225,8 +224,8 @@ class TaskArithmetic(MergeMethod):
         return weighted_task_vectors, weights_tensors
 
     def _topk_pruning(
-        self, task_vectors: Dict[Model, torch.Tensor], top_k: float
-    ) -> Dict[Model, torch.Tensor]:
+            self, task_vectors: List[Tuple[torch.Tensor, float]], top_k: float
+    ) -> List[Tuple[torch.Tensor, float]]:
         """
         Performs top-k pruning on task vectors as described in TIES-MERGING: Resolving Interference When
         Merging Models (https://arxiv.org/abs/2306.01708)
@@ -239,9 +238,9 @@ class TaskArithmetic(MergeMethod):
         Returns:
             A dictionary containing the pruned task vectors for each model.
         """
-        pruned_task_vectors: Dict[Model, torch.Tensor] = {}
+        pruned_task_vectors: List[Tuple[torch.Tensor, float]] = []
 
-        for model, tensor in task_vectors.items():
+        for (tensor, weight) in task_vectors:
             orig_shape = tensor.shape
             if tensor.dim() == 1:
                 tensor = tensor.unsqueeze(0)  # to become a 2D tensor with a single row
@@ -264,16 +263,16 @@ class TaskArithmetic(MergeMethod):
                 tensor.squeeze() if orig_shape == tensor.squeeze().shape else tensor
             )
 
-            pruned_task_vectors[model] = tensor * final_mask
+            pruned_task_vectors.append((tensor * final_mask, weight))
 
         return pruned_task_vectors
 
     def _resolve_signs_and_dis_merge(
-        self,
-        weighted_task_vectors: torch.Tensor,
-        weights_tensors: torch.Tensor,
-        sign_consensus_method: str = "mass",
-        normalize: bool = True,
+            self,
+            weighted_task_vectors: torch.Tensor,
+            weights_tensors: torch.Tensor,
+            sign_consensus_method: str = "mass",
+            normalize: bool = True,
     ) -> torch.Tensor:
         """
         Resolve signs of task vectors and perform disjoint mean merging as described in TIES-MERGING: Resolving Interference When
@@ -328,10 +327,10 @@ class TaskArithmetic(MergeMethod):
         return merged_task_vector
 
     def _disjoint_merge(
-        self,
-        masked_weighted_task_vectors: torch.Tensor,
-        weights_tensors: torch.Tensor,
-        normalize: bool = True,
+            self,
+            masked_weighted_task_vectors: torch.Tensor,
+            weights_tensors: torch.Tensor,
+            normalize: bool = True,
     ) -> torch.Tensor:
         """
         Calculate the disjoint merge of masked task vectors.
@@ -371,7 +370,7 @@ class TaskArithmetic(MergeMethod):
             # Calculate the disjoint weighted mean by dividing the sum of weighted non-zero elements
             # by the sum of weights for non-zero elements, with a minimum value of 1 to avoid division by zero
             avg_task_vector = (
-                sum_weighted_non_zeros / sum_weights_non_zeros.clamp(min=1)
+                    sum_weighted_non_zeros / sum_weights_non_zeros.clamp(min=1)
             )  # * The clamp operation ensures that the minimum value of num_non_zeros is 1 to avoid division by zero
         else:
             avg_task_vector = sum_weighted_non_zeros
@@ -379,8 +378,8 @@ class TaskArithmetic(MergeMethod):
         return avg_task_vector
 
     def _dare_pruning(
-        self, task_vectors: Dict[Model, torch.Tensor], p: float
-    ) -> Dict[Model, torch.Tensor]:
+            self, task_vectors: List[Tuple[torch.Tensor, float]], p: float
+    ) -> List[Tuple[torch.Tensor, float]]:
         """
         Performs drop and rescale pruning on task vectors as described in Language Models are Super Mario:
         Absorbing Abilities from Homologous Models as a Free Lunch (https://arxiv.org/abs/2311.03099)
@@ -392,20 +391,20 @@ class TaskArithmetic(MergeMethod):
         Returns:
             A dictionary containing the pruned task vectors for each model.
         """
-        pruned_task_vectors: Dict[Model, torch.Tensor] = {}
+        pruned_task_vectors: List[Tuple[torch.Tensor, float]] = []
 
-        for model, tensor in task_vectors.items():
+        for (tensor, weight) in task_vectors:
             # Create a binary mask tensor with the same shape as the task vector
             mask = torch.bernoulli(
                 torch.full_like(input=tensor, fill_value=p, dtype=tensor.dtype)
             )
             masked_tensor = tensor * (
-                1 - mask
+                    1 - mask
             )  # * (1 - mask) because elements with 1 are meant to be dropped
 
             # Rescale remaining by 1 / (1 - p) to maintain
             rescaled_tensor = torch.div(input=masked_tensor, other=1 - p)
 
-            pruned_task_vectors[model] = rescaled_tensor
+            pruned_task_vectors.append((rescaled_tensor, weight))
 
         return pruned_task_vectors

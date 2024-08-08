@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Tuple
 
 import torch
 
@@ -10,18 +10,52 @@ from flow_merge.lib.merge_methods.merge_method import (
 )
 from flow_merge.lib.model import Model
 
+
 # FIXME new flow-merge repo format
 # logger = get_logger(__name__)
+
+def merge_linear(
+        base_model_tensor: torch.Tensor,
+        merge_method_settings: Dict[str, bool],
+        tensors_weights_pairs: List[Tuple[torch.Tensor, float]],
+        base_model_weight: float,
+) -> torch.Tensor:
+    base_tensor_dtype = base_model_tensor.dtype
+
+    weights = [p[1] for p in tensors_weights_pairs]
+    tensors = [p[0] for p in tensors_weights_pairs]
+
+    weights.append(base_model_weight)
+    tensors.append(base_model_tensor)
+
+    if set(weights) == {1.0}:
+        # uniform soup
+        merged_tensor = torch.stack(tensors, dim=0).sum(dim=0) / len(tensors)
+    else:
+        # weight average soup. If all weights are the same, this is equivalent to a simple average
+        stacked_tensors = torch.stack(tensors, dim=0)
+        weights_tensors = torch.tensor(
+            weights, dtype=base_tensor_dtype, device=stacked_tensors.device
+        )
+        while len(weights_tensors.shape) < len(stacked_tensors.shape):
+            weights_tensors.unsqueeze_(-1)
+
+        merged_tensor = (stacked_tensors * weights_tensors).sum(dim=0)
+        if merge_method_settings["normalize"]:
+            # relative weights
+            merged_tensor = merged_tensor / weights_tensors.sum(dim=0)
+
+    return merged_tensor.to(dtype=base_tensor_dtype)
 
 
 class Linear(MergeMethod):
     def merge(
-        self,
-        weight: ModelWeight,
-        base_model_tensor: torch.Tensor,
-        models_tensors: Dict[Model, torch.Tensor],
-        merge_method_settings: BaseMergeMethodSettings,
-        base_model: Model,
+            self,
+            weight: ModelWeight,
+            base_model_tensor: torch.Tensor,
+            models_tensors: Dict[Model, torch.Tensor],
+            merge_method_settings: BaseMergeMethodSettings,
+            base_model: Model,
     ) -> torch.Tensor:
         base_tensor_dtype = base_model_tensor.dtype
 
