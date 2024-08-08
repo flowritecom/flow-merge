@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 import torch
 from pydantic import BaseModel, field_validator
@@ -47,21 +47,19 @@ class Slerp(MergeMethod):
     If the vectors are colineal, the class falls back to using linear interpolation (lerp) instead.
     """
 
-    def merge(
-        self,
-        weight: ModelWeight,
-        base_model_tensor: torch.Tensor,
-        models_tensors: Dict[Model, torch.Tensor],
-        merge_method_settings: SlerpSettings,
-        base_model: Model, # why do we pass this?
-    ) -> torch.Tensor:
+    def merge(self, slice) -> torch.Tensor:
+        layer_name = [src.model.layer for src in slice.sources if src.is_base]
+        base_model_tensor = [src.model.tensor for src in slice.sources if src.is_base]
+        settings = slice.merge_method.settings
+
+        tensors = [src.tensor for src in slice.sources if not src.is_base] + base_model_tensor
         base_tensor_dtype = base_model_tensor.dtype
 
-        v0 = base_model_tensor
-        v1 = list(models_tensors.values())[0]  # Only 1 model is supported for slerp
-
         merged_tensor = self._slerp(
-            weight=weight, t=merge_method_settings.t, v0=v0, v1=v1
+            layer_name=layer_name,
+            t=settings.t,
+            v0=base_model_tensor,
+            v1=tensors[0]  # only 1 model supported for slerp
         )
 
         return merged_tensor.to(dtype=base_tensor_dtype)
@@ -71,7 +69,7 @@ class Slerp(MergeMethod):
 
     def _slerp(
         self,
-        weight: ModelWeight,
+        layer_name: Any,
         t: float,
         v0: torch.Tensor,
         v1: torch.Tensor,
@@ -82,7 +80,7 @@ class Slerp(MergeMethod):
         Spherical linear interpolation from https://gist.github.com/dvschultz/3af50c40df002da3b751efab1daddf2c#file-pytorch-tensor-slerp-py
 
         Args:
-            weight: Model weight. e.g. 'embed_tokens.weight'
+            layer_name: e.g. 'embed_tokens.weight'
             t: Float value between 0.0 and 1.0.
             v0: Starting vector.
             v1: Final vector.
@@ -103,8 +101,8 @@ class Slerp(MergeMethod):
         dot = torch.sum(v0 * v1)
         # If absolute value of dot product is almost 1, vectors are ~colineal, so use lerp
         if torch.abs(dot) >= torch.tensor(DOT_THRESHOLD, dtype=dot.dtype):
-            logger.info(
-                f"Vectors are colineal, using lerp instead of slerp for {weight.name}."
+            print(
+                f"Vectors are colineal, using lerp instead of slerp for {layer_name.name}."
             )
             return torch.lerp(v0_copy, v1_copy, t)
         # Calculate initial angle between v0 and v1

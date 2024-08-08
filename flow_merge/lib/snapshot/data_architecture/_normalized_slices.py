@@ -3,6 +3,8 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, model_validator
 
 from ..hash import create_content_hash
+from ...loaders.normalizer import MergeMethod
+
 
 class MergeMethodIdentifier(str, Enum):
     ADDITION_TASK_ARITHMETIC = "addition-task-arithmetic"
@@ -13,17 +15,19 @@ class MergeMethodIdentifier(str, Enum):
     SLERP = "slerp"
     TIES_MERGING = "ties-merging"
 
+
 class NormalizedSource(BaseModel):
     weight: Optional[float] = None
     model: Optional[str]
     layer: Optional[str]
-    # FIXME base_model is now is_base
     is_base: Optional[bool]
+
 
 class NormalizedSlice(BaseModel):
     # FIXME merge method is a new type with {name, params}
-    merge_method: Optional[Dict[Any, MergeMethodIdentifier]]
+    merge_method: Optional[MergeMethod]
     sources: List[NormalizedSource]
+
 
 class NormalizedSlices(BaseModel):
     slices: List[NormalizedSlice]

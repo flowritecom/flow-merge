@@ -1,3 +1,4 @@
+from flow_merge.lib.merge_methods.merge_method import MergeMethod, BaseMergeMethodSettings
 from flow_merge.lib.model.architecture import ModelArchitecture
 from typing import Any, Dict, List, Optional
 from functools import reduce
@@ -36,6 +37,8 @@ class Source:
 class MergeMethod:
     name: str
     params: Optional[Dict[str, Any]] = None
+    method: Optional[MergeMethod] = None
+    settings: Optional[BaseMergeMethodSettings] = None
 
     def __init__(self, **kwargs):
         if "name" not in kwargs:

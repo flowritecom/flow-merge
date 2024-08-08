@@ -2,39 +2,23 @@ from typing import Any, Dict, List, Optional, Type
 
 import torch
 
-from flow_merge.lib.model.architecture import ModelWeight
-# from flow_merge.lib.logger import get_logger
 from flow_merge.lib.merge_methods.merge_method import (
     BaseMergeMethodSettings,
     MergeMethod,
 )
 from flow_merge.lib.model import Model
 
-# FIXME new flow-merge repo format
-# logger = get_logger(__name__)
-
 
 class Linear(MergeMethod):
-    def merge(
-        self,
-        weight: ModelWeight,
-        base_model_tensor: torch.Tensor,
-        models_tensors: Dict[Model, torch.Tensor],
-        merge_method_settings: BaseMergeMethodSettings,
-        base_model: Model, # passed here just to use it as accessor
-    ) -> torch.Tensor:
+    def merge(self, slice) -> torch.Tensor:
+        base_model_tensor = [src.model.tensor for src in slice.sources if src.is_base]
+        base_model_weight = [src.model.weight for src in slice.sources if src.is_base]
+        settings = slice.merge_method.settings
+
+        tensors = [src.tensor for src in slice.sources if not src.is_base] + base_model_tensor
+        weights = [src.weight for src in slice.sources if not src.is_base] + base_model_weight
+
         base_tensor_dtype = base_model_tensor.dtype
-
-        tensors: List[torch.Tensor] = []
-        weights: List[float] = []
-        for model, tensor in models_tensors.items():
-            merge_weight = merge_method_settings.weights[model]
-            weights.append(merge_weight)
-            tensors.append(tensor)
-
-        base_model_weight = merge_method_settings.weights[base_model]
-        weights.append(base_model_weight)
-        tensors.append(base_model_tensor)
 
         if set(weights) == {1.0}:
             # uniform soup
@@ -49,7 +33,7 @@ class Linear(MergeMethod):
                 weights_tensors.unsqueeze_(-1)
 
             merged_tensor = (stacked_tensors * weights_tensors).sum(dim=0)
-            if merge_method_settings.normalize:
+            if settings.normalize:
                 # relative weights
                 merged_tensor = merged_tensor / weights_tensors.sum(dim=0)
 

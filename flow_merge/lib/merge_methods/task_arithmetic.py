@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Tuple, Type, Union
+from typing import Dict, Optional, Tuple, Type, Union, Any
 
 import torch
 from pydantic import ValidationError, field_validator
@@ -108,37 +108,34 @@ class TiesMergingSettings(TaskArithmeticSettings):
 
 
 class TaskArithmetic(MergeMethod):
-    def merge(
-        self,
-        weight: ModelWeight,
-        base_model_tensor: torch.Tensor,
-        models_tensors: Dict[Model, torch.Tensor], # Using the Model object as a key needs to go
-        merge_method_settings: Union[TaskArithmeticSettings, TiesMergingSettings],
-        base_model: Model,
-    ) -> torch.Tensor:
+    def merge(self, slice) -> torch.Tensor:
+        base_model_tensor = [src.model.tensor for src in slice.sources if src.is_base]
+        models_tensors = [{src.model: src.tensor} for src in slice.sources if not src.is_base]
+        settings = slice.merge_method.settings
         base_tensor_dtype = base_model_tensor.dtype
 
+        # FIXME: Rewrite for just tensors and weights, not models_tensors
         task_vectors: Dict[Model, torch.Tensor] = self._get_task_vectors(
             base_model_tensor, models_tensors
         )
 
         if not task_vectors:
-            logger.warning("No task vectors. Returning the base model tensor.")
+            print("No task vectors. Returning the base model tensor.")
             return base_model_tensor
 
-        if type(merge_method_settings) == TiesMergingSettings:
+        if type(settings) == TiesMergingSettings:
             # Ties-merging top-k pruning
-            task_vectors = self._topk_pruning(task_vectors, merge_method_settings.top_k)
+            task_vectors = self._topk_pruning(task_vectors, settings.top_k)
 
-        if type(merge_method_settings) == DareTiesMergingSettings:
-            task_vectors = self._dare_pruning(task_vectors, merge_method_settings.p)
+        if type(settings) == DareTiesMergingSettings:
+            task_vectors = self._dare_pruning(task_vectors, settings.p)
 
         # _apply_weights(task_vectors, merge_method_settings.weights)
         weighted_task_vectors, weights_tensors = self._prepare_task_vectors(
-            task_vectors, merge_method_settings.weights
+            task_vectors, settings.weights
         )
 
-        if type(merge_method_settings) in [
+        if type(settings) in [
             TiesMergingSettings,
             DareTiesMergingSettings,
         ]:
@@ -146,14 +143,14 @@ class TaskArithmetic(MergeMethod):
             new_task_vector = self._resolve_signs_and_dis_merge(
                 weighted_task_vectors=weighted_task_vectors,
                 weights_tensors=weights_tensors,
-                normalize=merge_method_settings.normalize,
+                normalize=settings.normalize,
             )
         else:
             # Addition task arithmetic
             new_task_vector = torch.sum(
                 weighted_task_vectors, dim=0
             )  # * We do sum only because if all weights are 1.0, they are normalize to be equal
-            if merge_method_settings.normalize:
+            if settings.normalize:
                 norm_term = weights_tensors.sum(dim=0)
                 norm_term[norm_term == 0] = 1  # Avoid division by zero
                 new_task_vector /= norm_term
@@ -161,13 +158,14 @@ class TaskArithmetic(MergeMethod):
         # Apply to base model tensor using scaling term as described in the paper Editing Models with Task Arithmetic (https://arxiv.org/abs/2212.04089)
         merged_tensor = (
             base_model_tensor
-            + merge_method_settings.scaling_coefficient * new_task_vector
+            + settings.scaling_coefficient * new_task_vector
         )
 
         return merged_tensor.to(dtype=base_tensor_dtype)
 
+    # FIXME: Rewrite this into list comprehension to top level?
     def _get_task_vectors(
-        self, base_model_tensor: torch.Tensor, models_tensors: Dict[Model, torch.Tensor]
+            self, base_model_tensor: torch.Tensor, models_tensors: Dict[Model, torch.Tensor]
     ) -> Dict[Model, torch.Tensor]:
         """
         Obtain the task vectors (or deltas) from a pre-trained model tensor and a set of model tensors as described in the paper Editing Models with Task Arithmetic (https://arxiv.org/abs/2212.04089)
@@ -195,6 +193,7 @@ class TaskArithmetic(MergeMethod):
             return {}
         else:
             return task_vectors
+
 
     def _prepare_task_vectors(
         self, task_vectors: Dict[Model, torch.Tensor], weights: Dict[Model, float]
