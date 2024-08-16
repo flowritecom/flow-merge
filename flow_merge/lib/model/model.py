@@ -1,10 +1,8 @@
+import logging
 from pathlib import Path
 from typing import List, NewType, Optional, Dict
-
 from pydantic import BaseModel
 from transformers import PretrainedConfig
-
-from flow_merge.lib.logger import Logger
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.model.service import ModelService
 from flow_merge.lib.model.architecture import ModelArchitecture
@@ -15,18 +13,7 @@ from flow_merge.lib.tensor.loader import ShardFile
 ModelId = NewType("ModelId", str)
 
 
-class ModelBase(BaseModel, arbitrary_types_allowed=True):
-
-    @classmethod
-    def from_path(cls):
-        pass
-
-    @classmethod
-    def from_layers(cls):
-        pass
-
-
-class Model(ModelBase, arbitrary_types_allowed=True):
+class Model(BaseModel, arbitrary_types_allowed=True):
     id: ModelId
     path: Path
     metadata: ModelMetadata
@@ -35,101 +22,6 @@ class Model(ModelBase, arbitrary_types_allowed=True):
     architecture: ModelArchitecture
 
     is_partial: bool = False
-    
-    @staticmethod
-    def _create_metadata(
-        path: Path,
-        env: ApplicationConfig,
-        logger: Logger
-        ):
-        print("Creating metadata: _create_metadata")
-        metadata_service = ModelMetadataService(
-            env=env,
-            logger=logger
-        )
-
-        metadata = metadata_service.load_model_info(str(path))
-        
-        return metadata
-    
-    @staticmethod
-    def _create_architecture(
-        metadata: ModelMetadata,
-        env: ApplicationConfig,
-        logger: Logger
-    ):
-        print("Creating architecture: _create_architecture")
-        try:
-            config = PretrainedConfig.from_dict(metadata.config)
-            return ModelArchitecture.from_config(config)
-        except EnvironmentError as e:
-            logger.warn(f"Error while fetching config for local model: {e}")
-            
-    
-    @classmethod
-    def from_path(
-        cls, 
-        path: Path,
-        env: ApplicationConfig, 
-        logger: Logger
-    ):
-        print("Loading Model from path: from_path")
-        metadata = cls._create_metadata(path, env, logger)
-
-        model_id = ModelId(str(path))
-        file_to_tensor_index = TensorIndexService.create_file_to_tensor_index(metadata)
-
-        shards = ModelService.create_shard_files(
-            model_metadata=metadata,
-            env=env,
-            layers_to_download=None
-        )
-
-        architecture = cls._create_architecture(metadata, env, logger)
-
-        print("Creating the Model class: from_path")
-        return cls(
-            id=model_id,
-            path=Path(directory_settings.local_dir, path).resolve(),
-            metadata=metadata,
-            file_to_tensor_index=file_to_tensor_index,
-            shards=shards,
-            architecture=architecture
-        )
-    
-    @classmethod
-    def from_layers(
-        cls, 
-        layers_to_download, 
-        path, 
-        directory_settings,
-        env: ApplicationConfig,
-        logger: Logger
-    ):
-        print("Loading Model from layers: from_layers")
-        metadata = cls._create_metadata(path, directory_settings, env, logger)
-
-        model_id = ModelId(str(path))
-        file_to_tensor_index = TensorIndexService.create_file_to_tensor_index(metadata)
-
-        shards = ModelService.create_shard_files(
-            model_metadata=metadata,
-            env=env,
-            layers_to_download=layers_to_download
-        )
-
-        architecture = cls._create_architecture(metadata, env, logger)
-
-        print("Creating the Model class: from_layers")
-        return cls(
-            id=model_id,
-            path=Path(directory_settings.local_dir, path).resolve(),
-            metadata=metadata,
-            file_to_tensor_index=file_to_tensor_index,
-            shards=shards,
-            is_partial=False if metadata.has_adapter and file_to_tensor_index is None else True,
-            architecture=architecture
-        )
 
     def __hash__(self):
         return hash((self.id, self.metadata.sha))

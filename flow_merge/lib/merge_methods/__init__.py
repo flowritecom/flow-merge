@@ -3,13 +3,14 @@ from enum import Enum
 
 from flow_merge.lib.merge_methods.linear import Linear
 from flow_merge.lib.merge_methods.merge_method import BaseMergeMethodSettings
-from flow_merge.lib.merge_methods.slerp import Slerp, SlerpSettings
+from flow_merge.lib.merge_methods.slerp import merge_slerp, SlerpSettings
 from flow_merge.lib.merge_methods.task_arithmetic import (
     DareTiesMergingSettings,
     TaskArithmetic,
     TaskArithmeticSettings,
     TiesMergingSettings,
 )
+
 
 class MergeMethodIdentifier(str, Enum):
     ADDITION_TASK_ARITHMETIC = "addition-task-arithmetic"
@@ -20,12 +21,13 @@ class MergeMethodIdentifier(str, Enum):
     PASSTHROUGH = "passthrough"
     INTERPOLATE = "interpolate"
 
-method_classes: Dict[MergeMethodIdentifier, TaskArithmetic | Linear | Slerp] = {
+
+method_classes: Dict[MergeMethodIdentifier, TaskArithmetic | Linear] = {
     MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC.value: TaskArithmetic,
     MergeMethodIdentifier.MODEL_SOUP.value: Linear,
     MergeMethodIdentifier.TIES_MERGING.value: TaskArithmetic,
     MergeMethodIdentifier.DARE_TIES_MERGING.value: TaskArithmetic,
-    MergeMethodIdentifier.SLERP.value: Slerp,
+    MergeMethodIdentifier.SLERP.value: merge_slerp,
 }
 
 method_configs: Dict[MergeMethodIdentifier, BaseMergeMethodSettings] = {

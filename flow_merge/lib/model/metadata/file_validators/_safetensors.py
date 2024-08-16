@@ -1,5 +1,6 @@
 def has_safetensors_files(file_list):
     safetensors_files = [file for file in file_list if file.endswith(".safetensors")]
+    print(file_list)
     num_shards = len(safetensors_files)
     if not num_shards:
         return False

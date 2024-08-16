@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -17,39 +18,35 @@ class ModelService:
     """Manages the overall process of handling models."""
 
     @staticmethod
-    def create_shard_file(
-        output_dir: Path,
-        repo_id: str,
-        device: DeviceIdentifier,
-        shard_filename: str,
-        keys: Optional[List[str]] = None,
+    def download_and_return_shard_file(
+            output_dir: Path,
+            repo_id: str,
+            device: DeviceIdentifier,
+            shard_filename: str,
+            keys: Optional[List[str]] = None,
     ) -> ShardFile:
         output_path = output_dir / shard_filename
-        FileRepository.download_file(
-            repo_id=repo_id, filename=shard_filename, download_dir=output_dir
-        )
+        FileRepository.download_file(repo_id=repo_id, filename=shard_filename, download_dir=output_dir)
 
         if keys is None:
-            file_type = (
-                "safetensors" if shard_filename.endswith(".safetensors") else "bin"
-            )
             try:
-                keys = TensorRepository.get_tensor_keys(output_path, file_type, device)
+                keys = TensorRepository.get_tensor_keys_from_file(output_path, device)
             except RuntimeError as e:
+                logging.warning(f"Tensor keys cannot be retrieved: {e}", e)
                 keys = []  # Default to an empty list if keys cannot be retrieved
 
         return ShardFile(filename=shard_filename, path=output_path, tensor_keys=keys)
 
     @staticmethod
-    def gather_shard_files(
-        file_to_tensor_index: Dict[str, List[str]],
-        output_dir: Path,
-        repo_id: str,
-        device: DeviceIdentifier,
+    def download_and_return_shard_files(
+            file_to_tensor_index: Dict[str, List[str]],
+            output_dir: Path,
+            repo_id: str,
+            device: DeviceIdentifier,
     ) -> List[ShardFile]:
         try:
             return [
-                ModelService.create_shard_file(
+                ModelService.download_and_return_shard_file(
                     output_dir, repo_id, device, filename, keys
                 )
                 for filename, keys in file_to_tensor_index.items()
@@ -58,6 +55,88 @@ class ModelService:
         except Exception as e:
             raise RuntimeError(f"Error gathering shard files: {e}")
 
+    @staticmethod
+    def gather_shard_files_from_layers(
+            layers_to_download,
+            file_index,
+            output_model_path,
+            repo_id,
+            device
+    ) -> List[ShardFile]:
+        shards_to_download = [file_index[layer] for layer in layers_to_download if layer in file_index]
+        shards_to_download = list(set(shards_to_download))
+
+        try:
+            return [
+                ModelService.download_and_return_shard_file(
+                    output_model_path, repo_id, device, filename
+                )
+                for filename in shards_to_download
+            ]
+        except Exception as e:
+            raise RuntimeError(
+                f"Error gathering shard files from layers {e}"
+            )
+
+    @staticmethod
+    def create_shard_files(
+            model_metadata: ModelMetadata, app_config: ApplicationConfig, layers_to_download: List[str] = None,
+    ) -> List[ShardFile]:
+        if not (model_metadata.has_config and model_metadata.has_tokenizer_config):
+            raise FileNotFoundError("Model is missing config.json or tokenizer_config.json")
+
+        output_model_path = model_metadata.absolute_path
+        print(f"output model path: {output_model_path}")
+
+        # Download *minimal* required files to fetch information about shards
+        FileRepository.download_required_files(model_metadata, app_config)
+
+        # If it has adapter, we continue with different procedure (how different though?)
+        # fixme: go through has_adatper path
+        if model_metadata.has_adapter:
+            return ModelService.merge_and_save_model(model_metadata, app_config)
+
+        # Multiple shards
+        file_index = TensorIndexService.create_file_to_tensor_index(model_metadata)
+        if file_index:
+            if layers_to_download:
+                ModelService.gather_shard_files_from_layers(
+                    layers_to_download,
+                    file_index,
+                    output_model_path,
+                    model_metadata.id,
+                    app_config.device
+                )
+
+            file_index = TensorIndexService.flip_keys(file_index)
+
+            return ModelService.download_and_return_shard_files(
+                file_index, output_model_path, model_metadata.id, app_config.device
+            )
+
+        # Single-shard-file model
+        print("Index files not found, using single shard file fallback.")
+        single_file = (
+            "model.safetensors" if model_metadata.has_safetensor_files else "pytorch_model.bin"
+        )
+        shard_file = ModelService.download_and_return_shard_file(
+            output_model_path, model_metadata.id, app_config.device, single_file
+        )
+        return [shard_file]
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # Merging adapters
     @staticmethod
     def determine_base_model_shards(model_metadata: ModelMetadata) -> List[str]:
         if model_metadata.has_safetensor_files:
@@ -81,11 +160,11 @@ class ModelService:
 
     @staticmethod
     def load_and_apply_adapters(
-        adapter_files: List[str],
-        base_model_shards: List[str],
-        device: DeviceIdentifier,
-        repo_id: str,
-        local_dir: Path,
+            adapter_files: List[str],
+            base_model_shards: List[str],
+            device: DeviceIdentifier,
+            repo_id: str,
+            local_dir: Path,
     ) -> torch.nn.Module:
         print("Loading and applying adapters: load_and_apply_adapters")
         shard_paths = []
@@ -98,7 +177,7 @@ class ModelService:
 
     @staticmethod
     def save_model_shards(
-        base_model: torch.nn.Module, output_dir: Path
+            base_model: torch.nn.Module, output_dir: Path
     ) -> List[ShardFile]:
         print("Saving model shard files: save_model_shards")
         shard_files = []
@@ -111,7 +190,7 @@ class ModelService:
 
     @staticmethod
     def merge_and_save_model(
-        model_metadata: ModelMetadata, env: ApplicationConfig
+            model_metadata: ModelMetadata, env: ApplicationConfig
     ) -> List[ShardFile]:
         print("Merging adapter and saving model: merge_and_save_model")
         FileRepository.download_adapter_files(model_metadata, env)
@@ -128,100 +207,3 @@ class ModelService:
         return ModelService.save_model_shards(
             base_model, model_metadata.directory_settings.output_dir
         )
-    
-    @staticmethod
-    def get_output_model_path(model_metadata: ModelMetadata):
-        return (
-            model_metadata.directory_settings.local_dir / model_metadata.id
-        )
-    
-    @staticmethod
-    def validate_config(model_metadata: ModelMetadata):
-        if not (model_metadata.has_config and model_metadata.has_tokenizer_config):
-            raise FileNotFoundError(
-                "Model is missing config.json or tokenizer_config.json"
-            )
-
-    @staticmethod
-    def get_shard_filenames_from_layers(
-        layers_to_download: List[str], 
-        file_index: Dict
-    ) -> List[str]:
-        shard_filenames = set()
-
-        (
-            shard_filenames.add(file_index[layer]) 
-            for layer in layers_to_download 
-            if layer in file_index
-        )
-        
-        return list(shard_filenames)
-        
-    @staticmethod
-    def gather_shard_files_from_layers(
-        layers_to_download,
-        file_index,
-        output_model_path,
-        repo_id,
-        device
-    ) -> List[ShardFile]:
-        shards_to_download = ModelService.get_shard_filenames_from_layers(
-            layers_to_download,
-            file_index
-        )
-
-        try:
-            return [
-                ModelService.create_shard_file(
-                    output_model_path, repo_id, device, filename
-                )
-                for filename in shards_to_download
-            ]
-        except Exception as e:
-            raise RuntimeError(
-                f"Error gathering shard files from layers {e}"
-            )
-
-    # FIXME: THIS IS NOT CREATING, IT IS DOWNLOADING
-    # FIXME: DON"T HANDLE get_output_model_path like this
-    @staticmethod
-    def create_shard_files(
-        model_metadata: ModelMetadata, env: ApplicationConfig, layers_to_download: List[str] = None,
-    ) -> List[ShardFile]:
-        output_model_path = ModelService.get_output_model_path(model_metadata)
-
-        ModelService.validate_config(model_metadata)
-
-        FileRepository.download_required_files(model_metadata, env)
-
-        if model_metadata.has_adapter:
-            return ModelService.merge_and_save_model(model_metadata, env)
-
-        file_index = TensorIndexService.create_file_to_tensor_index(model_metadata)
-        if file_index:
-            if layers_to_download:
-                ModelService.gather_shard_files_from_layers(
-                    layers_to_download,
-                    file_index,
-                    output_model_path,
-                    model_metadata.id,
-                    env.device
-                )
-
-            file_index = TensorIndexService.flip_keys(file_index)
-
-            return ModelService.gather_shard_files(
-                file_index, output_model_path, model_metadata.id, env.device
-            )
-        else:
-            print("Index files not found, using single shard file fallback.")
-            single_file = (
-                "model.safetensors"
-                if model_metadata.has_safetensor_files
-                else "pytorch_model.bin"
-            )
-            shard_file = ModelService.create_shard_file(
-                output_model_path, model_metadata.id, env.device, single_file
-            )
-            return [shard_file]
-        

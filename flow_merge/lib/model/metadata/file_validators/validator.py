@@ -1,3 +1,5 @@
+import logging
+
 from flow_merge.lib.model.metadata.model_metadata import ModelMetadata
 from flow_merge.lib.model.metadata.file_validators._adapter import has_adapter_files
 from flow_merge.lib.model.metadata.file_validators._integrity import has_config_json
@@ -29,10 +31,9 @@ adapter_checks = [
     ("has_adapter", has_adapter_files, "Missing adapter files"),
 ]
 
+
 class FileListValidator:
-    def __init__(self, env, logger) -> None:
-        self.env = env
-        self.logger = logger
+    def __init__(self) -> None:
         self.checks = [
             integrity_checks,
             tokenizer_checks,
@@ -42,6 +43,7 @@ class FileListValidator:
         ]
 
     def check(self, metadata: ModelMetadata):
+        file_list = []
         if metadata.file_metadata_list:
             file_list = [
                 file_metadata.filename for file_metadata in metadata.file_metadata_list
@@ -53,10 +55,8 @@ class FileListValidator:
                 tested_outcome = test_func(file_list)
 
                 if tested_outcome is False:
-                    self.logger.info(missing_message)
+                    logging.info(missing_message)
 
                 setattr(metadata, attribute_name, tested_outcome)
-        
+
         return metadata
-                
-    

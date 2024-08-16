@@ -32,6 +32,10 @@ class ApplicationConfig(BaseModel):
         default=Path("./merged_model").resolve(),
         description="Directory for saving the merged model, tokenizer, and metadata.",
     )
+    trust_remote_code: bool = Field(
+        default=False,
+        description="Whether to trust remote code (HuggingFace) when running the merge"
+    )
 
     def __post_init__(self):
         os.environ["HF_HUB_DISABLE_IMPLICIT_TOKEN"] = "1"

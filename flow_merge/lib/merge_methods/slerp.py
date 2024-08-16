@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Optional, List, Tuple
 
 import torch
@@ -64,7 +65,7 @@ def merge_slerp(
     dot = torch.sum(v0 * v1)
     # If absolute value of dot product is almost 1, vectors are ~colineal, so use lerp
     if torch.abs(dot) >= torch.tensor(DOT_THRESHOLD, dtype=dot.dtype):
-        logger.info(
+        logging.info(
             f"Vectors v0={v0.__hash__()} & v1={v1.__hash__()} are colineal, using lerp instead of slerp."
         )
         return torch.lerp(v0_copy, v1_copy, t)

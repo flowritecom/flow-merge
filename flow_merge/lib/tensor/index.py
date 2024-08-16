@@ -17,42 +17,40 @@ class TensorIndexService:
 
     @staticmethod
     def create_file_to_tensor_index(
-        metadata: ModelMetadata,
+            metadata: ModelMetadata,
     ) -> Optional[Dict[str, list]]:
         index_path = None
-        model_path = metadata.absolute_path
+        safetensors_index_path = Path(metadata.absolute_path) / "model.safetensors.index.json"
+        pytorch_bin_index_path = Path(metadata.absolute_path) / "pytorch_model.bin.index.json"
 
         if metadata.hf_exists and metadata.has_safetensors_index:
             try:
                 index_path = FileRepository.download_file(
                     repo_id=str(metadata.id),
                     filename="model.safetensors.index.json",
-                    download_dir=metadata.directory_settings.local_dir,
+                    download_dir=metadata.absolute_path,
                 )
             except Exception as e:
                 print(f"Safetensors index not found: {e}")
-
+                return None
         elif metadata.hf_exists and metadata.has_pytorch_bin_index:
             try:
                 index_path = FileRepository.download_file(
                     repo_id=str(metadata.id),
                     filename="pytorch_model.bin.index.json",
-                    download_dir=metadata.directory_settings.local_dir,
+                    download_dir=metadata.absolute_path,
                 )
             except Exception as e:
                 print(f"Pytorch bin index not found: {e}")
                 return None
+
+        if index_path is None and safetensors_index_path.exists():
+            index_path = safetensors_index_path
+        elif index_path is None and pytorch_bin_index_path.exists():
+            index_path = pytorch_bin_index_path
         else:
-            safetensors_index_path = Path(model_path) / "model.safetensors.index.json"
-            pytorch_bin_index_path = Path(model_path) / "pytorch_model.bin.index.json"
+            return None
 
-            if safetensors_index_path.exists():
-                index_path = safetensors_index_path
-            elif pytorch_bin_index_path.exists():
-                index_path = pytorch_bin_index_path
-            else:
-                return None
+        shardfile_index = FileRepository.load_model_files_index(index_path)
 
-        shardfile_index = FileRepository.load_index(index_path)
-        
         return shardfile_index["weight_map"]

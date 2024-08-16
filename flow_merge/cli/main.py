@@ -10,6 +10,7 @@ from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from flow_merge.lib.merge_config import MergeConfig
 from flow_merge.lib.merge_plan import MergePlan
+from flow_merge.lib.merger import merger2
 from flow_merge.lib.model.architecture import ModelArchitectureProvider
 
 normalization_runner: NormalizationRunner
@@ -96,9 +97,10 @@ def run(args):
         except Exception as e:
             sys.exit(str(e))
 
-    # Run
-    # -> Materialize (Model + Merged Tokenizer + Get the right merge_method that holds the merge fn)
-    # -> Exec merge fn from merge_method using the "materialized goods"
+    try:
+        merger2.merge(merge_plan)
+    except Exception as e:
+        raise Exception("Unexpected error while merging") from e
 
 
 def plan(args):

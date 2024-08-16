@@ -3,8 +3,7 @@ import torch
 from typing import Dict, List, Tuple, Any
 
 from flow_merge.lib.model import Model
-from flow_merge.lib.merge_methods.slerp import SlerpSettings
-from flow_merge.lib.snapshot.data_architecture._normalized_slices import NormalizedSource, MergeMethodIdentifier
+from flow_merge.lib.snapshot.data_architecture._normalized_slices import MergeMethodIdentifier
 
 
 class InterpolationRunner:
@@ -52,7 +51,7 @@ class InterpolationRunner:
             cls,
             all_tensors: List[Tuple[torch.Tensor, float, bool]],
             merge_method_name: str,
-            input_ids_mappings: Dict[Model, Dict[int, int]],
+            input_ids_mappings: Dict[str, Dict[int, int]],
             hidden_dim: int
     ):
         base_tensor = [p for p in all_tensors if p[2] is True][0]
