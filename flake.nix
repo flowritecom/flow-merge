@@ -42,6 +42,7 @@
             chmod +x $out/miniconda.sh
           '';
         };
+        zfsCompat = pkgs.zfs_unstable.latestCompatibleLinuxPackages;
         customConda =
           pkgs.runCommand "conda-install"
           {buildInputs = [pkgs.makeWrapper minicondaScript];}
@@ -57,15 +58,48 @@
           pkgs.python311
           pkgs.ruff
           pkgs.nodejs
-          pkgs.nodePackages.pyright
+          pkgs.pyright
           pkgs.jq
         ];
         cudaDeps = with pkgs; [
+          autoconf
+          binutils
+          curl
+          freeglut
+          gcc11
+          git
+          gitRepo
+          gnumake
+          gnupg
+          gperf
+          libGLU
+          libGL
+          libselinux
+          m4
+          ncurses5
+          procps
+          stdenv.cc
+          unzip
+          util-linux
+          wget
+          xorg.libICE
+          xorg.libSM
+          xorg.libX11
+          xorg.libXext
+          xorg.libXi
+          xorg.libXmu
+          xorg.libXrandr
+          xorg.libXrender
+          xorg.libXv
+          zlib
+          zfsCompat.nvidia_x11
+          cudaPackages_12_1.cudatoolkit
           customConda
           file
         ];
 
         libInputs = with pkgs; [
+          zfsCompat.nvidia_x11
           file
           stdenv.cc
           stdenv.cc.cc.lib
@@ -87,6 +121,13 @@
                 export NIX_CFLAGS_LINK="-L${installationPath}lib"
                 export FONTCONFIG_FILE=/etc/fonts/fonts.conf
                 export QTCOMPOSE=${pkgs.xorg.libX11}/share/X11/locale
+
+                # cuda
+                export CUDA_PATH="${pkgs.cudaPackages_12_1.cudatoolkit}"
+                export EXTRA_LDFLAGS="-L/lib -L${
+                  zfsCompat.nvidia_x11
+                }/lib"
+                export EXTRA_CCFLAGS="-I/usr/include"
                 export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath libInputs}"
 
                 export UID_DOCKER=$(id -u)
