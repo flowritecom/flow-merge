@@ -1,8 +1,10 @@
+import logging
 from typing import List, Tuple
 
 import torch
 
 from flow_merge.lib.config import ApplicationConfig
+from flow_merge.lib.loaders.normalizer import NormalizedSource
 from flow_merge.lib.merge_methods import MergeMethodIdentifier, TaskArithmetic, TiesMergingSettings, \
     DareTiesMergingSettings, TaskArithmeticSettings
 from flow_merge.lib.merge_methods.linear import merge_linear
@@ -12,9 +14,8 @@ from flow_merge.lib.model import Model
 from flow_merge.lib.model.architecture import ModelArchitecture, ModelWeight
 from flow_merge.lib.model.metadata import ModelMetadataService
 from flow_merge.lib.model.service import ModelService
-from flow_merge.lib.snapshot.data_architecture._normalized_slices import NormalizedSource
 from flow_merge.lib.tensor.loader import TensorRepository
-from flow_merge.lib.tokenizer import Tokenizer, MergeTokenizerService
+from flow_merge.lib.tokenizer import MergeTokenizerService
 from flow_merge.lib.merger.interpolation import InterpolationRunner
 
 config = ApplicationConfig()
@@ -32,6 +33,7 @@ def get_base_source(sources: List[NormalizedSource]) -> NormalizedSource:
 def merge(
         merge_plan: MergePlan
 ):
+    logging.basicConfig(level=logging.INFO)
     tokenizer_service = MergeTokenizerService(config=config)
     tokenizer = tokenizer_service.get_merge_tokenizer(merge_plan)
     metadata_service = ModelMetadataService(app_config=config)

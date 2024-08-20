@@ -6,8 +6,7 @@ from transformers import PretrainedConfig
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.model.service import ModelService
 from flow_merge.lib.model.architecture import ModelArchitecture
-from flow_merge.lib.model.metadata import ModelMetadataService, ModelMetadata
-from flow_merge.lib.tensor.index import TensorIndexService
+from flow_merge.lib.model.metadata import ModelMetadata
 from flow_merge.lib.tensor.loader import ShardFile
 
 ModelId = NewType("ModelId", str)

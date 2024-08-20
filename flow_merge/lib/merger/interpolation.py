@@ -2,8 +2,8 @@ import torch
 
 from typing import Dict, List, Tuple, Any
 
+from flow_merge.lib.merge_methods import MergeMethodIdentifier
 from flow_merge.lib.model import Model
-from flow_merge.lib.snapshot.data_architecture._normalized_slices import MergeMethodIdentifier
 
 
 class InterpolationRunner:
@@ -11,7 +11,7 @@ class InterpolationRunner:
     @staticmethod
     def _map_tensors(
             tensors: List[Tuple[torch.Tensor, float, bool]],
-            input_ids_mappings: Dict[Model, Dict[int, int]],
+            input_ids_mappings: Dict[str, Dict[int, int]],
             hidden_size: int
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         mapped_tensors = []

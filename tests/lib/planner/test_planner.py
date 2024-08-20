@@ -62,9 +62,7 @@ class TestPlanner(unittest.TestCase):
         )
 
         # Initializing NormalizedSlices with required fields
-        self.normalized_slices = NormalizedSlices(
-            sha="normalized_slices_sha",
-            slices=[
+        self.normalized_slices = [
                 NormalizedSlice(
                     index=0,
                     merge_method=MergeMethodIdentifier.PASSTHROUGH,
@@ -87,7 +85,6 @@ class TestPlanner(unittest.TestCase):
                     ]
                 )
             ]
-        )
         self.snapshot = Snapshot(
             sha='test_sha', 
             metadata=self.snapshot_metadata, 

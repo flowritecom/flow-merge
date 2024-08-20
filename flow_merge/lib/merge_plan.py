@@ -4,10 +4,8 @@ import json
 from pathlib import Path
 from typing import List, Any, Optional
 from pydantic import BaseModel, computed_field, Field
-
-from flow_merge.lib.loaders.normalizer import NormalizationRunner
+from flow_merge.lib.loaders.normalizer import NormalizationRunner, NormalizedSlice
 from flow_merge.lib.merge_config import MergeConfig
-from flow_merge.lib.snapshot.data_architecture._normalized_slices import NormalizedSlice
 
 
 class MergePlan(BaseModel):

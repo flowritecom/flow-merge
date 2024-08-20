@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -82,7 +83,8 @@ class ModelService:
     def create_shard_files(
             model_metadata: ModelMetadata, app_config: ApplicationConfig, layers_to_download: List[str] = None,
     ) -> List[ShardFile]:
-        if not (model_metadata.has_config and model_metadata.has_tokenizer_config):
+        print(model_metadata.has_config)
+        if not model_metadata.has_config and not model_metadata.has_tokenizer_config:
             raise FileNotFoundError("Model is missing config.json or tokenizer_config.json")
 
         output_model_path = model_metadata.absolute_path
@@ -123,18 +125,6 @@ class ModelService:
             output_model_path, model_metadata.id, app_config.device, single_file
         )
         return [shard_file]
-
-
-
-
-
-
-
-
-
-
-
-
 
     # Merging adapters
     @staticmethod

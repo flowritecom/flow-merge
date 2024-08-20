@@ -47,7 +47,7 @@ class ApplicationConfig(BaseModel):
         self.hf_token = token
 
     def set_device(self, device: str):
-        self.device = device
+        self.device = DeviceIdentifier(device)
 
     @field_validator("hf_token")
     def validate_hf_token(cls, v):

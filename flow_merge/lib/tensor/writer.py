@@ -1,13 +1,10 @@
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Any
-
 import safetensors.torch
 import torch
-
-from flow_merge.lib.logger import Logger
-
 
 
 # TODO - Test this class with .bin files
@@ -39,7 +36,7 @@ class TensorWriter:
         for shard_name in set(self.weight_map.values()):
             shard_path = os.path.join(self.output_dir, shard_name)
             if os.path.exists(shard_path):
-                logger.info(f"Removing shard {shard_name}")
+                logging.info(f"Removing shard {shard_name}")
                 os.remove(shard_path)
 
     def save_tensor(self, weight: Any, tensor: torch.Tensor, clone: bool = False):
@@ -64,7 +61,7 @@ class TensorWriter:
         for weight_name in self.current_shard:
             self.weight_map[weight_name] = shard_name
 
-        logger.info(f"Writing shard {shard_name} to disk")
+        logging.info(f"Writing shard {shard_name} to disk")
 
         if self.safe_serialization:
             self._save_st(shard_path)
@@ -94,7 +91,7 @@ class TensorWriter:
 
         index_file = f"{prefix}.safetensors.index.json"
         index_path = os.path.join(self.output_dir, index_file)
-        logger.info(f"Writing index file: {index_file} to disk")
+        logging.info(f"Writing index file: {index_file} to disk")
 
         with open(index_path, "w") as f:
             json.dump(

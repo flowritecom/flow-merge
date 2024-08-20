@@ -13,16 +13,14 @@ from typing import Any, Dict, List, Literal, Optional
 
 from flow_merge.lib.model.metadata.file_metadata import FileMetadata
 
+
 class ModelMetadata(BaseModel):
     id: str
-    file_metadata_list: List[FileMetadata] = Field(default_factory=list)
     file_list: List[str] = Field(default_factory=list)
-    
-    sha: Optional[str] = None
     config: Optional[Dict] = None
     safetensors_info: Optional[SafeTensorsInfo] = Field(
         alias="safetensors", default=None
-    ) 
+    )
 
     relative_path: Optional[Path] = None
     absolute_path: Optional[Path] = None

@@ -4,11 +4,10 @@ from itertools import combinations
 from typing import Dict, Optional, Tuple, List
 from pydantic import BaseModel, ConfigDict
 from transformers import AutoConfig, AutoTokenizer, PreTrainedTokenizerBase
-from flow_merge.lib.constants import ADDITIONAL_SPECIAL_TOKENS_KEY
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.merge_plan import MergePlan
 
-
+ADDITIONAL_SPECIAL_TOKENS_KEY = "additional_special_tokens"
 class Tokenizer(BaseModel):
     tokenizer: PreTrainedTokenizerBase
     input_ids_mappings: Optional[Dict[str, Dict[int, int]]] = None

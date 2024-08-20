@@ -10,7 +10,6 @@ from flow_merge.lib.model.architecture import ModelWeight
 from flow_merge.lib.tensor.loader import TensorRepository
 from flow_merge.lib.merger.interpolation import InterpolationRunner
 from flow_merge.lib.merge_methods import MergeMethodIdentifier
-from flow_merge.lib.snapshot.data_architecture._normalized_slices import NormalizedSource
 
 class Merger:
 

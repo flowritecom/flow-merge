@@ -1,9 +1,29 @@
+from pydantic import BaseModel
+
+from flow_merge.lib.merge_methods import MergeMethodIdentifier
 from flow_merge.lib.model.architecture import ModelArchitectureProvider, ModelWeight
 from typing import Any, Dict, List, Optional
 from functools import reduce
 import re
 
 from flow_merge.lib.config import ApplicationConfig
+
+
+class NormalizedSource(BaseModel):
+    weight: Optional[float] = None
+    model: Optional[str]
+    layer: Optional[str]
+    is_base: Optional[bool]
+
+
+class MergeMethod(BaseModel):
+    name: MergeMethodIdentifier
+    params: Optional[Dict[str, Any]] = None
+
+
+class NormalizedSlice(BaseModel):
+    merge_method: MergeMethod
+    sources: List[NormalizedSource]
 
 
 class _Source:
