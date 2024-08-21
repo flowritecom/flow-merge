@@ -3,8 +3,7 @@ import re
 from enum import Enum
 from pathlib import Path
 from typing import Optional
-
-from pydantic import BaseModel, Field, field_validator, ValidationError
+from pydantic import BaseModel, Field, field_validator
 import logging
 from huggingface_hub import login, logout
 

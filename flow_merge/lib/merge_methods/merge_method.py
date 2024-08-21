@@ -1,15 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import torch
-from pydantic import BaseModel, ValidationError, field_validator
+from pydantic import BaseModel
 
 from flow_merge.lib.model.architecture import ModelWeight
-# from flow_merge.lib.logger import get_logger
 from flow_merge.lib.model import Model
-
-# FIXME new flow-merge repo format
-# logger = get_logger(__name__)
 
 
 class BaseMergeMethodSettings(BaseModel):

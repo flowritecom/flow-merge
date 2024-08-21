@@ -1,10 +1,6 @@
-import logging
 from pathlib import Path
 from typing import List, NewType, Optional, Dict
 from pydantic import BaseModel
-from transformers import PretrainedConfig
-from flow_merge.lib.config import ApplicationConfig
-from flow_merge.lib.model.service import ModelService
 from flow_merge.lib.model.architecture import ModelArchitecture
 from flow_merge.lib.model.metadata import ModelMetadata
 from flow_merge.lib.tensor.loader import ShardFile

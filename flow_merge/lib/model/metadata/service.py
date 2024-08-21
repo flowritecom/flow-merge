@@ -1,17 +1,14 @@
-import hashlib
 import logging
 import huggingface_hub
 from pathlib import Path
 from typing import List
-from huggingface_hub.hf_api import (
-    ModelInfo,
-    RepoSibling,
-)
 from transformers import PretrainedConfig
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.model.metadata import ModelMetadata
 
 CHUNK_SIZE = 64 * 1024
+
+logger = logging.getLogger(__name__)
 
 
 class ModelMetadataService:
@@ -22,10 +19,10 @@ class ModelMetadataService:
         path_to_model = (self.app_config.local_dir / id)
         if path_to_model.resolve().exists():
             try:
-                logging.info("Model found locally, loading from local directory")
+                logger.info("Model found locally, loading from local directory")
                 return self._load_local_model_metadata(id, path_to_model)
             except EnvironmentError as e:
-                logging.warning("Failed to load model info from local file, trying HuggingFace", e)
+                logger.warning("Failed to load model info from local file, trying HuggingFace", e)
 
         try:
             return self._load_hf_model_metadata(id, path_to_model)
@@ -104,7 +101,6 @@ class ModelMetadataService:
     @staticmethod
     def _has_safetensors_files(file_list: List[str]):
         safetensors_files = [file for file in file_list if file.endswith(".safetensors")]
-        print(file_list)
         num_shards = len(safetensors_files)
         if not num_shards:
             return False

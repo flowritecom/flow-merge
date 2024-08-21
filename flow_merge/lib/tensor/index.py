@@ -1,8 +1,11 @@
+import logging
 from pathlib import Path
 from typing import Dict, Optional
 
 from flow_merge.lib.model.metadata import ModelMetadata
 from flow_merge.lib.file_io import FileRepository
+
+logger = logging.getLogger(__name__)
 
 
 class TensorIndexService:
@@ -31,7 +34,7 @@ class TensorIndexService:
                     download_dir=metadata.absolute_path,
                 )
             except Exception as e:
-                print(f"Safetensors index not found: {e}")
+                logger.info(f"Safetensors index not found: {e}")
                 return None
         elif metadata.hf_exists and metadata.has_pytorch_bin_index:
             try:
@@ -41,7 +44,7 @@ class TensorIndexService:
                     download_dir=metadata.absolute_path,
                 )
             except Exception as e:
-                print(f"Pytorch bin index not found: {e}")
+                logger.info(f"Pytorch bin index not found: {e}")
                 return None
 
         if index_path is None and safetensors_index_path.exists():

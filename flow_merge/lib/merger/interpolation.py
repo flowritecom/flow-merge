@@ -1,9 +1,6 @@
 import torch
-
-from typing import Dict, List, Tuple, Any
-
+from typing import Dict, List, Tuple
 from flow_merge.lib.merge_methods import MergeMethodIdentifier
-from flow_merge.lib.model import Model
 
 
 class InterpolationRunner:

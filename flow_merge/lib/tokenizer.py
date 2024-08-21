@@ -8,6 +8,9 @@ from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.merge_plan import MergePlan
 
 ADDITIONAL_SPECIAL_TOKENS_KEY = "additional_special_tokens"
+
+logger = logging.getLogger(__name__)
+
 class Tokenizer(BaseModel):
     tokenizer: PreTrainedTokenizerBase
     input_ids_mappings: Optional[Dict[str, Dict[int, int]]] = None
@@ -29,7 +32,7 @@ class TokenizerLoader:
                 )
             except Exception as e:
                 error_message = f"Error loading tokenizer for {model_id}: {e}"
-                logging.error(error_message)
+                logger.error(error_message)
                 raise RuntimeError(error_message)
             all_tokenizers[model_id] = tokenizer
         return all_tokenizers
@@ -60,7 +63,7 @@ class TokenizerValidator:
         vocab_b = tokenizer_b.get_vocab()
 
         if vocab_a != vocab_b:
-            logging.info(f"Tokenizer for model {model_a} has different vocab compared to model {model_b}.")
+            logger.info(f"Tokenizer for model {model_a} has different vocab compared to model {model_b}.")
             return True
         return False
 
@@ -75,7 +78,7 @@ class TokenizerValidator:
         special_tokens_b = tokenizer_b.special_tokens_map
 
         if special_tokens_a != special_tokens_b:
-            logging.info(f"Tokenizer for model {model_a} has different special tokens compared to model {model_b}.")
+            logger.info(f"Tokenizer for model {model_a} has different special tokens compared to model {model_b}.")
             return True
         return False
 
@@ -90,7 +93,7 @@ class TokenizerValidator:
         added_tokens_encoder_b = tokenizer_b.added_tokens_encoder
 
         if added_tokens_encoder_a != added_tokens_encoder_b:
-            logging.info(
+            logger.info(
                 f"Tokenizer for model {model_a} has different added tokens encoder compared to model {model_b}.")
             return True
         return False
@@ -143,7 +146,7 @@ class TokenizerMerger:
             token = added_token
             if token in merged_added_tokens:
                 if merged_added_tokens[token] != added_token and token not in duplicate_added_tokens:
-                    logging.warning(
+                    logger.warning(
                         f"Token {token} added with multiple different settings, using the first one by default.")
                     duplicate_added_tokens.add(token)
             else:
@@ -182,10 +185,10 @@ class TokenizerMerger:
 
         for special_token_type, special_token in merged_special_tokens.items():
             if special_token_type == ADDITIONAL_SPECIAL_TOKENS_KEY and isinstance(special_token, list):
-                logging.info(f"Adding additional special tokens: {special_token}.")
+                logger.info(f"Adding additional special tokens: {special_token}.")
                 merged_tokenizer.add_special_tokens({ADDITIONAL_SPECIAL_TOKENS_KEY: special_token})
             else:
-                logging.warning(
+                logger.warning(
                     f"Overriding {special_token_type} with {special_token}. When a conflict occurs, the last one takes priority.")
                 merged_tokenizer.add_special_tokens({special_token_type: special_token})
 
@@ -200,7 +203,7 @@ class InputIDsMapper:
             merge_tokenizer: PreTrainedTokenizerBase,
             config: ApplicationConfig
     ) -> Dict[str, Dict[int, int]]:
-        logging.info("Creating input ids mappings for interpolation of `embed_tokens` and `lm_head` layers.")
+        logger.info("Creating input ids mappings for interpolation of `embed_tokens` and `lm_head` layers.")
         input_ids_mappings = {}
         merge_tokenizer_vocab = merge_tokenizer.get_vocab()
 
@@ -233,7 +236,7 @@ class InputIDsMapper:
             model_config = AutoConfig.from_pretrained(config.local_dir / model, trust_remote_code=trust_remote_code)
             return model_config.vocab_size
         except Exception as e:
-            logging.warning(f"Can't get vocab size for {model}: {e}")
+            logger.warning(f"Can't get vocab size for {model}: {e}")
             return None
 
 
@@ -247,11 +250,11 @@ class MergeTokenizerService:
         all_tokenizers = TokenizerLoader.load_all_tokenizers(all_models, self.config)
 
         if not TokenizerValidator.check_tokenizers_for_differences(all_tokenizers):
-            logging.info(
+            logger.info(
                 f"No differences in tokens or vocab among tokenizers. Using {merge_plan.base_model} for the tokenizer.")
             return Tokenizer(tokenizer=all_tokenizers[merge_plan.base_model])
 
-        logging.info("Different tokens or vocab among tokenizers. Building the tokenizer for the merged model.")
+        logger.info("Different tokens or vocab among tokenizers. Building the tokenizer for the merged model.")
 
         merge_tokenizer = self.construct_appropriate_tokenizer(merge_plan.tokenizer_mode, merge_plan.base_model,
                                                                all_tokenizers)

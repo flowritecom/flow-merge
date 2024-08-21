@@ -6,6 +6,7 @@ import yaml
 from pydantic import Field, ValidationError, field_validator, BaseModel, ConfigDict, computed_field
 from flow_merge.lib.validators.slice_validator import SliceValidator
 
+logger = logging.getLogger(__name__)
 
 class MergeConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -41,7 +42,7 @@ class MergeConfig(BaseModel):
     @field_validator("tokenizer_interpolation_method")
     def validate_interpolation_method(cls, v):
         if not v:
-            logging.info(
+            logger.warning(
                 "No interpolation method provided for tokenizer of the merged model. Defaulting to 'linear' in case interpolation of token embed and lm head layers is needed due to different vocabularies of tokenizers."
             )
             return v

@@ -1,17 +1,13 @@
 from datetime import datetime
 from pathlib import Path
 from huggingface_hub.hf_api import (
-    BlobLfsInfo,
     ModelCardData,
     ModelInfo,
-    RepoSibling,
     SafeTensorsInfo,
     TransformersInfo,
 )
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Literal, Optional
-
-from flow_merge.lib.model.metadata.file_metadata import FileMetadata
 
 
 class ModelMetadata(BaseModel):

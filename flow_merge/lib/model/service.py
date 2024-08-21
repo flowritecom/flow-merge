@@ -1,11 +1,8 @@
-import json
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional
-
 import torch
 from peft import PeftConfig, PeftModel
-
 from flow_merge.lib.model.architecture import ModelWeight
 from flow_merge.lib.config import ApplicationConfig, DeviceIdentifier
 from flow_merge.lib.model.metadata import ModelMetadata
@@ -13,6 +10,8 @@ from flow_merge.lib.tensor.index import TensorIndexService
 from flow_merge.lib.tensor.loader import ShardFile, TensorRepository
 from flow_merge.lib.tensor.writer import TensorWriter
 from flow_merge.lib.file_io import FileRepository
+
+logger = logging.getLogger(__name__)
 
 
 class ModelService:
@@ -33,7 +32,7 @@ class ModelService:
             try:
                 keys = TensorRepository.get_tensor_keys_from_file(output_path, device)
             except RuntimeError as e:
-                logging.warning(f"Tensor keys cannot be retrieved: {e}", e)
+                logger.warning(f"Tensor keys cannot be retrieved: {e}", e)
                 keys = []  # Default to an empty list if keys cannot be retrieved
 
         return ShardFile(filename=shard_filename, path=output_path, tensor_keys=keys)
@@ -83,12 +82,10 @@ class ModelService:
     def create_shard_files(
             model_metadata: ModelMetadata, app_config: ApplicationConfig, layers_to_download: List[str] = None,
     ) -> List[ShardFile]:
-        print(model_metadata.has_config)
         if not model_metadata.has_config and not model_metadata.has_tokenizer_config:
             raise FileNotFoundError("Model is missing config.json or tokenizer_config.json")
 
         output_model_path = model_metadata.absolute_path
-        print(f"output model path: {output_model_path}")
 
         # Download *minimal* required files to fetch information about shards
         FileRepository.download_required_files(model_metadata, app_config)
@@ -117,7 +114,7 @@ class ModelService:
             )
 
         # Single-shard-file model
-        print("Index files not found, using single shard file fallback.")
+        logger.info("Index files not found, using single shard file fallback.")
         single_file = (
             "model.safetensors" if model_metadata.has_safetensor_files else "pytorch_model.bin"
         )
@@ -156,7 +153,7 @@ class ModelService:
             repo_id: str,
             local_dir: Path,
     ) -> torch.nn.Module:
-        print("Loading and applying adapters: load_and_apply_adapters")
+        logger.info("Loading and applying adapters: load_and_apply_adapters")
         shard_paths = []
         for shard_file in base_model_shards:
             shard_path = FileRepository.download_file(repo_id, shard_file, local_dir)
@@ -169,7 +166,7 @@ class ModelService:
     def save_model_shards(
             base_model: torch.nn.Module, output_dir: Path
     ) -> List[ShardFile]:
-        print("Saving model shard files: save_model_shards")
+        logger.info("Saving model shard files: save_model_shards")
         shard_files = []
         with TensorWriter(output_dir) as writer:
             for name, param in base_model.named_parameters():
@@ -182,7 +179,7 @@ class ModelService:
     def merge_and_save_model(
             model_metadata: ModelMetadata, env: ApplicationConfig
     ) -> List[ShardFile]:
-        print("Merging adapter and saving model: merge_and_save_model")
+        logger.info("Merging adapter and saving model: merge_and_save_model")
         FileRepository.download_adapter_files(model_metadata, env)
         base_model_shards = ModelService.determine_base_model_shards(model_metadata)
         adapter_files = [f for f in model_metadata.file_list if "adapter" in f]
