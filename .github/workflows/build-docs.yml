@@ -2,7 +2,7 @@ name: Build documentation
 
 on:
   push:
-    branches: ["main", "simplified-preparation-step-and-cli"]
+    branches: ["main", "docs"]
   workflow_dispatch:
 
 permissions:
