@@ -22,7 +22,7 @@ class TensorRepository:
 
     @staticmethod
     def get_tensor(
-            shards: List[ShardFile], tensor_key: TensorKey, device: torch.device
+            shards: List[ShardFile], tensor_key: TensorKey, device: DeviceIdentifier
     ) -> torch.Tensor:
         """
         Retrieves a tensor from the tensor shards based on the provided tensor key.
@@ -35,7 +35,6 @@ class TensorRepository:
         Raises:
             KeyError: If the tensor key is not found in any of the tensor shards.
         """
-
         for shard_file in shards:
             if shard_file.tensor_keys and tensor_key in shard_file.tensor_keys:
                 return TensorRepository.load_tensor(shard_file, tensor_key, device)
@@ -43,7 +42,7 @@ class TensorRepository:
 
     @staticmethod
     def load_tensor(
-            shard_file: ShardFile, tensor_key: TensorKey, device: torch.device
+            shard_file: ShardFile, tensor_key: TensorKey, device: DeviceIdentifier
     ) -> torch.Tensor:
         """
         Load a tensor from a specific shard file (either .safetensors or .bin).
@@ -70,7 +69,7 @@ class TensorRepository:
 
     @staticmethod
     def _load_safetensor(
-            path: Path, tensor_key: str, device: torch.device
+            path: Path, tensor_key: str, device: DeviceIdentifier
     ) -> torch.Tensor:
         """
         Load a tensor from a safetensor file.
@@ -81,12 +80,12 @@ class TensorRepository:
         Returns:
             The loaded tensor.
         """
-        with safe_open(path, framework="pt", device=device) as file:
+        with safe_open(path, framework="pt", device=device.value) as file:
             return file.get_tensor(tensor_key)
 
     @staticmethod
     def _load_bin_tensor(
-            path: Path, tensor_key: str, device: torch.device
+            path: Path, tensor_key: str, device: DeviceIdentifier
     ) -> torch.Tensor:
         """
         Load a tensor from a binary file.
@@ -100,7 +99,7 @@ class TensorRepository:
             KeyError: If the tensor key is not found in the file.
         """
         with path.open("rb") as f:
-            state_dict = torch.load(f, map_location=device)
+            state_dict = torch.load(f, map_location=device.value)
             if tensor_key in state_dict:
                 return state_dict[tensor_key]
             raise KeyError(f"Tensor key {tensor_key} not found in file {path.name}")
@@ -123,11 +122,11 @@ class TensorRepository:
         """
         try:
             if file_path.suffix.endswith("safetensors"):
-                with safe_open(file_path, framework="pt", device=device) as f:
+                with safe_open(file_path, framework="pt", device=device.value) as f:
                     return list(f.keys())
             elif file_path.suffix.endswith("bin"):
                 with open(file_path, "rb") as f:
-                    state_dict = torch.load(f, map_location=device)
+                    state_dict = torch.load(f, map_location=device.value)
                     return list(state_dict.keys())
             else:
                 raise ValueError(f"Unsupported file type: {file_path.suffix}")

@@ -1,7 +1,7 @@
 from typing import Dict
 from enum import Enum
 
-from flow_merge.lib.merge_methods.linear import Linear
+from flow_merge.lib.merge_methods.linear import merge_linear
 from flow_merge.lib.merge_methods.merge_method import BaseMergeMethodSettings
 from flow_merge.lib.merge_methods.slerp import merge_slerp, SlerpSettings
 from flow_merge.lib.merge_methods.task_arithmetic import (
@@ -22,9 +22,9 @@ class MergeMethodIdentifier(str, Enum):
     INTERPOLATE = "interpolate"
 
 
-method_classes: Dict[MergeMethodIdentifier, TaskArithmetic | Linear] = {
+method_classes: Dict[MergeMethodIdentifier, TaskArithmetic] = {
     MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC.value: TaskArithmetic,
-    MergeMethodIdentifier.MODEL_SOUP.value: Linear,
+    MergeMethodIdentifier.MODEL_SOUP.value: merge_linear,
     MergeMethodIdentifier.TIES_MERGING.value: TaskArithmetic,
     MergeMethodIdentifier.DARE_TIES_MERGING.value: TaskArithmetic,
     MergeMethodIdentifier.SLERP.value: merge_slerp,

@@ -4,18 +4,19 @@ import logging
 from pathlib import Path
 from huggingface_hub import hf_hub_download
 
+from flow_merge.lib import config
 from flow_merge.lib.model.metadata import ModelMetadata
-from flow_merge.lib.config import ApplicationConfig
 
 logger = logging.getLogger(__name__)
+
 
 # Fixme: HuggingFace download client instead of FileRepository?
 class FileRepository:
     """Immutable repository for handling file operations."""
 
     @staticmethod
-    def download_file(repo_id: str, filename: str, download_dir: Path,
-                      env: ApplicationConfig = ApplicationConfig()) -> Path:
+    def download_file(repo_id: str, filename: str, download_dir: Path) -> Path:
+        app_config = config.app_config.get()
         try:
             if Path(download_dir / filename).exists():
                 logger.info(f"File {download_dir / filename} already exists, skipping download")
@@ -26,7 +27,7 @@ class FileRepository:
                 repo_id,
                 filename,
                 local_dir=str(download_dir),  # Convert Path to str for hf_hub_download
-                token=env.hf_token,
+                token=app_config.hf_token,
             )
             logger.info(f"downloaded file {repo_id}/{filename} to {file_path}")
             return Path(file_path)  # Convert returned file_path to Path
@@ -50,7 +51,7 @@ class FileRepository:
             raise RuntimeError(f"Error loading index from {file_path}: {e}")
 
     @staticmethod
-    def download_required_files(metadata: ModelMetadata, app_config: ApplicationConfig):
+    def download_required_files(metadata: ModelMetadata):
         required_files = [
             "config.json",
             "tokenizer.json",
@@ -62,10 +63,10 @@ class FileRepository:
             if filename not in metadata.file_list:
                 continue
             logger.info(f"Downloading required file {filename} into {str(metadata.relative_path)}")
-            FileRepository.download_file(metadata.id, filename, metadata.relative_path, app_config)
+            FileRepository.download_file(metadata.id, filename, metadata.relative_path)
 
     @staticmethod
-    def download_adapter_files(model_metadata: "ModelMetadata", env: ApplicationConfig):
+    def download_adapter_files(model_metadata: ModelMetadata):
         adapter_files = [f for f in model_metadata.file_list if "adapter" in f]
         for adapter_file in adapter_files:
             logger.info(
@@ -74,5 +75,4 @@ class FileRepository:
                 model_metadata.id,
                 adapter_file,
                 model_metadata.directory_settings.local_dir / model_metadata.id,
-                env
             )

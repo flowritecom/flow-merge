@@ -97,7 +97,7 @@ class NormalizationRunner:
         self.transformations = [self._ensure_base_model]
         self.model_arch_provider = model_arch_provider
 
-    def normalize(self, raw_data: Dict) -> (List[Dict[str, Any]], int):
+    def normalize(self, raw_data: Dict) -> List[Dict[str, Any]]:
         self._load_models_layers(raw_data)
 
         if "base_model" not in raw_data:
@@ -109,7 +109,6 @@ class NormalizationRunner:
             s = self._apply_transformations(s)
             s.output_layer_id = i
             normalized_slices.extend(self._process_slice(s))
-        num_hidden_layers = max(normalized_slices, key=lambda x: x.output_layer_id).output_layer_id + 1
         normalized_slices = self._process_special_layers(normalized_slices, raw_data["base_model"])
         normalized_slices = self._move_embed_slice_to_top(normalized_slices)
         normalized_slices = self._reindex_slices_with_embed_slice(normalized_slices)
@@ -120,7 +119,7 @@ class NormalizationRunner:
                 src.__delattr__("range")
                 if src.is_base is None:
                     src.__delattr__("is_base")
-        return [s.to_dict() for s in normalized_slices], num_hidden_layers
+        return [s.to_dict() for s in normalized_slices]
 
     def _apply_transformations(self, s: _Slice) -> _Slice:
         # ideally we want transformations being able to be passed in

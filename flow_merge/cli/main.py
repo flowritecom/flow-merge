@@ -6,14 +6,12 @@ from enum import Enum
 from pathlib import Path
 import yaml
 
-from flow_merge.lib.config import ApplicationConfig
+from flow_merge.lib import di
+from flow_merge.lib.config import ApplicationConfig, app_config
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from flow_merge.lib.merge_config import MergeConfig
 from flow_merge.lib.merge_plan import MergePlan
-from flow_merge.lib.merger import merger2
-from flow_merge.lib.model.architecture import ModelArchitectureProvider
-
-normalization_runner: NormalizationRunner
+from flow_merge.lib.merger.merger import Merger
 
 
 class FileFormat(Enum):
@@ -42,7 +40,7 @@ def detect_file_format(file_path: Path) -> FileFormat:
     return FileFormat.UNSUPPORTED
 
 
-def detect_merge_plan_file(path: Path) -> bool:
+def is_merge_plan_file(path: Path) -> bool:
     if detect_file_format(path) != FileFormat.JSON:
         return False
 
@@ -87,18 +85,18 @@ def run(args):
         sys.exit("Provided path does not exist or is not a file.")
 
     # Distinguish between plan files (json?) and merge configuration in JSON/YAML
-    merge_plan = None
-    if detect_merge_plan_file(path):
-        merge_plan = MergePlan.from_file(path)
-    else:
-        try:
+    try:
+        if is_merge_plan_file(path):
+            merge_plan = MergePlan.from_file(path)
+        else:
             config = load_configuration_from_file(path)
-            merge_plan = MergePlan.from_config(config, normalization_runner=normalization_runner)
-        except Exception as e:
-            sys.exit(str(e))
+            merge_plan = MergePlan.from_config(config, normalization_runner=di.get(NormalizationRunner))
+    except Exception as e:
+        sys.exit(str(e))
 
     try:
-        merger2.merge(merge_plan)
+        merger: Merger = di.get(Merger)
+        merger.execute(merge_plan)
     except Exception as e:
         raise Exception("Unexpected error while merging") from e
 
@@ -116,7 +114,7 @@ def plan(args):
 
     try:
         config = load_configuration_from_file(path)
-        merge_plan = MergePlan.from_config(config, normalization_runner=normalization_runner)
+        merge_plan = MergePlan.from_config(config, normalization_runner=di.get(NormalizationRunner))
         with(open(output_path, 'w')) as output_file:
             output_file.write(merge_plan.to_json())
     except Exception as e:
@@ -125,9 +123,7 @@ def plan(args):
 
 
 def main():
-    app_config = ApplicationConfig()
-    global normalization_runner
-    normalization_runner = NormalizationRunner(model_arch_provider=ModelArchitectureProvider(app_config=app_config))
+    app_config.set(ApplicationConfig())
 
     parser = argparse.ArgumentParser(description="Flow merge CLI")
     subparsers = parser.add_subparsers(title="Commands", dest="command")

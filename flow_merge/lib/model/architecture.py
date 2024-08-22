@@ -10,7 +10,6 @@ from pydantic import BaseModel, ConfigDict
 from transformers import PretrainedConfig
 
 import flow_merge.data.architectures
-from flow_merge.lib.file_io import FileRepository
 from flow_merge.lib.config import ApplicationConfig
 
 
@@ -76,10 +75,10 @@ class ModelArchitectureProvider:
         self.app_config = app_config
 
     def get_by_path(self, path: Path):
-        return ModelArchitecture.from_path_or_id(path.__str__(), self.app_config.local_dir, self.app_config)
+        return ModelArchitecture.from_path_or_id(path.__str__(), self.app_config.local_dir)
 
     def get_by_id(self, model_id: str):
-        return ModelArchitecture.from_path_or_id(model_id, self.app_config.local_dir, self.app_config)
+        return ModelArchitecture.from_path_or_id(model_id, self.app_config.local_dir)
 
 
 class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
@@ -108,13 +107,12 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
             cls,
             path_or_id: str,
             local_dir: Path,
-            env: ApplicationConfig
     ):
+        from flow_merge.lib.file_io import FileRepository
         path_to_config = FileRepository.download_file(
             repo_id=path_or_id,
             filename="config.json",
             download_dir=local_dir,
-            env=env
         )
         config = PretrainedConfig.from_json_file(
             path_to_config

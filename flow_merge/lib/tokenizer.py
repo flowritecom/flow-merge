@@ -4,12 +4,15 @@ from itertools import combinations
 from typing import Dict, Optional, Tuple, List
 from pydantic import BaseModel, ConfigDict
 from transformers import AutoConfig, AutoTokenizer, PreTrainedTokenizerBase
+
+from flow_merge.lib import config
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.merge_plan import MergePlan
 
 ADDITIONAL_SPECIAL_TOKENS_KEY = "additional_special_tokens"
 
 logger = logging.getLogger(__name__)
+
 
 class Tokenizer(BaseModel):
     tokenizer: PreTrainedTokenizerBase
@@ -19,24 +22,6 @@ class Tokenizer(BaseModel):
 
 
 # Snapshot-less tokenizer implementation
-
-class TokenizerLoader:
-    @staticmethod
-    def load_all_tokenizers(models_ids: List[str], config: ApplicationConfig) -> Dict[str, PreTrainedTokenizerBase]:
-        all_tokenizers = {}
-        for model_id in models_ids:
-            try:
-                tokenizer = AutoTokenizer.from_pretrained(
-                    model_id,
-                    trust_remote_code=config.trust_remote_code,
-                )
-            except Exception as e:
-                error_message = f"Error loading tokenizer for {model_id}: {e}"
-                logger.error(error_message)
-                raise RuntimeError(error_message)
-            all_tokenizers[model_id] = tokenizer
-        return all_tokenizers
-
 
 class TokenizerValidator:
     @staticmethod
@@ -195,13 +180,66 @@ class TokenizerMerger:
         return merged_tokenizer
 
 
-class InputIDsMapper:
+class MergeTokenizerService:
+    def __init__(self, app_config: ApplicationConfig):
+        self.config = app_config
+
+    def get_merge_tokenizer(self, merge_plan: MergePlan) -> Tokenizer:
+        all_models = list(set([source.model for slice in merge_plan.slices for source in slice.sources]))
+        all_tokenizers = self._load_all_tokenizers(all_models)
+
+        if not TokenizerValidator.check_tokenizers_for_differences(all_tokenizers):
+            logger.info(
+                f"No differences in tokens or vocab among tokenizers. Using {merge_plan.base_model} for the tokenizer.")
+            return Tokenizer(tokenizer=all_tokenizers[merge_plan.base_model])
+
+        logger.info("Different tokens or vocab among tokenizers. Building the tokenizer for the merged model.")
+
+        merge_tokenizer = self.construct_appropriate_tokenizer(merge_plan.tokenizer_mode, merge_plan.base_model,
+                                                               all_tokenizers)
+        input_ids_mappings = self._create_input_ids_mappings(
+            all_models,
+            all_tokenizers,
+            merge_tokenizer,
+        )
+
+        return Tokenizer(tokenizer=merge_tokenizer, input_ids_mappings=input_ids_mappings)
+
     @staticmethod
-    def create_input_ids_mappings(
+    def construct_appropriate_tokenizer(
+            tokenizer_mode: str, base_model: str,
+            all_tokenizers: Dict[str, PreTrainedTokenizerBase]
+    ) -> PreTrainedTokenizerBase:
+        if tokenizer_mode == "base":
+            return all_tokenizers[base_model]
+
+        builder = TokenizerMerger(
+            base_model=base_model,
+            tokenizers=all_tokenizers,
+        )
+        return builder.construct_merged_tokenizer()
+
+    def _load_all_tokenizers(self, models_ids: List[str]) -> Dict[str, PreTrainedTokenizerBase]:
+
+        all_tokenizers = {}
+        for model_id in models_ids:
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(
+                    model_id,
+                    trust_remote_code=self.config.trust_remote_code,
+                )
+            except Exception as e:
+                error_message = f"Error loading tokenizer for {model_id}: {e}"
+                logger.error(error_message)
+                raise RuntimeError(error_message)
+            all_tokenizers[model_id] = tokenizer
+        return all_tokenizers
+
+    def _create_input_ids_mappings(
+            self,
             models: List[str],
             all_tokenizers: Dict[str, PreTrainedTokenizerBase],
             merge_tokenizer: PreTrainedTokenizerBase,
-            config: ApplicationConfig
     ) -> Dict[str, Dict[int, int]]:
         logger.info("Creating input ids mappings for interpolation of `embed_tokens` and `lm_head` layers.")
         input_ids_mappings = {}
@@ -209,11 +247,7 @@ class InputIDsMapper:
 
         for model in models:
             vocab = all_tokenizers[model].get_vocab()
-            vocab_size = InputIDsMapper.get_vocab_size(
-                model=model,
-                trust_remote_code=config.trust_remote_code,
-                config=config
-            ) or len(vocab)
+            vocab_size = self._get_model_vocab_size(model=model) or len(vocab)
 
             model_input_ids_mappings = {}
             for token, new_input_id in merge_tokenizer_vocab.items():
@@ -230,51 +264,13 @@ class InputIDsMapper:
 
         return input_ids_mappings
 
-    @staticmethod
-    def get_vocab_size(model: str, trust_remote_code: bool, config: ApplicationConfig) -> Optional[int]:
+    def _get_model_vocab_size(self, model: str) -> Optional[int]:
         try:
-            model_config = AutoConfig.from_pretrained(config.local_dir / model, trust_remote_code=trust_remote_code)
+            model_config = AutoConfig.from_pretrained(
+                self.config.local_dir / model,
+                trust_remote_code=self.config.trust_remote_code
+            )
             return model_config.vocab_size
         except Exception as e:
             logger.warning(f"Can't get vocab size for {model}: {e}")
             return None
-
-
-class MergeTokenizerService:
-
-    def __init__(self, config: ApplicationConfig):
-        self.config = config
-
-    def get_merge_tokenizer(self, merge_plan: MergePlan) -> Tokenizer:
-        all_models = list(set([source.model for slice in merge_plan.slices for source in slice.sources]))
-        all_tokenizers = TokenizerLoader.load_all_tokenizers(all_models, self.config)
-
-        if not TokenizerValidator.check_tokenizers_for_differences(all_tokenizers):
-            logger.info(
-                f"No differences in tokens or vocab among tokenizers. Using {merge_plan.base_model} for the tokenizer.")
-            return Tokenizer(tokenizer=all_tokenizers[merge_plan.base_model])
-
-        logger.info("Different tokens or vocab among tokenizers. Building the tokenizer for the merged model.")
-
-        merge_tokenizer = self.construct_appropriate_tokenizer(merge_plan.tokenizer_mode, merge_plan.base_model,
-                                                               all_tokenizers)
-        input_ids_mappings = InputIDsMapper.create_input_ids_mappings(
-            all_models,
-            all_tokenizers,
-            merge_tokenizer,
-            config=self.config
-        )
-
-        return Tokenizer(tokenizer=merge_tokenizer, input_ids_mappings=input_ids_mappings)
-
-    def construct_appropriate_tokenizer(
-            self, tokenizer_mode: str, base_model: str, all_tokenizers: Dict[str, PreTrainedTokenizerBase]
-    ) -> PreTrainedTokenizerBase:
-        if tokenizer_mode == "base":
-            return all_tokenizers[base_model]
-
-        builder = TokenizerMerger(
-            base_model=base_model,
-            tokenizers=all_tokenizers,
-        )
-        return builder.construct_merged_tokenizer()

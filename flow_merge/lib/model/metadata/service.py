@@ -70,16 +70,6 @@ class ModelMetadataService:
         )
         return model_metadata
 
-    ## FIXME: WHY THIS NOT USING FILEIO REPOSITORY !!?
-    def download_hf_file(self, repo_id: str, filename: str) -> str:
-        return huggingface_hub.hf_hub_download(
-            repo_id,
-            filename,
-            local_dir=self.app_config.local_dir / repo_id,
-            resume_download=True,
-            token=self.app_config.hf_token,
-        )
-
     @staticmethod
     def _has_pytorch_bin_files(file_list: List[str]):
         pytorch_bin_files = [

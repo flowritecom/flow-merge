@@ -1,3 +1,4 @@
+import contextvars
 import os
 import re
 from enum import Enum
@@ -14,6 +15,8 @@ class DeviceIdentifier(str, Enum):
 
 
 logger = logging.getLogger(__name__)
+
+app_config = contextvars.ContextVar("app_config")
 
 
 class ApplicationConfig(BaseModel):
@@ -60,7 +63,7 @@ class ApplicationConfig(BaseModel):
 
             try:
                 login(token=v)
-                logout(token=v)
+                logout()
             except Exception as e:
                 logger.warning(
                     f"Failed to login to the Hugging Face Hub with the provided token: {e}"
