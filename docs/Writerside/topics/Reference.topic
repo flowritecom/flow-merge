@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Reference" id="Reference">
+
+    <p>
+        Here you can find the descriptions for the main building blocks of flow-merge library.
+    </p>
+
+    <show-structure/>
+
+    <chapter title="MergePlan" id="MergePlan">
+        <link-summary>
+            Python object that holds the validated and normalized plan for the merge to be executed.
+        </link-summary>
+        <code-block lang="python">
+            def MergePlan(BaseModel):
+                slices: List[NormalizedSlice]
+        </code-block>
+
+        <deflist type="medium">
+            <def title="plan">
+                Details about this arg
+            </def>
+            <def title="slices">
+                Details about this arg
+            </def>
+        </deflist>
+    </chapter>
+
+    <seealso>
+        <!--Provide links to related how-to guides, overviews, and tutorials.-->
+    </seealso>
+</topic>

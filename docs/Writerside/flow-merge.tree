@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE instance-profile
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
+
+<instance-profile id="flow-merge"
+                 name="flow-merge"
+                 start-page="flow-merge.md">
+
+    <toc-element topic="flow-merge.md"/>
+    <toc-element topic="Load.topic"/>
+    <toc-element topic="Configuring-a-merge.topic"/>
+    <toc-element topic="Merge.topic">
+    </toc-element>
+    <toc-element topic="Reference.topic"/>
+    <toc-element topic="Debugging-a-merge.topic"/>
+    <toc-element topic="CLI.topic"/>
+    <toc-element topic="Dependencies.topic"/>
+    <toc-element topic="FAQ.topic"/>
+    <toc-element topic="Contribution-guide.topic"/>
+    <toc-element topic="Engineering-Scope-Problems-Solved.topic"/>
+    <toc-element topic="Tutorials.topic">
+        <toc-element topic="merge-two-llama-models.topic"/>
+    </toc-element>
+</instance-profile>

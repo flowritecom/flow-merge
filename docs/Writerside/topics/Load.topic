@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Loading a merge configuration" id="Load" help-id="Load">
+
+    <p>
+        This section explains how we load merging tasks and their related settings.
+    </p>
+
+    <chapter title="Initialize a merge plan from configuration" id="read-merge-configuration">
+        <tabs>
+            <tab title="Read from yaml file">
+                Consider a config file at our current working directory named <code>example-config.yaml</code>. It has the following contents:
+                <br/>
+                <code-block lang="yaml">
+                    merge_method: "slerp"
+                    base_model: "Qwen/Qwen2-0.5B"
+                    slices:
+                        - sources
+                          -
+                </code-block>
+                You can load the file either via the terminal or using a Notebook
+                <procedure>
+                    <step>
+                        <p>In the terminal:</p>
+                        <code-block lang="bash">
+                            flow-merge run --config-file example.yaml
+                        </code-block>
+                    </step>
+
+                    <step>
+                        Alternatively, in a Notebook:
+                        <code-block lang="python">
+                            my_merge_plan = MergePlan.from_file("example-config.yaml")
+                        </code-block>
+                    </step>
+                </procedure>
+            </tab>
+            <tab title="Create a config object directly">
+                <procedure>
+                    <step>
+                        <p>Instantiate a config object interactively</p>
+
+                        <code-block lang="python">
+                            MergeConfig()
+                        </code-block>
+                    </step>
+
+                    <step>
+                        Step with a <a href="https://www.jetbrains.com">link</a>.
+                    </step>
+
+                    <step>
+                        Final step in part 1.
+                    </step>
+                </procedure>
+            </tab>
+        </tabs>
+        Now you have created a new <a href="Reference.topic#MergePlan">MergePlan</a> object.
+        This object serves as the base for the merging operation, providing the necessary slices.
+        The merge is defined piece-wise, where each single slice represents a single corresponding output layer.
+        Each slice contains the desired merging options for that output layer.
+        <tip>The config definition in yaml works hierarchically. You are able to define options at the top-level
+            and override with higher granularity at the slice level.</tip>
+        Python representation of the output object <a href="Reference.topic#MergePlan">MergePlan</a>:
+        <code-block lang="python">
+            MergePlan(
+                merge_method="slerp",
+                slices=[
+                    NormalizedSlice(
+                        key1=value1,
+                        key2=value2
+                    )
+                ],
+                key3="value",
+                key4="value",
+            )
+        </code-block>
+    </chapter>
+
+    <seealso>
+        <!--Give some related links to how-to articles-->
+    </seealso>
+</topic>

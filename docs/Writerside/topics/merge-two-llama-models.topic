@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Merge two Llama 3.1 8B models" id="merge-two-llama-models">
+
+    <p>
+        A How-to article is an action-oriented type of document.
+        It explains how to perform a specific task or solve a problem, and usually contains a sequence of steps.
+        Start with a short introductory paragraph that explains what users will accomplish by following this procedure,
+        what they need to perform it for, or define the target audience of the doc.
+    </p>
+
+    <note>
+        <p><control>Highlight important information.</control></p>
+        <p>
+            You can change this element to <code>&lt;tip&gt;</code> or <code>&lt;warning&gt;</code>.
+        </p>
+    </note>
+
+    <chapter title="Before you start" id="before">
+        <p>It is good practice to list the prerequisites that are required or recommended.</p>
+
+        <p>Make sure that:</p>
+
+        <list>
+            <li>First prerequisite</li>
+            <li>Second prerequisite.</li>
+        </list>
+    </chapter>
+
+    <chapter title="How to perform a task" id="how-to">
+        <p>
+            Avoid writing procedures that are longer than 5 steps to keep it simple.
+            If the title of a procedure repeats the chapter title,
+            consider dropping the 'title' attribute of the procedure.
+        </p>
+
+        <procedure title="How to title" id="steps-sequence">
+            <step>
+                <p>Step with a code block.</p>
+
+                <code-block lang="plain text">
+                    Hello, world!
+                </code-block>
+            </step>
+
+            <step>
+                Step with a <a href="https://www.jetbrains.com">link</a>.
+            </step>
+
+            <step>
+                <p>Step with a list.</p>
+
+                <list>
+                    <li>
+                        <p>List item.</p>
+                    </li>
+                    <li>
+                        <p>List item.</p>
+                    </li>
+                    <li>
+                        <p>List item.</p>
+                    </li>
+                </list>
+            </step>
+        </procedure>
+    </chapter>
+</topic>

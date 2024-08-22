@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Tutorials" id="Tutorials" help-id="Tutorials">
+
+    <p>
+        Overview articles give background information and provide context to a particular subject.
+        Their goal is to explain a concept, not to teach or give instructions.
+    </p>
+
+    <chapter title="What is &lt;product/service/concept&gt;" id="overview-chapter" >
+        <p>Provide some background and context, explain choices and alternatives.</p>
+    </chapter>
+    <chapter title="Glossary" id="glossary">
+        <p>A definition list or a glossary:</p>
+        <deflist>
+            <def title="Term1">
+                This is the definition of the first term.
+            </def>
+            <def title="Term2">
+                This is the definition of the second term.
+            </def>
+        </deflist>
+    </chapter>
+</topic>

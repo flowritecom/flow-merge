@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="FAQ" id="FAQ">
+
+    <p>Start typing here...</p>
+
+    <show-structure/>
+
+    <chapter title="1. What is the main purpose of this library?">
+        The primary purpose of this library is to enable the seamless
+        merging of multiple large language models (LLMs) to enhance their capabilities,
+        combine their knowledge, or create custom models that leverage strengths
+        from different pre-existing models.
+    </chapter>
+
+    <chapter title="2. How does this library ensure the quality of the merged models?">
+        The library employs advanced algorithms that carefully align and integrate
+        the parameters and knowledge bases of the contributing models.
+        It also includes validation steps to compare the performance
+        of the merged model to the original models, ensuring high quality and reliability.
+    </chapter>
+
+    <chapter title="3. Is it possible to fine-tune the merged model?">
+        Yes, after merging the models, you can fine-tune the resulting model
+        on specific datasets relevant to your application. This allows you to
+        tailor the merged model’s performance to better suit specific tasks or domains.
+    </chapter>
+
+    <chapter title="4. What are the hardware requirements for running this library?">
+        Merging large language models isn't that computationally intensive but will require disk space and in many
+        cases a fair bit of ram depending on the size of the models to be merged. Here is an indicative table of
+        the hardware requirements.
+        <table>
+            <tr>
+                <td>(Name of approximate model) x (How many models)</td>
+                <td>Disk</td>
+                <td>RAM</td>
+            </tr>
+            <tr>
+                <td>Llama 3.1 8B x 2</td>
+                <td>14 GB</td>
+                <td>7 GB</td>
+            </tr>
+            <tr>
+                <td>etc</td>
+                <td>etc</td>
+                <td>etc</td>
+            </tr>
+            <tr>
+                <td>etc</td>
+                <td>etc</td>
+                <td>etc</td>
+            </tr>
+        </table>
+    </chapter>
+
+    <chapter title="Question 5">
+        Content
+    </chapter>
+
+
+
+
+</topic>

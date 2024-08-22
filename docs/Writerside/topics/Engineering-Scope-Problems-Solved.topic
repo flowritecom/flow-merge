@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Library scope" id="Engineering-Scope-Problems-Solved">
+
+    <show-structure depth="3"/>
+
+    <chapter title="Outline of the library">
+        This is an outline of the library and of the problems seeks to solve and descriptions of the solutions
+        it uses to do so. It's designed to help compare engineering decisions and identify
+        areas of improvement.
+
+        <chapter title="Specs" id="0chapter0">
+
+            <chapter title="Loading and validating the configuration" id="loading-and-validating-the-configuration">
+
+
+        <procedure title="Validating yaml fields"
+                   id="validating_yaml_fields"
+                   type="choices" collapsible="true"
+                   default-state="collapsed"
+        >
+            <step>
+                <p>Problem</p>
+            </step>
+            <step>
+                <p>Constraints</p>
+            </step>
+            <step>
+                <p>Functions used: snippet plus github link</p>
+            </step>
+            <step>
+                <code-block lang="python">
+                    def this_is_function(a):
+                    return a
+                </code-block>
+            </step>
+        </procedure>
+
+        <procedure title="Normalizing range-based slice notation" id="normalizing-range-based-slice-notation" type="choices" collapsible="true" default-state="collapsed">
+            <step>
+                <p>Problem</p>
+            </step>
+            <step>
+                <p>Constraints</p>
+            </step>
+            <step>
+                <p>Functions used: snippet plus github link</p>
+            </step>
+            <step>
+                <code-block lang="python">
+                    def this_is_function(a):
+                    return a
+                </code-block>
+            </step>
+        </procedure>
+
+            </chapter>
+
+        <chapter title="Loading models" id="loading-models">
+
+            <procedure title="Loading models from local" id="loading_models_from_local" type="choices" collapsible="true" default-state="collapsed">
+                <step>
+                    <p>Problem</p>
+                </step>
+                <step>
+                    <p>Constraints</p>
+                </step>
+                <step>
+                    <p>Functions used: snippet plus github link</p>
+                </step>
+                <step>
+                    <code-block lang="python">
+                        def this_is_function(a):
+                        return a
+                    </code-block>
+                </step>
+            </procedure>
+
+            <procedure title="Loading models from Hugging Face" id="loading_models_from_huggingface" type="choices" collapsible="true" default-state="collapsed">
+                <step>
+                    <p>Problem</p>
+                </step>
+                <step>
+                    <p>Constraints</p>
+                </step>
+                <step>
+                    <p>Functions used: snippet plus github link</p>
+                </step>
+                <step>
+                    <code-block lang="python">
+                        def this_is_function(a):
+                        return a
+                    </code-block>
+                </step>
+            </procedure>
+
+        </chapter>
+
+
+                <chapter title="Adapters" id="adapters">
+
+                    <procedure title="Loading adapter from Hugging Face" id="loading_adapter_from_hugging_face" type="choices" collapsible="true" default-state="collapsed">
+                        <step>
+                            <p>Problem</p>
+                        </step>
+                        <step>
+                            <p>Constraints</p>
+                        </step>
+                        <step>
+                            <p>Functions used: snippet plus github link</p>
+                        </step>
+                        <step>
+                            <code-block lang="python">
+                                def this_is_function(a):
+                                return a
+                            </code-block>
+                        </step>
+                    </procedure>
+
+                    <procedure title="Merging adapter" id="merging_adapter" type="choices" collapsible="true" default-state="collapsed">
+                        <step>
+                            <p>Problem</p>
+                        </step>
+                        <step>
+                            <p>Constraints</p>
+                        </step>
+                        <step>
+                            <p>Functions used: snippet plus github link</p>
+                        </step>
+                        <step>
+                            <code-block lang="python">
+                                def this_is_function(a):
+                                return a
+                            </code-block>
+                        </step>
+                    </procedure>
+
+                </chapter>
+
+        </chapter>
+    </chapter>
+
+
+
+
+
+</topic>

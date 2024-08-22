@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE topic
+                SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="CLI commands" id="CLI">
+
+<p>
+    A reference article is information-oriented.
+    It provides a structured description of a product:
+    its APIs, classes, functions, configuration options, actions, and so on.
+    Start with a summary of what this reference article is about, and what the items you are describing are used for.
+</p>
+
+<chapter title="Command" id="command">
+    <p>Syntax:</p>
+
+    <code-block lang="shell">
+        flow-merge [OPTIONS]
+    </code-block>
+</chapter>
+
+<chapter title="Options" id="options">
+    <p>Describe what each option is used for:</p>
+
+    <deflist type="medium">
+        <def title="-c, --config-file">
+            Opens a file.
+        </def>
+        <def title="-v --version">
+            Displays version information.
+        </def>
+        <def title="-h, --help">
+            Displays help.
+        </def>
+    </deflist>
+</chapter>
+
+<seealso>
+    <!--Provide links to related how-to guides, overviews, and tutorials.-->
+</seealso>
+</topic>

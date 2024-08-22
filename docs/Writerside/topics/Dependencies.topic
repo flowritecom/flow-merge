@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
+<topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
+       title="Dependencies" id="Dependencies">
+
+    <p>Here are dependencies of the project and how they are used.</p>
+
+    <code-block lang="python">
+        accelerate==0.32.1
+        huggingface-hub==0.23.4
+        peft==0.11.1
+        pydantic==2.8.2
+        pyyaml==6.0.1
+        safetensors==0.4.3
+        torch==2.3.1
+        transformers==4.42.4
+    </code-block>
+    <deflist>
+        <def title="accelerate">Used for</def>
+        <def title="huggingface-hub">Used for</def>
+        <def title="peft">Used for</def>
+        <def title="pydantic">Used for</def>
+        <def title="pyyaml">Used for</def>
+        <def title="safetensors">Used for</def>
+        <def title="torch">Used for</def>
+        <def title="transformers">Used for</def>
+    </deflist>
+</topic>
