@@ -11,7 +11,7 @@ permissions:
 
 env:
   INSTANCE: 'Writerside/flow-merge'
-  ARTIFACT: 'webHelpFLOW-MERGE-all'
+  ARTIFACT: 'webHelpFLOW-MERGE2-all.zip'
   DOCKER_VERSION: '241.18775'
 
 jobs:
