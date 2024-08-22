@@ -3,7 +3,7 @@
         SYSTEM "https://resources.jetbrains.com/writerside/1.0/xhtml-entities.dtd">
 <topic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="https://resources.jetbrains.com/writerside/1.0/topic.v2.xsd"
-       title="Tutorials" id="Tutorials" help-id="Tutorials">
+       title="Tutorials" id="Tutorials">
 
     <p>
         Overview articles give background information and provide context to a particular subject.
