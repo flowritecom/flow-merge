@@ -10,7 +10,7 @@ permissions:
   pages: write
 
 env:
-  INSTANCE: 'docs/Writerside/flow-merge'
+  INSTANCE: 'Writerside/flow-merge'
   ARTIFACT: 'webHelpFLOW-MERGE-all.zip'
   DOCKER_VERSION: '241.18775'
 
