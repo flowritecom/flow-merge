@@ -150,7 +150,9 @@
                         2. special tokens<br/>
                         3. added tokens encoders<br/><br/>
 
-                        Firstly, we attempt to find <b>difference in vocabularies</b>. This means the __ that the model __. </p>
+                        Firstly, we attempt to find
+                        <a href="https://github.com/flowritecom/flow-merge/blob/269024353477df4e05cc592722eb095a88960e3a/flow_merge/lib/tokenizer.py#L53">
+                            <b>difference in vocabularies</b></a>. This means the __ that the model __. </p>
                         <code-block lang="python">
                             @staticmethod
                             def _compare_tokenizer_vocabs(
@@ -167,8 +169,21 @@
                                     return True
                                 return False
                         </code-block>
+                        <br/>
+                        In the above, we leverage the method from Hugging Face transformers library called
+                        <a href="https://github.com/huggingface/transformers/blob/6baa6f276a7b81776e426cdade06015aaf2baf80/src/transformers/models/llama/tokenization_llama.py#L228">
+                            <b>get_vocab()</b></a> which returns the vocab of the tokenizer as a dictionary, and we compare the dictionaries for equality.
+                        <code-block lang="python">
+                            # example implementation from Llama architecture
+                            def get_vocab(self):
+                            """Returns vocab as a dict"""
+                            vocab = {self.convert_ids_to_tokens(i): i for i in range(self.vocab_size)}
+                            vocab.update(self.added_tokens_encoder)
+                            return vocab
+                        </code-block>
                         <br/><p>
-                        Secondly, we <b>compare the special tokens</b>, which ___. </p>
+                        Secondly, we <a href="https://github.com/flowritecom/flow-merge/blob/269024353477df4e05cc592722eb095a88960e3a/flow_merge/lib/tokenizer.py#L68">
+                        <b>compare the special tokens</b></a>, which __ purpose here ___. </p>
                         <code-block lang="python">
                             @staticmethod
                             def _compare_special_tokens(
@@ -185,8 +200,29 @@
                                     return True
                                 return False
                         </code-block>
+                        <br/>
+                        To do so, we use the property of the tokenizer from Hugging Face transformers library called
+                        <a href="https://github.com/huggingface/transformers/blob/c42d264549b31c104c812892978b83505c552125/src/transformers/tokenization_utils_base.py#L1297">
+                            <b>special_tokens_map (HF)</b></a> which gives us the mapping of ___. We then compare both mappings for equality.
+                        <code-block lang="python">
+                            @property
+                            def special_tokens_map(self) -> Dict[str, Union[str, List[str]]]:
+                                """
+                                `Dict[str, Union[str, List[str]]]`: A dictionary mapping special token class attributes (`cls_token`,
+                                `unk_token`, etc.) to their values (`'unk'`, 'cls', etc.).
 
-                        <br/><p>Thirdly, we <b>compare added tokens encoders</b>, which ___.</p>
+                                Convert potential tokens of `tokenizers.AddedToken` type to string.
+                                """
+                                set_attr = {}
+                                for attr in self.SPECIAL_TOKENS_ATTRIBUTES:
+                                    attr_value = getattr(self, attr)
+                                if attr_value:
+                                    set_attr[attr] = attr_value
+                                return set_attr
+                        </code-block>
+
+                        <br/><p>Thirdly, we <a href="https://github.com/flowritecom/flow-merge/blob/269024353477df4e05cc592722eb095a88960e3a/flow_merge/lib/tokenizer.py#L83">
+                        <b>compare added tokens encoders</b></a>, which ___ do what __.</p>
                         <code-block lang="python">
                             @staticmethod
                             def _compare_added_tokens_encoders(
@@ -204,7 +240,25 @@
                                     return True
                                 return False
                         </code-block>
-                        <br/><p>And finally, we put everything together and form a logical <b>union set</b> from the three checking methods.
+                        <br/>
+                        To do so we utilize the property of the tokenizer, similarly to the above, called
+                        <a href="https://github.com/huggingface/transformers/blob/8b94d28f97b7208d1ff3db201a3db49904b48bad/src/transformers/tokenization_utils.py#L455">
+                            <b>added_tokens_encoder (HF)</b></a>. The purpose of ___.
+                        <code-block lang="python">
+                            @property
+                            def added_tokens_encoder(self) -> Dict[str, int]:
+                                """
+                                Returns the sorted mapping from string to index. The added tokens encoder is cached for performance
+                                optimisation in `self._added_tokens_encoder` for the slow tokenizers.
+                                """
+                                return {k.content: v for v, k in sorted(self._added_tokens_decoder.items(), key=lambda item: item[0])}
+                        </code-block>
+
+
+
+                        <br/><p>Lastly, we put everything together and form a logical
+                        <a href="https://github.com/flowritecom/flow-merge/blob/269024353477df4e05cc592722eb095a88960e3a/flow_merge/lib/tokenizer.py#L40">
+                        <b>union set</b></a> from the three checking methods.
                         If even one of them fails, we record that there are differences as the output of this function,
                         and in the next steps we proceed to merge a common tokenizer to eliminate that difference.</p>
                         <code-block lang="python">
