@@ -63,8 +63,8 @@ class ModelWeight(BaseModel):
         projection: The projection of the weight if applicable. For self_attn and mlp only. Default to None.
     """
     name: str
-    type: ModelWeightType
-    layer_type: ModelWeightLayerType
+    type: Optional[ModelWeightType] = None
+    layer_type: Optional[ModelWeightLayerType] = None
     projection: Optional[ProjectionType] = None
 
 
@@ -101,6 +101,7 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
     weights: List[ModelWeight]
     model_type: ModelType
     config: PretrainedConfig
+    raw_weights: List[ModelWeight]
 
     @classmethod
     def from_path_or_id(
@@ -144,12 +145,11 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
             weights=model_weights,
             model_type=arch["model_type"],
             config=config,
+            raw_weights=[ModelArchitecture._create_weight(w) for w in arch["weights"]]
         )
 
     @staticmethod
-    def _generate_model_weights(
-            arch: dict, config: PretrainedConfig
-    ) -> List[ModelWeight]:
+    def _generate_model_weights(arch: dict, config: PretrainedConfig) -> List[ModelWeight]:
         model_weights: List[ModelWeight] = []
 
         for weight in arch["weights"]:
@@ -166,7 +166,6 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
                 raise RuntimeError(
                     f"Invalid weight type {weight_type} in model {arch['model_type']} template."
                 )
-
         return model_weights
 
     @staticmethod
@@ -179,10 +178,8 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
         )
 
     @staticmethod
-    def _create_decoder_weights(weight: dict, config: PretrainedConfig
-                                ) -> List[ModelWeight]:
+    def _create_decoder_weights(weight: dict, config: PretrainedConfig) -> List[ModelWeight]:
         decoder_weights: List[ModelWeight] = []
-        config.num_hidden_layers = 20
         for layer_index in range(config.num_hidden_layers):
             decoder_weight = ModelWeight(
                 name=re.sub(r"{layer_index}", str(layer_index), weight["name"]),

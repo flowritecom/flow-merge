@@ -101,8 +101,8 @@ class TiesMergingSettings(TaskArithmeticSettings):
 
 
 class TaskArithmetic:
+    @staticmethod
     def merge(
-            self,
             tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool]],
             merge_method_settings: Union[TaskArithmeticSettings, TiesMergingSettings],
     ) -> torch.Tensor:
@@ -110,7 +110,7 @@ class TaskArithmetic:
         base: Tuple[torch.Tensor, float, bool] = [t for t in tensors_weights_pairs if t[2] is True][0]
         base_tensor_dtype = base[0].dtype
 
-        task_vectors: List[Tuple[torch.Tensor, float]] = self._get_task_vectors(
+        task_vectors: List[Tuple[torch.Tensor, float]] = TaskArithmetic._get_task_vectors(
             base[0], tensors_weights_pairs
         )
 
@@ -120,20 +120,20 @@ class TaskArithmetic:
 
         if type(merge_method_settings) == TiesMergingSettings:
             # Ties-merging top-k pruning
-            task_vectors = self._topk_pruning(task_vectors, merge_method_settings.top_k)
+            task_vectors = TaskArithmetic._topk_pruning(task_vectors, merge_method_settings.top_k)
 
         if type(merge_method_settings) == DareTiesMergingSettings:
-            task_vectors = self._dare_pruning(task_vectors, merge_method_settings.p)
+            task_vectors = TaskArithmetic._dare_pruning(task_vectors, merge_method_settings.p)
 
         # _apply_weights(task_vectors, merge_method_settings.weights)
-        weighted_task_vectors, weights_tensors = self._prepare_task_vectors(task_vectors)
+        weighted_task_vectors, weights_tensors = TaskArithmetic._prepare_task_vectors(task_vectors)
 
         if type(merge_method_settings) in [
             TiesMergingSettings,
             DareTiesMergingSettings,
         ]:
             # TIES-merging sign resolution and disjoint merge
-            new_task_vector = self._resolve_signs_and_dis_merge(
+            new_task_vector = TaskArithmetic._resolve_signs_and_dis_merge(
                 weighted_task_vectors=weighted_task_vectors,
                 weights_tensors=weights_tensors,
                 normalize=merge_method_settings.normalize,
@@ -155,8 +155,9 @@ class TaskArithmetic:
 
         return merged_tensor.to(dtype=base_tensor_dtype)
 
+    @staticmethod
     def _get_task_vectors(
-            self, base_model_tensor: torch.Tensor, models_tensors: List[Tuple[torch.Tensor, float, bool]]
+            base_model_tensor: torch.Tensor, models_tensors: List[Tuple[torch.Tensor, float, bool]]
     ) -> List[Tuple[torch.Tensor, float]]:
         """
         Obtain the task vectors (or deltas) from a pre-trained model tensor and a set of model tensors as described in the paper Editing Models with Task Arithmetic (https://arxiv.org/abs/2212.04089)
@@ -186,8 +187,9 @@ class TaskArithmetic:
         else:
             return task_vectors
 
+    @staticmethod
     def _prepare_task_vectors(
-            self, task_vectors: List[Tuple[torch.Tensor, float]]
+            task_vectors: List[Tuple[torch.Tensor, float]]
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Prepare task vectors for merging by applying weights to each task vector.
@@ -215,9 +217,8 @@ class TaskArithmetic:
 
         return weighted_task_vectors, weights_tensors
 
-    def _topk_pruning(
-            self, task_vectors: List[Tuple[torch.Tensor, float]], top_k: float
-    ) -> List[Tuple[torch.Tensor, float]]:
+    @staticmethod
+    def _topk_pruning(task_vectors: List[Tuple[torch.Tensor, float]], top_k: float) -> List[Tuple[torch.Tensor, float]]:
         """
         Performs top-k pruning on task vectors as described in TIES-MERGING: Resolving Interference When
         Merging Models (https://arxiv.org/abs/2306.01708)
@@ -259,8 +260,8 @@ class TaskArithmetic:
 
         return pruned_task_vectors
 
+    @staticmethod
     def _resolve_signs_and_dis_merge(
-            self,
             weighted_task_vectors: torch.Tensor,
             weights_tensors: torch.Tensor,
             sign_consensus_method: str = "mass",
@@ -312,18 +313,15 @@ class TaskArithmetic:
             )
 
         # Disjoint merge as describe in paper
-        merged_task_vector = self._disjoint_merge(
+        merged_task_vector = TaskArithmetic._disjoint_merge(
             masked_weighted_task_vectors, weights_tensors, normalize=normalize
         )
 
         return merged_task_vector
 
-    def _disjoint_merge(
-            self,
-            masked_weighted_task_vectors: torch.Tensor,
-            weights_tensors: torch.Tensor,
-            normalize: bool = True,
-    ) -> torch.Tensor:
+    @staticmethod
+    def _disjoint_merge(masked_weighted_task_vectors: torch.Tensor, weights_tensors: torch.Tensor,
+                        normalize: bool = True, ) -> torch.Tensor:
         """
         Calculate the disjoint merge of masked task vectors.
 
@@ -369,9 +367,8 @@ class TaskArithmetic:
 
         return avg_task_vector
 
-    def _dare_pruning(
-            self, task_vectors: List[Tuple[torch.Tensor, float]], p: float
-    ) -> List[Tuple[torch.Tensor, float]]:
+    @staticmethod
+    def _dare_pruning(task_vectors: List[Tuple[torch.Tensor, float]], p: float) -> List[Tuple[torch.Tensor, float]]:
         """
         Performs drop and rescale pruning on task vectors as described in Language Models are Super Mario:
         Absorbing Abilities from Homologous Models as a Free Lunch (https://arxiv.org/abs/2311.03099)

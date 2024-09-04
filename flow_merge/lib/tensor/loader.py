@@ -56,7 +56,7 @@ class TensorRepository:
             RuntimeError: If the shard file path does not exist.
             ValueError: If the file type is unsupported.
         """
-        path_to_shard = shard_file.path
+        path_to_shard = shard_file.path / shard_file.filename
         if not path_to_shard.exists():
             raise RuntimeError(f"Path {path_to_shard} to shard file doesn't exist!")
 

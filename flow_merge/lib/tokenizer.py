@@ -185,7 +185,9 @@ class MergeTokenizerService:
         self.config = app_config
 
     def get_merge_tokenizer(self, merge_plan: MergePlan) -> Tokenizer:
-        all_models = list(set([source.model for slice in merge_plan.slices for source in slice.sources]))
+        all_models = list(
+            set([source.model for slice in merge_plan.slices for source in slice.sources] + [merge_plan.base_model])
+        )
         all_tokenizers = self._load_all_tokenizers(all_models)
 
         if not TokenizerValidator.check_tokenizers_for_differences(all_tokenizers):

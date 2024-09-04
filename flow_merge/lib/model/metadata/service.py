@@ -22,7 +22,7 @@ class ModelMetadataService:
                 logger.info("Model found locally, loading from local directory")
                 return self._load_local_model_metadata(id, path_to_model)
             except EnvironmentError as e:
-                logger.warning("Failed to load model info from local file, trying HuggingFace", e)
+                logger.warning(f"Failed to load model info from local file, trying HuggingFace ({e.__str__()})")
 
         try:
             return self._load_hf_model_metadata(id, path_to_model)
@@ -38,24 +38,42 @@ class ModelMetadataService:
             files_metadata=True,
             token=self.app_config.hf_token,
         )
+        all_files = [s.rfilename for s in hf_model_info.siblings]
+
         model_metadata = ModelMetadata(
             **hf_model_info.__dict__,
             relative_path=path_to_model,
             absolute_path=path_to_model.resolve(),
+            file_list=all_files,
+            has_config="config.json" in all_files,
+            has_vocab="tokenizer.json" in all_files or any(file.endswith("tokenizer.vocab") for file in all_files),
+            has_tokenizer_config="tokenizer_config.json" in all_files,
+            has_pytorch_bin_index=any(file.endswith(".bin.index.json") for file in all_files),
+            has_safetensors_index=any(file.endswith(".safetensors.index.json") for file in all_files),
+            has_safetensor_files=self._has_safetensors_files(all_files),
+            has_pytorch_bin_files=self._has_pytorch_bin_files(all_files),
+            has_adapter=any(
+                file.startswith("adapter_")
+                and (file.endswith(".bin") or file.endswith(".safetensors"))
+                for file in all_files
+            ),
+
         )
         return model_metadata
 
     def _load_local_model_metadata(self, id: str, path_to_model: Path):
 
         all_files = [file_path.name for file_path in path_to_model.glob("*")]
+        has_config = Path(path_to_model / "config.json").exists()
+        config = PretrainedConfig.from_json_file(str(path_to_model / "config.json")).to_dict() if has_config else None
         model_metadata = ModelMetadata(
             id=id,
             file_list=all_files,
-            config=PretrainedConfig.from_json_file(str(path_to_model / "config.json")).to_dict(),
+            config=config,
             hf_exists=False,
             relative_path=path_to_model,
             absolute_path=path_to_model.resolve(),
-            has_config=Path(path_to_model / "config.json").exists(),
+            has_config=has_config,
             has_vocab="tokenizer.json" in all_files or any(file.endswith("tokenizer.vocab") for file in all_files),
             has_tokenizer_config="tokenizer_config.json" in all_files,
             has_pytorch_bin_index=any(file.endswith(".bin.index.json") for file in all_files),
@@ -95,7 +113,7 @@ class ModelMetadataService:
         if not num_shards:
             return False
 
-        if num_shards == 1 and "model.safetensors" in file_list:
+        if num_shards == 1 and ("model.safetensors" in file_list or "adapter_model.safetensors" in file_list):
             return True
 
         return all(

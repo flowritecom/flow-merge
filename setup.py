@@ -11,7 +11,7 @@ setup(
     install_requires=[
         "accelerate==0.32.1",
         "huggingface-hub==0.23.4",
-        "peft==0.11.1",
+        "peft==0.12.0",
         "pydantic==2.8.2",
         "pyyaml==6.0.1",
         "safetensors==0.4.3",

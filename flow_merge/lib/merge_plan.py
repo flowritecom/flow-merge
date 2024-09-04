@@ -23,7 +23,7 @@ class MergePlan(BaseModel):
 
     @classmethod
     def from_config(cls, config: MergeConfig, normalization_runner: NormalizationRunner) -> "MergePlan":
-        slices, num_hidden_layers = normalization_runner.normalize({
+        slices = normalization_runner.normalize({
             "base_model": config.base_model,
             "definition": config.definition,
         })
@@ -32,7 +32,6 @@ class MergePlan(BaseModel):
             base_model=config.base_model,
             tokenizer_mode=config.tokenizer_mode,
             tokenizer_interpolation_method=config.tokenizer_interpolation_method,
-            normalization_runner=normalization_runner,
             slices=slices,
         )
 

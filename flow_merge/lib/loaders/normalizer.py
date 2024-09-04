@@ -24,6 +24,8 @@ class MergeMethod(BaseModel):
 class NormalizedSlice(BaseModel):
     merge_method: MergeMethod
     sources: List[NormalizedSource]
+    output_layer_id: int
+    output_layer_name: str
 
 
 class _Source:
@@ -65,11 +67,13 @@ class _MergeMethod:
 
 class _Slice:
     output_layer_id: int
+    output_layer_name: str
     layers: Optional[List[str]] = None
     sources: List[_Source] = None
     merge_method: _MergeMethod
 
     def __init__(self, **kwargs):
+        self.output_layer_name = kwargs["output_layer_name"] if "output_layer_name" in kwargs else None
         self.output_layer_id = kwargs["output_layer_id"] if "output_layer_id" in kwargs else None
         self.layers = kwargs["layers"] if "layers" in kwargs else None
         self.sources = [
@@ -185,7 +189,8 @@ class NormalizationRunner:
                     get_plain_sources(normalized_data[0].sources),
                     special_layer.name,
                     _MergeMethod(name="interpolate"),
-                    0
+                    0,
+                    special_layer.name,
                 )
                 normalized_data.append(embed_slice)
 
@@ -194,7 +199,8 @@ class NormalizationRunner:
                     get_plain_sources(normalized_data[len(normalized_data) - 1].sources),
                     special_layer.name,
                     _MergeMethod(name="interpolate"),
-                    self._get_last_output_slice_id(normalized_data) + 1
+                    self._get_last_output_slice_id(normalized_data) + 1,
+                    special_layer.name,
                 )
                 normalized_data.append(norm_slice)
 
@@ -203,7 +209,8 @@ class NormalizationRunner:
                     get_plain_sources(normalized_data[len(normalized_data) - 1].sources),
                     special_layer.name,
                     _MergeMethod(name="interpolate"),
-                    self._get_last_output_slice_id(normalized_data) + 1
+                    self._get_last_output_slice_id(normalized_data) + 1,
+                    special_layer.name,
                 )
                 normalized_data.append(lm_head_slice)
         return normalized_data
@@ -281,20 +288,27 @@ class NormalizationRunner:
                 raise Exception("Layer defined for merging must be a hidden layer (pattern layer)")
 
             user_defined_layer = re.sub(r'\.\d+\.', ".{layer_index}.", base_source.layer)
-            remaining_layers = [l for _, l in self.models_layers[base_model].items() if l.name != user_defined_layer]
+            remaining_layers = [l for _, l in self.models_layers[base_model].items() if l.name != user_defined_layer and l.layer_type.value == "decoder"]
 
-            user_defined_slice = [
-                self._create_slice(slice.sources, None, slice.merge_method, slice.output_layer_id)]
+            user_defined_slice = self._create_slice(
+                slice.sources,
+                None,
+                slice.merge_method,
+                slice.output_layer_id,
+                output_layer_name=user_defined_layer.format(layer_index=slice.output_layer_id)
+            )
             remaining_slices = [
                 self._create_slice(
                     [base_source],
                     layer.name.format(layer_index=user_defined_layer_id[0]),
                     _MergeMethod(name="passthrough"),
-                    slice.output_layer_id)
+                    slice.output_layer_id,
+                    output_layer_name=layer.name.format(layer_index=slice.output_layer_id)
+                )
                 for layer in remaining_layers
             ]
 
-            return user_defined_slice + remaining_slices
+            return [user_defined_slice] + remaining_slices
 
         raise Exception("Neither range or layers defined for merging")
 
@@ -304,7 +318,8 @@ class NormalizationRunner:
                 raise Exception(f"Layer '{l}' does not exist in the model")
 
     def _create_slice(
-            self, sources: List[_Source], layer: Optional[str], merge_method: _MergeMethod, output_layer_id: int
+            self, sources: List[_Source], layer: Optional[str], merge_method: _MergeMethod, output_layer_id: int,
+            output_layer_name: str,
     ) -> _Slice:
         # creates a slice, sets merge_method and layer
         # while making sure to keep all other keys.
@@ -319,6 +334,7 @@ class NormalizationRunner:
             for src in sources
         ]
         return _Slice(
+            output_layer_name=output_layer_name,
             output_layer_id=output_layer_id,
             merge_method=merge_method,
             sources=sources_with_layer,
@@ -345,16 +361,12 @@ class NormalizationRunner:
 
         for m in all_models:
             arch = self.model_arch_provider.get_by_id(m)
-            self.models_layers[m] = {
-                weight.name: weight for weight in arch.weights
-            }
+            self.models_layers[m] = {weight.name: weight for weight in arch.raw_weights}
 
             # Group weights in type groups
             self.models_layers_by_type[m] = {
-                weight.type: [
-                    w for w in arch.weights if w.type is weight.type
-                ]
-                for weight in arch.weights
+                weight.type: [w for w in arch.raw_weights if w.type is weight.type]
+                for weight in arch.raw_weights
             }
 
     def _move_embed_slice_to_top(self, normalized_data: List[_Slice]) -> List[_Slice]:

@@ -35,11 +35,12 @@ def _create(name: Type[Any]) -> object:
         return NormalizationRunner(get(ModelArchitectureProvider))
     elif name is ModelService:
         return ModelService(config=config.app_config.get(), tensor_index_service=get(TensorIndexService),
-                            file_repository=get(FileRepository), tensor_repository=get(TensorRepository))
+                            file_repository=get(FileRepository), tensor_repository=get(TensorRepository),
+                            metadata_service=get(ModelMetadataService))
     elif name is TensorRepository:
         return TensorRepository()
     elif name is FileRepository:
-        return FileRepository()
+        return FileRepository(config.app_config.get())
     elif name is TensorIndexService:
         return TensorIndexService()
     else:

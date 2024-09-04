@@ -2,10 +2,12 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 import torch
-from peft import PeftConfig, PeftModel
+from peft import PeftConfig, PeftModel, PeftMixedModel
+from transformers import AutoModel
+
 from flow_merge.lib.model.architecture import ModelWeight
 from flow_merge.lib.config import ApplicationConfig, DeviceIdentifier
-from flow_merge.lib.model.metadata import ModelMetadata
+from flow_merge.lib.model.metadata import ModelMetadata, ModelMetadataService
 from flow_merge.lib.tensor.index import TensorIndexService
 from flow_merge.lib.tensor.loader import ShardFile, TensorRepository
 from flow_merge.lib.tensor.writer import TensorWriter
@@ -18,10 +20,11 @@ class ModelService:
     """Manages the overall process of handling models."""
 
     def __init__(self, tensor_repository: TensorRepository, tensor_index_service: TensorIndexService,
-                 file_repository: FileRepository, config: ApplicationConfig):
+                 file_repository: FileRepository, metadata_service: ModelMetadataService, config: ApplicationConfig):
         self.file_repository = file_repository
         self.tensor_repository = tensor_repository
         self.tensor_index_service = tensor_index_service
+        self.metadata_service = metadata_service
         self.config = config
 
     def download_and_return_shard_file(
@@ -98,7 +101,6 @@ class ModelService:
         self.file_repository.download_required_files(model_metadata)
 
         # If it has adapter, we continue with different procedure (how different though?)
-        # fixme: go through has_adatper path
         if model_metadata.has_adapter:
             return self.merge_and_save_model(model_metadata)
 
@@ -130,60 +132,66 @@ class ModelService:
         )
         return [shard_file]
 
-    # Merging adapters
-    def determine_base_model_shards(self, model_metadata: ModelMetadata) -> List[str]:
-        if model_metadata.has_safetensor_files:
-            base_model_shards = [
-                f
-                for f in model_metadata.file_list
-                if f.startswith("model-") and f.endswith(".safetensors")
-            ]
-            if not base_model_shards:
-                base_model_shards = ["model.safetensors"]
-        else:
-            base_model_shards = [
-                f
-                for f in model_metadata.file_list
-                if f.startswith("pytorch_model-") and f.endswith(".bin")
-            ]
-            if not base_model_shards:
-                base_model_shards = ["pytorch_model.bin"]
-
-        return base_model_shards
-
-    def load_and_apply_adapters(self, base_model_shards: List[str], repo_id: str, local_dir: Path) -> torch.nn.Module:
-        logger.info("Loading and applying adapters: load_and_apply_adapters")
-        shard_paths = []
-        for shard_file in base_model_shards:
-            shard_path = self.file_repository.download_file(repo_id, shard_file, local_dir)
-            shard_paths.append(shard_path)
-
-        peft_config = PeftConfig.from_pretrained(str(local_dir))
-        return PeftModel.from_pretrained(shard_paths, peft_config=peft_config)
-
-    @staticmethod
     def save_model_shards(
             base_model: torch.nn.Module, output_dir: Path
-    ) -> List[ShardFile]:
+    ) -> List[Path]:
         logger.info("Saving model shard files: save_model_shards")
         shard_files = []
         with TensorWriter(output_dir) as writer:
             for name, param in base_model.named_parameters():
-                writer.save_tensor(ModelWeight(name=name), param)
-                shard_files.append(ShardFile(filename=name, path=str(output_dir)))
+                shard_name = writer.save_tensor(weight=ModelWeight(name=name), tensor=param)
+                # name is incorrect here
+                shard_files.append(output_dir / shard_name)
             writer.finish()
         return shard_files
 
     def merge_and_save_model(self, model_metadata: ModelMetadata) -> List[ShardFile]:
         logger.info("Merging adapter and saving model: merge_and_save_model")
         self.file_repository.download_adapter_files(model_metadata)
-        base_model_shards = self.determine_base_model_shards(model_metadata)
 
-        base_model = self.load_and_apply_adapters(
-            base_model_shards=base_model_shards,
-            repo_id=model_metadata.id,
-            local_dir=model_metadata.directory_settings.local_dir,
-        )
-        return self.save_model_shards(
-            base_model, model_metadata.directory_settings.output_dir
-        )
+
+        # Peft configuration of the adapter repo
+        adapter_config = PeftConfig.from_pretrained(str(model_metadata.relative_path))
+
+        # Download minimal required files of the base model
+        base_model_metadata = self.metadata_service.load_model_metadata(adapter_config.base_model_name_or_path)
+        self.file_repository.download_required_files(base_model_metadata)
+        # Determine base_model shards
+        files = base_model_metadata.file_list
+        if base_model_metadata.has_safetensor_files:
+            base_model_shards = [f for f in files if f.startswith("model-") and f.endswith(".safetensors")] or [
+                "model.safetensors"]
+        else:
+            base_model_shards = [f for f in files if f.startswith("pytorch_model-") and f.endswith(".bin")] or [
+                "pytorch_model.bin"]
+
+        # Model already merged
+        if Path(model_metadata.relative_path / "config.json").exists():
+            return [
+                ShardFile(
+                    filename=f,
+                    path=model_metadata.absolute_path,
+                    tensor_keys=self.tensor_repository.get_tensor_keys_from_file(model_metadata.absolute_path / f,
+                                                                                 device=self.config.device)
+                ) for f in base_model_shards]
+
+        # Merge base model with adapter and get resulting model
+        logger.info("Loading and applying adapters: load_and_apply_adapters")
+        for shard_file in base_model_shards:
+            self.file_repository.download_file(base_model_metadata.id, shard_file, base_model_metadata.absolute_path)
+
+        base_model = AutoModel.from_pretrained(base_model_metadata.absolute_path)
+        model = PeftModel.from_pretrained(base_model, peft_config=adapter_config, model_id=model_metadata.id)
+        model.set_adapter("default")
+        merged_model = model.merge_and_unload()
+        merged_model.save_pretrained(model_metadata.absolute_path)
+
+        shard_files = [
+            ShardFile(
+                filename=f,
+                path=model_metadata.absolute_path,
+                tensor_keys=self.tensor_repository.get_tensor_keys_from_file(model_metadata.absolute_path / f,
+                                                                             device=self.config.device)
+            ) for f in base_model_shards]
+
+        return shard_files

@@ -5,6 +5,7 @@ from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.merge_methods import MergeMethodIdentifier, TaskArithmetic, TiesMergingSettings, \
     DareTiesMergingSettings, TaskArithmeticSettings
 from flow_merge.lib.merge_methods.linear import merge_linear
+from flow_merge.lib.merge_methods.passthrough import merge_passthrough
 from flow_merge.lib.merge_methods.slerp import merge_slerp, SlerpSettings
 from flow_merge.lib.merge_plan import MergePlan
 from flow_merge.lib.model.architecture import ModelWeight, ModelArchitectureProvider
@@ -15,6 +16,15 @@ from flow_merge.lib.tokenizer import MergeTokenizerService
 from flow_merge.lib.merger.interpolation import InterpolationRunner
 
 logger = logging.getLogger(__name__)
+
+_merge_methods = {
+    MergeMethodIdentifier.PASSTHROUGH: merge_passthrough,
+    MergeMethodIdentifier.MODEL_SOUP: merge_linear,
+    MergeMethodIdentifier.SLERP: merge_slerp,
+    MergeMethodIdentifier.TIES_MERGING: TaskArithmetic.merge,
+    MergeMethodIdentifier.DARE_TIES_MERGING: TaskArithmetic.merge,
+    MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC: TaskArithmetic.merge,
+}
 
 
 class Merger:
@@ -45,7 +55,7 @@ class Merger:
     ):
         tokenizer = self.tokenizer_service.get_merge_tokenizer(merge_plan)
 
-        output = []
+        output: List[torch.tensor] = []
 
         for idx, s in enumerate(merge_plan.slices):
             logger.debug(f"Merging slice {idx}")
@@ -62,13 +72,6 @@ class Merger:
                 )
                 tensors_weights_pairs.append((tensor, source.weight, source.is_base))
 
-            # hidden_dim = self._validate_tensor_shapes(
-            #     base_model_weight=task_base_model_weight,
-            #     tensors=all_tensors,
-            #     base_model_layer_type=task_base_model_weight.layer_type
-            # )
-
-            # FIXME we want to temp save here
             if tokenizer.input_ids_mappings and s.merge_method.name == MergeMethodIdentifier.INTERPOLATE:
                 hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id).output_layer_id + 1
                 output.append(InterpolationRunner.interpolate(
@@ -78,36 +81,30 @@ class Merger:
                     hidden_dim=hidden_dim
                 ))
                 continue
-
-            if s.merge_method.name == MergeMethodIdentifier.MODEL_SOUP:
-                output.append(merge_linear(
-                    tensors_weights_pairs=tensors_weights_pairs,
-                    merge_method_settings={**s.merge_method.params}
-                ))
+            elif s.merge_method.name == MergeMethodIdentifier.INTERPOLATE:
                 continue
+
+            merge_alg_settings = {}
+            if s.merge_method.name == MergeMethodIdentifier.MODEL_SOUP:
+                merge_alg_settings = {**s.merge_method.params}
 
             if s.merge_method.name == MergeMethodIdentifier.SLERP:
-                output.append(merge_slerp(
-                    tensors_weights_pairs=tensors_weights_pairs,
-                    merge_method_settings=SlerpSettings(**(s.merge_method.params or {})),
-                ))
-                continue
+                merge_alg_settings = SlerpSettings(**(s.merge_method.params or {}))
 
             if (s.merge_method.name in [MergeMethodIdentifier.TIES_MERGING,
                                         s.merge_method.name == MergeMethodIdentifier.DARE_TIES_MERGING,
                                         s.merge_method.name == MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC
                                         ]):
-                task_arithmetic_merger = TaskArithmetic()  # fixme: for now an object instance, let's see if needed later
                 settings_class = {
                     MergeMethodIdentifier.TIES_MERGING: TiesMergingSettings,
                     MergeMethodIdentifier.DARE_TIES_MERGING: DareTiesMergingSettings,
                     MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC: TaskArithmeticSettings,
                 }
+                merge_alg_settings = settings_class[s.merge_method.name](**s.merge_method.params)
 
-                output.append(task_arithmetic_merger.merge(
-                    tensors_weights_pairs=tensors_weights_pairs,
-                    merge_method_settings=settings_class[s.merge_method.name](**s.merge_method.params),
-                ))
-                continue
+            output.append((s.output_layer_name, _merge_methods[s.merge_method.name](
+                tensors_weights_pairs=tensors_weights_pairs,
+                merge_method_settings=merge_alg_settings,
+            )))
 
         print(output)

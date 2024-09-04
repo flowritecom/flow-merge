@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 import sys
 from enum import Enum
@@ -92,13 +93,13 @@ def run(args):
             config = load_configuration_from_file(path)
             merge_plan = MergePlan.from_config(config, normalization_runner=di.get(NormalizationRunner))
     except Exception as e:
-        sys.exit(str(e))
+        raise e
 
-    try:
-        merger: Merger = di.get(Merger)
-        merger.execute(merge_plan)
-    except Exception as e:
-        raise Exception("Unexpected error while merging") from e
+    # try:
+    merger: Merger = di.get(Merger)
+    merger.execute(merge_plan)
+    # except Exception as e:
+    #     raise Exception("Unexpected error while merging") from e
 
 
 def plan(args):
@@ -123,6 +124,7 @@ def plan(args):
 
 
 def main():
+    logging.getLogger(__name__).setLevel(logging.DEBUG)
     app_config.set(ApplicationConfig())
 
     parser = argparse.ArgumentParser(description="Flow merge CLI")
