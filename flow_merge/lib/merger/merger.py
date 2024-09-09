@@ -1,6 +1,7 @@
 import logging
 from typing import List, Tuple
 import torch
+from transformers import PretrainedConfig
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.merge_methods import MergeMethodIdentifier, TaskArithmetic, TiesMergingSettings, \
     DareTiesMergingSettings, TaskArithmeticSettings
@@ -12,8 +13,10 @@ from flow_merge.lib.model.architecture import ModelWeight, ModelArchitectureProv
 from flow_merge.lib.model.metadata import ModelMetadataService
 from flow_merge.lib.model.service import ModelService
 from flow_merge.lib.tensor.loader import TensorRepository
+from flow_merge.lib.tensor.writer import TensorWriter
 from flow_merge.lib.tokenizer import MergeTokenizerService
 from flow_merge.lib.merger.interpolation import InterpolationRunner
+from flow_merge.lib.hf.upload import generate_model_card
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +59,11 @@ class Merger:
         tokenizer = self.tokenizer_service.get_merge_tokenizer(merge_plan)
 
         output: List[torch.tensor] = []
+        merged_model_config = None
+        # Don't count the embedding layer, the LM head layer
+        # This should be the hidden_num_layers
+        hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id).output_layer_id + 1
+        logger.warn(f"hidden dim {hidden_dim}")
 
         for idx, s in enumerate(merge_plan.slices):
             logger.debug(f"Merging slice {idx}")
@@ -65,6 +73,9 @@ class Merger:
                 metadata = self.metadata_service.load_model_metadata(source.model)
                 shards = self.model_service.create_shard_files(model_metadata=metadata)
 
+                if source.is_base:
+                    merged_model_config = metadata.config
+
                 tensor = self.tensor_repository.get_tensor(
                     shards=shards,
                     tensor_key=self.get_model_weight(source.model, source.layer).name,
@@ -73,13 +84,14 @@ class Merger:
                 tensors_weights_pairs.append((tensor, source.weight, source.is_base))
 
             if tokenizer.input_ids_mappings and s.merge_method.name == MergeMethodIdentifier.INTERPOLATE:
-                hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id).output_layer_id + 1
-                output.append(InterpolationRunner.interpolate(
+                output.append((s.output_layer_name, InterpolationRunner.interpolate(
                     all_tensors=tensors_weights_pairs,
                     merge_method_name=s.merge_method.name,
                     input_ids_mappings=tokenizer.input_ids_mappings,
+                    # This might be the hidden_size (hidden_dim) (896, 1000... larger ints)
+                    # B: This could be the vocab size
                     hidden_dim=hidden_dim
-                ))
+                )))
                 continue
             elif s.merge_method.name == MergeMethodIdentifier.INTERPOLATE:
                 continue
@@ -107,4 +119,38 @@ class Merger:
                 merge_method_settings=merge_alg_settings,
             )))
 
-        print(output)
+        print(output[0])
+        with TensorWriter(output_dir=self.config.output_dir) as writer:
+            writer.save_all_tensors(merged_tensors=output)
+            logger.warn(f"Saved")
+
+        merged_config = PretrainedConfig.from_dict(
+            config_dict=merged_model_config
+        )
+
+        merged_config._name_or_path = str(self.config.output_dir)
+
+        # FIXME does num_hidden_layers equate hidden_dim? hidden_num_layers
+        merged_config.num_hidden_layers = hidden_dim
+
+        print(f"{merged_config._name_or_path}")
+        print(f"{merged_config.num_hidden_layers}")
+
+        if tokenizer.input_ids_mappings:
+            merged_config.vocab_size = len(tokenizer.tokenizer.get_vocab())
+
+        logger.info(f"Saving tokenizer to {self.config.output_dir}")
+        
+        tokenizer.tokenizer.save_pretrained(
+            self.config.output_dir, safe_serialization=True
+        )
+
+        logger.info(
+            f"Saving config.json to {self.config.output_dir}"
+        )
+
+        merged_config.save_pretrained(self.config.output_dir)
+
+        generate_model_card(merge_plan=merge_plan, app_config=self.config)
+
+

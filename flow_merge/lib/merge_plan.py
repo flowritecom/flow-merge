@@ -14,6 +14,7 @@ class MergePlan(BaseModel):
     tokenizer_mode: str
     tokenizer_interpolation_method: str
     slices: Optional[List[NormalizedSlice]] = None
+    raw_config: Optional[dict]
     lib_version: str = Field(
         default="0.0.1"  # fixme use actual version from appropriate source
     )
@@ -33,6 +34,7 @@ class MergePlan(BaseModel):
             tokenizer_mode=config.tokenizer_mode,
             tokenizer_interpolation_method=config.tokenizer_interpolation_method,
             slices=slices,
+            raw_config=config.model_dump()
         )
 
     @classmethod

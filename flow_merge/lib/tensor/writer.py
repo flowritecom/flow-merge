@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, List
 import safetensors.torch
 import torch
 
@@ -41,15 +41,31 @@ class TensorWriter:
                 logger.info(f"Removing shard {shard_name}")
                 os.remove(shard_path)
 
-    def save_tensor(self, weight: Any, tensor: torch.Tensor, clone: bool = False) -> Optional[str]:
+    def save_tensor(
+            self, 
+            weight_name: str, 
+            tensor: torch.Tensor, 
+            clone: bool = False
+        ) -> Optional[str]:
         if clone:
             tensor = tensor.clone()
 
-        self.current_shard[weight.name] = tensor
+        self.current_shard[weight_name] = tensor
         self.current_shard_size += tensor.numel() * tensor.element_size()
 
         if self.current_shard_size > self.max_shard_size:
             return self.current_shard_to_disk()
+        
+    def save_all_tensors(
+            self, 
+            merged_tensors: List[tuple[str, torch.tensor]]
+        ) -> Any:
+        for (weight_name, tensor) in merged_tensors:
+            self.save_tensor(
+                weight_name=weight_name, 
+                tensor=tensor,
+            )
+        self.finish()
 
     def current_shard_to_disk(self) -> Optional[str]:
         if not self.current_shard:
