@@ -1,6 +1,5 @@
 import argparse
 import json
-import logging
 import os
 import sys
 from enum import Enum
@@ -85,6 +84,15 @@ def run(args):
     if not path.exists() or not path.is_file():
         sys.exit("Provided path does not exist or is not a file.")
 
+    config = ApplicationConfig(
+        device=args.device,
+        hf_token=args.hf_token or os.getenv("HF_TOKEN"),
+        local_dir=args.local_dir,
+        output_dir=args.output_dir,
+        trust_remote_code=args.trust_remote_code,
+    )
+    app_config.set(config)
+
     # Distinguish between plan files (json?) and merge configuration in JSON/YAML
     try:
         if is_merge_plan_file(path):
@@ -93,13 +101,13 @@ def run(args):
             config = load_configuration_from_file(path)
             merge_plan = MergePlan.from_config(config, normalization_runner=di.get(NormalizationRunner))
     except Exception as e:
-        raise e
+        sys.exit(str(e))
 
-    # try:
-    merger: Merger = di.get(Merger)
-    merger.execute(merge_plan)
-    # except Exception as e:
-    #     raise Exception("Unexpected error while merging") from e
+    try:
+        merger: Merger = di.get(Merger)
+        merger.execute(merge_plan)
+    except Exception as e:
+        raise Exception("Unexpected error while merging") from e
 
 
 def plan(args):
@@ -124,9 +132,6 @@ def plan(args):
 
 
 def main():
-    logging.getLogger(__name__).setLevel(logging.DEBUG)
-    app_config.set(ApplicationConfig())
-
     parser = argparse.ArgumentParser(description="Flow merge CLI")
     subparsers = parser.add_subparsers(title="Commands", dest="command")
 
@@ -138,7 +143,15 @@ def main():
     # Run command
     run_parser = subparsers.add_parser('run', help='Run merge from merge configuration file or saved merging plan')
     run_parser.add_argument('file', type=str, help='Merge configuration file OR saved merging plan to run')
-    run_parser.add_argument("--output-dir", "-o", required=True, type=str, help="Output directory")
+    run_parser.add_argument("--output-dir", "-o", required=True, type=str,
+                            help="Output directory where the results will be saved")
+    run_parser.add_argument("--device", required=False, default="cpu", type=str, help="PyTorch device to use")
+    run_parser.add_argument("--hf-token", required=False, type=str,
+                            help="HuggingFace access token. Alternatively HF_TOKEN environment variable can be used.")
+    run_parser.add_argument("--local-dir", required=False, type=str, default="models",
+                            help="Working directory for the library. Models and their configurations will be downloaded there.")
+    run_parser.add_argument("--trust-remote-code", required=False, default=False, type=bool,
+                            help="Whether to trust remote code execution (see HuggingFace documentation for details).")
     run_parser.set_defaults(func=run)
 
     # Plan command
