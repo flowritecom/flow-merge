@@ -116,6 +116,8 @@ def plan(args):
     if not path.exists() or not path.is_file():
         sys.exit("Provided path does not exist or is not a file.")
 
+    app_config.set(ApplicationConfig(output_dir=""))
+
     output_path = os.path.abspath(args.output)
     # Check output directory/file
     if not os.access(os.path.dirname(output_path), os.W_OK):

@@ -10,6 +10,7 @@ from flow_merge.lib.merge_config import MergeConfig
 
 class MergePlan(BaseModel):
     created_at: datetime.datetime
+    name: str
     base_model: str
     tokenizer_mode: str
     tokenizer_interpolation_method: str
@@ -29,6 +30,7 @@ class MergePlan(BaseModel):
         })
         return cls(
             created_at=datetime.datetime.now(),
+            name=config.name,
             base_model=config.base_model,
             tokenizer_mode=config.tokenizer_mode,
             tokenizer_interpolation_method=config.tokenizer_interpolation_method,
