@@ -22,6 +22,7 @@ class FileRepository:
     @staticmethod
     def download_file(repo_id: str, filename: str, download_dir: Path) -> Path:
         app_config = config.app_config.get()
+        print(f"Downloading {repo_id} to {download_dir / filename}")
         logger.debug(f"Downloading {repo_id} to {download_dir / filename}")
         try:
             if Path(download_dir / filename).exists():
@@ -38,14 +39,16 @@ class FileRepository:
         except Exception as e:
             raise RuntimeError(f"An unexpected error occurred while downloading {filename} from {repo_id}: {e}")
 
-    def load_model_files_index(self, file_path: Path) -> dict:
+    @staticmethod
+    def load_model_files_index(file_path: Path) -> dict:
         try:
             with open(file_path, "r") as file:
                 return json.load(file)
         except (json.JSONDecodeError, FileNotFoundError) as e:
             raise RuntimeError(f"Error loading index from {file_path}: {e}")
 
-    def download_required_files(self, metadata: ModelMetadata):
+    @staticmethod
+    def download_required_files(metadata: ModelMetadata):
         required_files = [
             "config.json",
             "tokenizer.json",
@@ -58,10 +61,11 @@ class FileRepository:
             if filename not in metadata.file_list:
                 continue
             logger.debug(f"Downloading required file {filename} into {str(metadata.relative_path)}")
-            self.download_file(metadata.id, filename, metadata.relative_path)
+            FileRepository.download_file(metadata.id, filename, metadata.relative_path)
 
-    def download_adapter_files(self, model_metadata: ModelMetadata):
+    @staticmethod
+    def download_adapter_files(model_metadata: ModelMetadata):
         adapter_files = [f for f in model_metadata.file_list if "adapter" in f]
 
         for adapter_file in adapter_files:
-            self.download_file(model_metadata.id, adapter_file, model_metadata.absolute_path)
+            FileRepository.download_file(model_metadata.id, adapter_file, model_metadata.absolute_path)

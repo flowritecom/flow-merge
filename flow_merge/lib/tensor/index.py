@@ -51,6 +51,9 @@ class TensorIndexService:
             index_path = safetensors_index_path
         elif index_path is None and pytorch_bin_index_path.exists():
             index_path = pytorch_bin_index_path
+        elif index_path is None and not safetensors_index_path.exists() and not pytorch_bin_index_path.exists():
+            logger.warning("Neither pytorch_bin_index or safetensors_index_path exists")
+            return None # raise instead?
         else:
             return None
 

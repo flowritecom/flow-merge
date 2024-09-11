@@ -75,7 +75,6 @@ class ModelService:
     ) -> List[ShardFile]:
         shards_to_download = [file_index[layer] for layer in layers_to_download if layer in file_index]
         shards_to_download = list(set(shards_to_download))
-
         try:
             return [
                 self.download_and_return_shard_file(
@@ -108,7 +107,7 @@ class ModelService:
         file_index = self.tensor_index_service.create_file_to_tensor_index(model_metadata)
         if file_index:
             if layers_to_download:
-                self.gather_shard_files_from_layers(
+                return self.gather_shard_files_from_layers(
                     layers_to_download,
                     file_index,
                     output_model_path,

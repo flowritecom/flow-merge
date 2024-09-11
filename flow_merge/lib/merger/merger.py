@@ -2,6 +2,7 @@ import logging
 from typing import List, Tuple
 import torch
 from transformers import PretrainedConfig
+from collections import defaultdict
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.merge_methods import MergeMethodIdentifier, TaskArithmetic, TiesMergingSettings, \
     DareTiesMergingSettings, TaskArithmeticSettings
@@ -28,6 +29,12 @@ _merge_methods = {
     MergeMethodIdentifier.DARE_TIES_MERGING: TaskArithmetic.merge,
     MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC: TaskArithmetic.merge,
 }
+
+def get_layers_by_model(merge_plan):
+    sources = [source for slice in merge_plan.slices for source in slice.sources]
+    model_layers = defaultdict(list)
+    _ = list(map(lambda source: model_layers[source.model].append(source.layer), sources))
+    return dict(model_layers)
 
 
 class Merger:
@@ -63,21 +70,29 @@ class Merger:
         # Don't count the embedding layer, the LM head layer
         # This should be the hidden_num_layers
         hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id).output_layer_id + 1
-        logger.warn(f"hidden dim {hidden_dim}")
+        models_with_layers: dict[str, List[str]] = get_layers_by_model(merge_plan=merge_plan)
+
+        shards_by_model = {}
+        for model, layers in models_with_layers.items():
+            metadata = self.metadata_service.load_model_metadata(model)
+            shards = self.model_service.create_shard_files(
+                model_metadata=metadata,
+                layers_to_download=layers
+            )
+
+            shards_by_model[model] = shards
 
         for idx, s in enumerate(merge_plan.slices):
             logger.debug(f"Merging slice {idx}")
             # Fixme: creating map of all models to their weights (layers names)
             tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool]] = []
             for source in s.sources:
-                metadata = self.metadata_service.load_model_metadata(source.model)
-                shards = self.model_service.create_shard_files(model_metadata=metadata)
 
                 if source.is_base:
                     merged_model_config = metadata.config
 
                 tensor = self.tensor_repository.get_tensor(
-                    shards=shards,
+                    shards=shards_by_model[source.model],
                     tensor_key=self.get_model_weight(source.model, source.layer).name,
                     device=self.config.device,
                 )
@@ -119,7 +134,6 @@ class Merger:
                 merge_method_settings=merge_alg_settings,
             )))
 
-        print(output[0])
         with TensorWriter(output_dir=self.config.output_dir) as writer:
             writer.save_all_tensors(merged_tensors=output)
             logger.warn(f"Saved")
