@@ -2,8 +2,8 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 import torch
-from peft import PeftConfig, PeftModel, PeftMixedModel
-from transformers import AutoModel
+from peft import PeftConfig, PeftModel
+from transformers import AutoModelForCausalLM
 
 from flow_merge.lib.model.architecture import ModelWeight
 from flow_merge.lib.config import ApplicationConfig, DeviceIdentifier
@@ -170,7 +170,7 @@ class ModelService:
             return [
                 ShardFile(
                     filename=f,
-                    path=model_metadata.absolute_path,
+                    path=model_metadata.absolute_path / f,
                     tensor_keys=self.tensor_repository.get_tensor_keys_from_file(model_metadata.absolute_path / f,
                                                                                  device=self.config.device)
                 ) for f in base_model_shards]
@@ -180,7 +180,7 @@ class ModelService:
         for shard_file in base_model_shards:
             self.file_repository.download_file(base_model_metadata.id, shard_file, base_model_metadata.absolute_path)
 
-        base_model = AutoModel.from_pretrained(base_model_metadata.absolute_path)
+        base_model = AutoModelForCausalLM.from_pretrained(base_model_metadata.absolute_path)
         model = PeftModel.from_pretrained(base_model, peft_config=adapter_config, model_id=model_metadata.id)
         model.set_adapter("default")
         merged_model = model.merge_and_unload()
@@ -189,7 +189,7 @@ class ModelService:
         shard_files = [
             ShardFile(
                 filename=f,
-                path=model_metadata.absolute_path,
+                path=model_metadata.absolute_path / f,
                 tensor_keys=self.tensor_repository.get_tensor_keys_from_file(model_metadata.absolute_path / f,
                                                                              device=self.config.device)
             ) for f in base_model_shards]
