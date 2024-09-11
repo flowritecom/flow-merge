@@ -14,7 +14,7 @@ class TensorIndexService:
     @staticmethod
     def flip_keys(shardfile_index: Dict[str, str]) -> Dict[str, list]:
         unique_values = {}
-        for key, value in shardfile_index["weight_map"].items():
+        for key, value in shardfile_index.items():
             unique_values.setdefault(value, []).append(key)
         return unique_values
 
@@ -51,8 +51,9 @@ class TensorIndexService:
             index_path = safetensors_index_path
         elif index_path is None and pytorch_bin_index_path.exists():
             index_path = pytorch_bin_index_path
-        else:
-            return None
+        elif index_path is None and not safetensors_index_path.exists() and not pytorch_bin_index_path.exists():
+            logger.warning("Multi-shard model but neither pytorch_bin_index or safetensors_index_path found")
+            return None # raise instead?
 
         shardfile_index = FileRepository.load_model_files_index(index_path)
 

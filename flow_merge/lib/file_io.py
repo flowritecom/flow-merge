@@ -38,7 +38,8 @@ class FileRepository:
         except Exception as e:
             raise RuntimeError(f"An unexpected error occurred while downloading {filename} from {repo_id}: {e}")
 
-    def load_model_files_index(self, file_path: Path) -> dict:
+    @staticmethod
+    def load_model_files_index(file_path: Path) -> dict:
         try:
             with open(file_path, "r") as file:
                 return json.load(file)
