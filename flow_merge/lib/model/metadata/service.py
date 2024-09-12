@@ -70,7 +70,6 @@ class ModelMetadataService:
             id=id,
             file_list=all_files,
             config=config,
-            hf_exists=False,
             relative_path=path_to_model,
             absolute_path=path_to_model.resolve(),
             has_config=has_config,

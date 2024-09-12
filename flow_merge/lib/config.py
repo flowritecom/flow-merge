@@ -3,10 +3,9 @@ import os
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+import huggingface_hub
 from pydantic import BaseModel, Field, field_validator
 import logging
-from huggingface_hub import login, logout
 
 
 class DeviceIdentifier(str, Enum):
@@ -22,10 +21,6 @@ app_config = contextvars.ContextVar("app_config")
 class ApplicationConfig(BaseModel):
     device: DeviceIdentifier = Field(default=DeviceIdentifier.CPU)
     hf_token: str = Field(..., default_factory=lambda: os.getenv("HF_TOKEN"))
-    cache_dir: Optional[Path] = Field(
-        default=None,
-        description="Directory for caching models and tokenizers with the transformers library.",
-    )
     local_dir: Path = Field(
         default=Path("./models").resolve(),
         description="Directory for loading models from local.",
@@ -61,22 +56,12 @@ class ApplicationConfig(BaseModel):
                 )
                 raise ValueError("Invalid token format")
 
-            try:
-                login(token=v)
-                logout()
-            except Exception as e:
-                logger.warning(
-                    f"Failed to login to the Hugging Face Hub with the provided token: {e}"
-                )
-                raise ValueError("Failed to authenticate with the provided token")
-        return v
 
-    @field_validator("cache_dir")
-    def validate_cache_dir(cls, v):
-        if v:
-            v = Path(v).resolve()
-            v.mkdir(parents=True, exist_ok=True)
-            return v
+        perm = huggingface_hub.get_token_permission(token=v)
+        if perm is None:
+            raise ValueError("Failed to authenticate with the provided token")
+
+        return v
 
     @field_validator("local_dir")
     def validate_local_dir(cls, v):

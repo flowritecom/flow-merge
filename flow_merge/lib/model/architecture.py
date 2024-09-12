@@ -115,9 +115,7 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
             filename="config.json",
             download_dir=local_dir,
         )
-        config = PretrainedConfig.from_json_file(
-            path_to_config
-        )
+        config = PretrainedConfig.from_json_file(path_to_config)
         return cls.from_config(config)
 
     @classmethod

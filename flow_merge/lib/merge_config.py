@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 class MergeConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    name: str = Field()
     base_model: str = Field()
     tokenizer_mode: str = Field(
         default="base",
