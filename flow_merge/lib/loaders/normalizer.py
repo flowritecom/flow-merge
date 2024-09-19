@@ -13,7 +13,7 @@ class NormalizedSource(BaseModel):
     weight: Optional[float] = None
     model: Optional[str]
     layer: Optional[str]
-    is_base: Optional[bool]
+    is_base: Optional[bool] = False
 
 
 class MergeMethod(BaseModel):

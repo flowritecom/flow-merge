@@ -33,7 +33,7 @@ class SlerpSettings(BaseModel):
 
 
 def merge_slerp(
-        tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool]],
+        tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool, str, str]],
         merge_method_settings: SlerpSettings,
 ) -> torch.Tensor:
     # little bit dirty with the tuple for now

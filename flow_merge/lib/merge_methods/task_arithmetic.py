@@ -103,7 +103,7 @@ class TiesMergingSettings(TaskArithmeticSettings):
 class TaskArithmetic:
     @staticmethod
     def merge(
-            tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool]],
+            tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool, str, str]],
             merge_method_settings: Union[TaskArithmeticSettings, TiesMergingSettings],
     ) -> torch.Tensor:
         # little bit dirty with the tuple for now
@@ -157,7 +157,7 @@ class TaskArithmetic:
 
     @staticmethod
     def _get_task_vectors(
-            base_model_tensor: torch.Tensor, models_tensors: List[Tuple[torch.Tensor, float, bool]]
+            base_model_tensor: torch.Tensor, models_tensors: List[Tuple[torch.Tensor, float, bool, str, str]]
     ) -> List[Tuple[torch.Tensor, float]]:
         """
         Obtain the task vectors (or deltas) from a pre-trained model tensor and a set of model tensors as described in the paper Editing Models with Task Arithmetic (https://arxiv.org/abs/2212.04089)

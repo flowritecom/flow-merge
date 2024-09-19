@@ -4,7 +4,7 @@ import torch
 
 def merge_linear(
         merge_method_settings: Dict[str, bool],
-        tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool]],
+        tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool, str, str]],
 ) -> torch.Tensor:
     base: Tuple[torch.Tensor, float, bool] = [t for t in tensors_weights_pairs if t[2] is True][
         0]  # little bit dirty with the tuple for now
