@@ -32,8 +32,10 @@ def map_tensors(
         mask = torch.zeros((len(input_ids_map),), dtype=torch.bool)
         for out_id in input_ids_map:
             in_id = input_ids_map[out_id]
-            if in_id < 0:
+
+            if in_id < 0 or len(tensor.shape) < 2:
                     continue
+
             mapped_tensor[out_id, :] = tensor[in_id, :]
             mask[out_id] = True
 
@@ -63,15 +65,13 @@ def interpolate(
 )-> torch.Tensor:
     base_tensor = [p for p in all_tensors if p[2] is True][0]
     base_tensor_dtype = base_tensor[0].dtype
-
     layer_name = base_tensor[4] #source.layer
 
     validate_tensor_shape(
         all_tensors=all_tensors,
-        dim_index=1 if "embedding" in layer_name else 0,
+        dim_index=1 if "embed" in layer_name else 0,
         layer_name=layer_name
     )
-
     mapped_tensors, mask_list = map_tensors(all_tensors, input_ids_mappings)
     weights = compute_weights(all_tensors, merge_method_name)
 

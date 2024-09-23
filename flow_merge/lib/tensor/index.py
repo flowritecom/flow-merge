@@ -52,7 +52,6 @@ class TensorIndexService:
         elif index_path is None and pytorch_bin_index_path.exists():
             index_path = pytorch_bin_index_path
         elif index_path is None and not safetensors_index_path.exists() and not pytorch_bin_index_path.exists():
-            logger.warning("Multi-shard model but neither pytorch_bin_index or safetensors_index_path found")
             return None # raise instead?
 
         shardfile_index = FileRepository.load_model_files_index(index_path)

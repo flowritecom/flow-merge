@@ -16,7 +16,6 @@ from flow_merge.lib.model.service import ModelService
 from flow_merge.lib.tensor.loader import TensorRepository
 from flow_merge.lib.tensor.writer import TensorWriter
 from flow_merge.lib.tokenizer import MergeTokenizerService
-from flow_merge.lib.merger.interpolation import InterpolationRunner
 from flow_merge.lib.hf.upload import generate_model_card
 
 logger = logging.getLogger(__name__)

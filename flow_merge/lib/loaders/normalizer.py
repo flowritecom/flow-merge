@@ -123,6 +123,7 @@ class NormalizationRunner:
                 src.__delattr__("range")
                 if src.is_base is None:
                     src.__delattr__("is_base")
+
         return [s.to_dict() for s in normalized_slices]
 
     def _apply_transformations(self, s: _Slice) -> _Slice:
@@ -233,6 +234,7 @@ class NormalizationRunner:
         def get_slices_for_all_layers(start, end, _slice: _Slice, layers):
             return [
                 _Slice(
+                    output_layer_name=lnt.name.format(layer_index=start + i),
                     output_layer_id=_slice.output_layer_id + i,
                     merge_method=_slice.merge_method,
                     sources=[
@@ -289,7 +291,6 @@ class NormalizationRunner:
 
             user_defined_layer = re.sub(r'\.\d+\.', ".{layer_index}.", base_source.layer)
             remaining_layers = [l for _, l in self.models_layers[base_model].items() if l.name != user_defined_layer and l.layer_type.value == "decoder"]
-
             user_defined_slice = self._create_slice(
                 slice.sources,
                 None,

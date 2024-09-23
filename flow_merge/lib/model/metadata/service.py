@@ -17,12 +17,12 @@ class ModelMetadataService:
 
     def load_model_metadata(self, id: str) -> ModelMetadata:
         path_to_model = (self.app_config.local_dir / id)
-        if path_to_model.resolve().exists():
-            try:
-                logger.info("Model found locally, loading from local directory")
-                return self._load_local_model_metadata(id, path_to_model)
-            except EnvironmentError as e:
-                logger.warning(f"Failed to load model info from local file, trying HuggingFace ({e.__str__()})")
+        # if path_to_model.resolve().exists():
+        #     try:
+        #         logger.info("Model found locally, loading from local directory")
+        #         return self._load_local_model_metadata(id, path_to_model)
+        #     except EnvironmentError as e:
+        #         logger.warning(f"Failed to load model info from local file, trying HuggingFace ({e.__str__()})")
 
         try:
             return self._load_hf_model_metadata(id, path_to_model)
@@ -109,6 +109,7 @@ class ModelMetadataService:
     def _has_safetensors_files(file_list: List[str]):
         safetensors_files = [file for file in file_list if file.endswith(".safetensors")]
         num_shards = len(safetensors_files)
+
         if not num_shards:
             return False
 
