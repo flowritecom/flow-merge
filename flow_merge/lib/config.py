@@ -73,3 +73,4 @@ class ApplicationConfig(BaseModel):
     def validate_output_dir(cls, v):
         v = Path(v).resolve()
         v.mkdir(parents=True, exist_ok=True)
+        return v

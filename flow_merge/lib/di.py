@@ -1,6 +1,5 @@
 from typing import Dict, Any, Type
 from flow_merge.lib import config
-from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.file_io import FileRepository
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
 from flow_merge.lib.merger.merger import Merger
@@ -22,7 +21,7 @@ def get(name: Type[Any]) -> Any:
 
 def _create(name: Type[Any]) -> object:
     if name is Merger:
-        return Merger(ApplicationConfig(), get(MergeTokenizerService), get(ModelMetadataService), get(ModelService),
+        return Merger(config.app_config.get(), get(MergeTokenizerService), get(ModelMetadataService), get(ModelService),
                       get(ModelArchitectureProvider),
                       get(TensorRepository))
     elif name is MergeTokenizerService:
