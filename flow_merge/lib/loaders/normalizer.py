@@ -274,6 +274,7 @@ class NormalizationRunner:
                 _Slice(
                     output_layer_id=slice.output_layer_id + i,
                     merge_method=_MergeMethod(name="passthrough"),
+                    output_layer_name=lnt.name.format(layer_index=base_source.range[0] + i),
                     sources=[
                         _Source(model=base_model, is_base=True,
                                 layer=lnt.name.format(layer_index=base_source.range[0] + i))
