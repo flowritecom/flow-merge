@@ -113,7 +113,7 @@ class ModelArchitecture(BaseModel, arbitrary_types_allowed=True):
         path_to_config = FileRepository.download_file(
             repo_id=path_or_id,
             filename="config.json",
-            download_dir=local_dir,
+            download_dir=local_dir / path_or_id,
         )
         config = PretrainedConfig.from_json_file(path_to_config)
         return cls.from_config(config)

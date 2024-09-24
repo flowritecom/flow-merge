@@ -59,8 +59,6 @@ class Merger:
         ):
         tokenizer = self.tokenizer_service.get_merge_tokenizer(merge_plan)
 
-        # output: List[torch.tensor] = []
-        merged_model_config = None
         # Don't count the embedding layer, the LM head layer
         # This should be the hidden_num_layers
         hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id).output_layer_id + 1
@@ -132,7 +130,8 @@ class Merger:
             writer.finish()
 
         merged_config = AutoConfig.from_pretrained(
-            pretrained_model_name_or_path=merge_plan.base_model
+            pretrained_model_name_or_path=self.config.local_dir / merge_plan.base_model,
+            trust_remote_code=self.config.trust_remote_code
         )
 
         merged_config._name_or_path = str(self.config.output_dir)
