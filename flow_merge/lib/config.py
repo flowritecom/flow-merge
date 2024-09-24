@@ -14,6 +14,7 @@ class DeviceIdentifier(str, Enum):
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 app_config = contextvars.ContextVar("app_config")
 

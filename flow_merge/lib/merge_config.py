@@ -7,6 +7,7 @@ from pydantic import Field, ValidationError, field_validator, BaseModel, ConfigD
 from flow_merge.lib.validators.slice_validator import SliceValidator
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class MergeConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)

@@ -12,7 +12,7 @@ from flow_merge.lib.merge_plan import MergePlan
 ADDITIONAL_SPECIAL_TOKENS_KEY = "additional_special_tokens"
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 class Tokenizer(BaseModel):
     tokenizer: PreTrainedTokenizerBase

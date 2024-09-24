@@ -7,10 +7,8 @@ import safetensors.torch
 import torch
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-
-# TODO - Test this class with .bin files
-#   - restructure class for piecewise
 class TensorWriter:
     def __init__(
             self,
@@ -55,17 +53,6 @@ class TensorWriter:
 
         if self.current_shard_size > self.max_shard_size:
             return self.current_shard_to_disk()
-        
-    def save_all_tensors(
-            self, 
-            merged_tensors: List[tuple[str, torch.tensor]]
-        ) -> Any:
-        for (weight_name, tensor) in merged_tensors:
-            self.save_tensor(
-                weight_name=weight_name, 
-                tensor=tensor,
-            )
-        self.finish()
 
     def current_shard_to_disk(self) -> Optional[str]:
         if not self.current_shard:

@@ -6,7 +6,7 @@ from flow_merge.lib.model.metadata import ModelMetadata
 from flow_merge.lib.file_io import FileRepository
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 class TensorIndexService:
     """Service for handling tensor index operations."""

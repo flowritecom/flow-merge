@@ -105,7 +105,7 @@ def run(args):
 
     try:
         merger: Merger = di.get(Merger)
-        merger.execute(merge_plan)
+        merger.execute(merge_plan=merge_plan)
     except Exception as e:
         raise Exception("Unexpected error while merging") from e
 

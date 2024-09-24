@@ -19,7 +19,6 @@ def get(name: Type[Any]) -> Any:
         services[name] = _create(name)
     return services[name]
 
-
 def _create(name: Type[Any]) -> object:
     if name is Merger:
         return Merger(ApplicationConfig(), get(MergeTokenizerService), get(ModelMetadataService), get(ModelService),

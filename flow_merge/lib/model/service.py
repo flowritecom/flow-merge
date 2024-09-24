@@ -14,7 +14,7 @@ from flow_merge.lib.tensor.writer import TensorWriter
 from flow_merge.lib.file_io import FileRepository
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 class ModelService:
     """Manages the overall process of handling models."""

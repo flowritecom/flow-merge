@@ -5,6 +5,7 @@ from pydantic import BaseModel, field_validator
 from flow_merge.lib.model import Model
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class SlerpSettings(BaseModel):
     t: Optional[float] = 0.5

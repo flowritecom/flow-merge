@@ -10,7 +10,7 @@ from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.model.metadata import ModelMetadata
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 # Fixme: HuggingFace download client instead of FileRepository?
 class FileRepository:

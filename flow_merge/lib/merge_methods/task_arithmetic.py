@@ -6,7 +6,7 @@ from flow_merge.lib.merge_methods.merge_method import BaseMergeMethodSettings
 from flow_merge.lib.model import Model
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 class TaskArithmeticSettings(BaseMergeMethodSettings):
     scaling_coefficient: Optional[float] = 0.8

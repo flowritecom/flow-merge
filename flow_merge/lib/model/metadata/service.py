@@ -9,7 +9,7 @@ from flow_merge.lib.model.metadata import ModelMetadata
 CHUNK_SIZE = 64 * 1024
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 class ModelMetadataService:
     def __init__(self, app_config: ApplicationConfig):
