@@ -106,8 +106,8 @@ class Merger:
                     merge_alg_settings = SlerpSettings(**(s.merge_method.params or {}))
 
                 if (s.merge_method.name in [MergeMethodIdentifier.TIES_MERGING,
-                                            s.merge_method.name == MergeMethodIdentifier.DARE_TIES_MERGING,
-                                            s.merge_method.name == MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC
+                                            MergeMethodIdentifier.DARE_TIES_MERGING,
+                                            MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC
                                             ]):
                     settings_class = {
                         MergeMethodIdentifier.TIES_MERGING: TiesMergingSettings,
