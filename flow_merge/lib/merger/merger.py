@@ -64,6 +64,7 @@ class Merger:
 
         with TensorWriter(output_dir=self.config.output_dir) as writer:
             for idx, s in enumerate(merge_plan.slices):
+
                 logger.debug(f"Merging slice {idx}")
                 # Fixme: creating map of all models to their weights (layers names)
                 tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool, str]] = []
