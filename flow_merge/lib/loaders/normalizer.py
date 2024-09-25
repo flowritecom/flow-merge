@@ -41,7 +41,7 @@ class _Source:
         self.range = kwargs["range"] if "range" in kwargs else None
         self.model = kwargs["model"] if "model" in kwargs else None
         self.is_base = kwargs["is_base"] if "is_base" in kwargs else None
-        self.weight = kwargs["weight"] if "weight" in kwargs else None
+        self.weight = kwargs["weight"] if "weight" in kwargs else 1.0
 
     def update(self, attr: str, value: Any):
         self.__setattr__(attr, value)
