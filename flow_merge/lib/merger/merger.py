@@ -10,7 +10,7 @@ from flow_merge.lib.merge_methods.interpolation import interpolate
 from flow_merge.lib.merge_methods.passthrough import merge_passthrough
 from flow_merge.lib.merge_methods.slerp import merge_slerp, SlerpSettings
 from flow_merge.lib.merge_plan import MergePlan
-from flow_merge.lib.model.architecture import ModelWeight, ModelArchitectureProvider
+from flow_merge.lib.model.architecture import ModelWeight, ModelArchitectureProvider, ModelWeightLayerType
 from flow_merge.lib.model.metadata import ModelMetadataService
 from flow_merge.lib.model.service import ModelService
 from flow_merge.lib.tensor.loader import TensorRepository
@@ -61,7 +61,7 @@ class Merger:
 
         # Don't count the embedding layer, the LM head layer
         # This should be the hidden_num_layers
-        hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id).output_layer_id + 1
+        hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id if x.layer_type==ModelWeightLayerType.decoder.value else 0).output_layer_id
 
         with TensorWriter(output_dir=self.config.output_dir) as writer:
             for idx, s in enumerate(merge_plan.slices):
