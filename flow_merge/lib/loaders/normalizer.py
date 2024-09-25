@@ -7,7 +7,9 @@ from functools import reduce
 import re
 
 from flow_merge.lib.config import ApplicationConfig
+from flow_merge.lib.logger import get_logger
 
+logger = get_logger(__name__)
 
 class NormalizedSource(BaseModel):
     weight: Optional[float] = None
@@ -112,6 +114,9 @@ class NormalizationRunner:
 
         slices = [_Slice(**s) for s in raw_data["definition"]]
         normalized_slices = []
+
+        logger.info("Normalizing merge config slices")
+
         for i, s in enumerate(slices):
             s = self._apply_transformations(s)
             s.output_layer_id = i
@@ -127,6 +132,8 @@ class NormalizationRunner:
                 src.__delattr__("range")
                 if src.is_base is None:
                     src.__delattr__("is_base")
+
+        logger.info(f"Normalization complete, total slices {len(normalized_slices)}")
 
         return [s.to_dict() for s in normalized_slices]
 

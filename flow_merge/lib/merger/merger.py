@@ -1,4 +1,3 @@
-import logging
 from typing import List, Tuple
 import torch
 from transformers import AutoConfig
@@ -17,9 +16,9 @@ from flow_merge.lib.tensor.loader import TensorRepository
 from flow_merge.lib.tensor.writer import TensorWriter
 from flow_merge.lib.tokenizer import MergeTokenizerService
 from flow_merge.lib.hf.upload import generate_model_card
+from flow_merge.lib.logger import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 _merge_methods = {
     MergeMethodIdentifier.PASSTHROUGH: merge_passthrough,
@@ -64,16 +63,14 @@ class Merger:
 
         with TensorWriter(output_dir=self.config.output_dir) as writer:
             for idx, s in enumerate(merge_plan.slices):
-
+                logger.info(f"Merging slice for output-layer: {s.output_layer_name}")
                 logger.debug(f"Merging slice {idx}")
+
                 # Fixme: creating map of all models to their weights (layers names)
                 tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool, str]] = []
                 for source in s.sources:
                     metadata = self.metadata_service.load_model_metadata(source.model)
                     shards = self.model_service.create_shard_files(model_metadata=metadata)
-
-                    if source.is_base:
-                        merged_model_config = metadata.config
 
                     tensor = self.tensor_repository.get_tensor(
                         shards=shards,

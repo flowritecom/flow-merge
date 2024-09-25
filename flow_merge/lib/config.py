@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 import huggingface_hub
 from pydantic import BaseModel, Field, field_validator
-import logging
+from flow_merge.lib.logger import get_logger
 
 
 class DeviceIdentifier(str, Enum):
@@ -13,8 +13,7 @@ class DeviceIdentifier(str, Enum):
     CUDA = "cuda"
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 app_config = contextvars.ContextVar("app_config")
 

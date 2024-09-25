@@ -1,13 +1,12 @@
 import json
-import logging
 from pathlib import Path
 from typing import List, Dict, Any
 import yaml
 from pydantic import Field, ValidationError, field_validator, BaseModel, ConfigDict, computed_field
 from flow_merge.lib.validators.slice_validator import SliceValidator
+from flow_merge.lib.logger import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 class MergeConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)

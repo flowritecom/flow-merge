@@ -1,14 +1,14 @@
 
 import os
 import yaml
-import logging
 
 from huggingface_hub import HfApi
 
 from flow_merge.lib.merge_plan import MergePlan
 from flow_merge.lib.config import ApplicationConfig
+from flow_merge.lib.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 MODEL_CARD_TEMPLATE = """---
 {metadata}

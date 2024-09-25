@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 import torch
@@ -12,9 +11,9 @@ from flow_merge.lib.tensor.index import TensorIndexService
 from flow_merge.lib.tensor.loader import ShardFile, TensorRepository
 from flow_merge.lib.tensor.writer import TensorWriter
 from flow_merge.lib.file_io import FileRepository
+from flow_merge.lib.logger import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 class ModelService:
     """Manages the overall process of handling models."""
@@ -123,7 +122,6 @@ class ModelService:
             )
 
         # Single-shard-file model
-        logger.info("Index files not found, using single shard file fallback.")
         single_file = (
             "model.safetensors" if model_metadata.has_safetensor_files else "pytorch_model.bin"
         )

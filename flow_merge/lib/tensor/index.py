@@ -1,12 +1,11 @@
-import logging
 from pathlib import Path
 from typing import Dict, Optional
 
 from flow_merge.lib.model.metadata import ModelMetadata
 from flow_merge.lib.file_io import FileRepository
+from flow_merge.lib.logger import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 class TensorIndexService:
     """Service for handling tensor index operations."""

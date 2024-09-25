@@ -1,11 +1,10 @@
-import logging
 from typing import Dict, Optional, List, Tuple
 import torch
 from pydantic import BaseModel, field_validator
 from flow_merge.lib.model import Model
+from flow_merge.lib.logger import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 class SlerpSettings(BaseModel):
     t: Optional[float] = 0.5

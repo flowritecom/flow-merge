@@ -1,18 +1,16 @@
-import logging
 from copy import deepcopy
 from itertools import combinations
 from typing import Dict, Optional, Tuple, List
 from pydantic import BaseModel, ConfigDict
 from transformers import AutoConfig, AutoTokenizer, PreTrainedTokenizerBase
 
-from flow_merge.lib import config
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.merge_plan import MergePlan
+from flow_merge.lib.logger import get_logger
 
 ADDITIONAL_SPECIAL_TOKENS_KEY = "additional_special_tokens"
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 class Tokenizer(BaseModel):
     tokenizer: PreTrainedTokenizerBase

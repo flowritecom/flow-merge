@@ -1,13 +1,12 @@
 import json
-import logging
 import os
 from pathlib import Path
 from typing import Any, Optional, List
 import safetensors.torch
 import torch
+from flow_merge.lib.logger import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 class TensorWriter:
     def __init__(

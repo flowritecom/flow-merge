@@ -2,9 +2,9 @@ name: test_1
 base_model: Qwen/Qwen2-0.5B
 definition:
   - sources:
-      - range: [0, 21]
+      - range: [0, 2]
         model: Qwen/Qwen2-0.5B
-      - range: [0, 21]
+      - range: [0, 2]
         model: Qwen/Qwen2-0.5B-Instruct
     merge_method:
       name: model-soup

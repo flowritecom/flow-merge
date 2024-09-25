@@ -1,5 +1,4 @@
 import json
-import logging
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from pathlib import Path
@@ -8,9 +7,9 @@ from huggingface_hub import hf_hub_download
 from flow_merge.lib import config
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.model.metadata import ModelMetadata
+from flow_merge.lib.logger import get_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 # Fixme: HuggingFace download client instead of FileRepository?
 class FileRepository:

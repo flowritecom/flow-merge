@@ -1,15 +1,14 @@
-import logging
 import huggingface_hub
 from pathlib import Path
 from typing import List
 from transformers import PretrainedConfig
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.model.metadata import ModelMetadata
+from flow_merge.lib.logger import get_logger
 
 CHUNK_SIZE = 64 * 1024
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = get_logger(__name__)
 
 class ModelMetadataService:
     def __init__(self, app_config: ApplicationConfig):
