@@ -58,14 +58,12 @@ class Merger:
             merge_plan: MergePlan,
         ):
         tokenizer = self.tokenizer_service.get_merge_tokenizer(merge_plan)
-
         # Don't count the embedding layer, the LM head layer
         # This should be the hidden_num_layers
         hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id).output_layer_id + 1
 
         with TensorWriter(output_dir=self.config.output_dir) as writer:
             for idx, s in enumerate(merge_plan.slices):
-
                 logger.debug(f"Merging slice {idx}")
                 # Fixme: creating map of all models to their weights (layers names)
                 tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool, str]] = []
@@ -104,7 +102,7 @@ class Merger:
 
                 merge_alg_settings = {}
                 if s.merge_method.name == MergeMethodIdentifier.MODEL_SOUP:
-                    merge_alg_settings = {**s.merge_method.params}
+                    merge_alg_settings = {**s.merge_method.params} if s.merge_method.params else {}
 
                 if s.merge_method.name == MergeMethodIdentifier.SLERP:
                     merge_alg_settings = SlerpSettings(**(s.merge_method.params or {}))

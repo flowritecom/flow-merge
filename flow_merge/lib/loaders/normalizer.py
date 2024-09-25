@@ -116,6 +116,7 @@ class NormalizationRunner:
         normalized_slices = self._process_special_layers(normalized_slices, raw_data["base_model"])
         normalized_slices = self._move_embed_slice_to_top(normalized_slices)
         normalized_slices = self._reindex_slices_with_embed_slice(normalized_slices)
+        normalized_slices = self._process_post_norm_merge_method(normalized_slices)
 
         for s in normalized_slices:
             s.__delattr__("layers")
@@ -157,6 +158,20 @@ class NormalizationRunner:
         slices = self._process_template_slices(s)
 
         return slices
+    
+    def _process_post_norm_merge_method(self, normalized_slices: List[_Slice]) -> List[_Slice]:
+        # We treat the model.norm.weight layer as a special layer and add it with the interpolate method
+        # Then after processing and correct order of the slices we update the method for this slice
+        # This is to preserve the correct merge method based on the config
+        # We always append the norm layer to the end so the previous merge method that is not interpolate
+        # should hold true
+        for i, slice in enumerate(normalized_slices):
+            if slice.output_layer_name == "model.norm.weight":
+                for ind in range(i - 1, -1, -1):
+                    if normalized_slices[ind].merge_method != MergeMethodIdentifier.INTERPOLATE:
+                        slice.merge_method = normalized_slices[ind].merge_method
+                        break
+        return normalized_slices
 
     def _process_special_layers(self, normalized_data: List[_Slice], base_model: str) -> List[_Slice]:
         # we don't want to hard code what the special layers are so we

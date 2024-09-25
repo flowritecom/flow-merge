@@ -23,6 +23,7 @@ def merge_linear(
     else:
         # weight average soup. If all weights are the same, this is equivalent to a simple average
         stacked_tensors = torch.stack(tensors, dim=0)
+
         weights_tensors = torch.tensor(
             weights, dtype=base_tensor_dtype, device=stacked_tensors.device
         )
