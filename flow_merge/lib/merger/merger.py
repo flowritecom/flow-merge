@@ -60,7 +60,6 @@ class Merger:
         # Don't count the embedding layer, the LM head layer
         # This should be the hidden_num_layers
         hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id if x.layer_type==ModelWeightLayerType.decoder.value else 0).output_layer_id
-
         with TensorWriter(output_dir=self.config.output_dir) as writer:
             for idx, s in enumerate(merge_plan.slices):
                 logger.info(f"Merging slice for output-layer: {s.output_layer_name}")

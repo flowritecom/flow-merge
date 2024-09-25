@@ -35,7 +35,7 @@ class ModelMetadata(BaseModel):
     hf_mask_token: Optional[str] = Field(alias="mask_token", default=None)
     hf_card_data: Optional[ModelCardData] = Field(alias="card_data", default=None)
     hf_widget_data: Optional[Any] = Field(alias="widget_data", default=None)
-    hf_model_index: Optional[Dict] = Field(alias="model_index", default=None)
+    hf_model_index: Optional[Any] = Field(alias="model_index", default=None)
     hf_transformers_info: Optional[TransformersInfo] = Field(
         alias="transformers_info", default=None
     )
