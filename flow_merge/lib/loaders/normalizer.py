@@ -26,6 +26,7 @@ class NormalizedSlice(BaseModel):
     sources: List[NormalizedSource]
     output_layer_id: int
     output_layer_name: str
+    layer_type: str
 
 
 class _Source:
@@ -71,6 +72,7 @@ class _Slice:
     layers: Optional[List[str]] = None
     sources: List[_Source] = None
     merge_method: _MergeMethod
+    layer_type: str
 
     def __init__(self, **kwargs):
         self.output_layer_name = kwargs["output_layer_name"] if "output_layer_name" in kwargs else None
@@ -82,6 +84,7 @@ class _Slice:
         ]
         self.merge_method = _MergeMethod(**kwargs["merge_method"]) if isinstance(kwargs["merge_method"], dict) else \
             kwargs["merge_method"]
+        self.layer_type = kwargs["layer_type"] if "layer_type" in kwargs else None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -207,6 +210,7 @@ class NormalizationRunner:
                     _MergeMethod(name="interpolate"),
                     0,
                     special_layer.name,
+                    special_layer.layer_type.value
                 )
                 normalized_data.append(embed_slice)
 
@@ -217,6 +221,7 @@ class NormalizationRunner:
                     _MergeMethod(name="interpolate"),
                     self._get_last_output_slice_id(normalized_data) + 1,
                     special_layer.name,
+                    special_layer.layer_type.value
                 )
                 normalized_data.append(norm_slice)
 
@@ -227,6 +232,7 @@ class NormalizationRunner:
                     _MergeMethod(name="interpolate"),
                     self._get_last_output_slice_id(normalized_data) + 1,
                     special_layer.name,
+                    special_layer.layer_type.value
                 )
                 normalized_data.append(lm_head_slice)
         return normalized_data
@@ -258,6 +264,7 @@ class NormalizationRunner:
                         # src.update("layer", lnt.format(layer_index=src.range[0] + i)).update("range", None)
                         for src in _slice.sources
                     ],
+                    layer_type=lnt.layer_type.value,
                 )
                 for i in range(end - start + 1)
                 for lnt in layers
@@ -294,6 +301,7 @@ class NormalizationRunner:
                         _Source(model=base_model, is_base=True,
                                 layer=lnt.name.format(layer_index=base_source.range[0] + i))
                     ],
+                    layer_type=lnt.layer_type.value
                 )
                 for i in range(end - start + 1)
                 for lnt in remaining_layers
@@ -306,13 +314,15 @@ class NormalizationRunner:
                 raise Exception("Layer defined for merging must be a hidden layer (pattern layer)")
 
             user_defined_layer = re.sub(r'\.\d+\.', ".{layer_index}.", base_source.layer)
-            remaining_layers = [l for _, l in self.models_layers[base_model].items() if l.name != user_defined_layer and l.layer_type.value == "decoder"]
+            remaining_layers = [l for _, l in self.models_layers[base_model].items() if
+                                l.name != user_defined_layer and l.layer_type.value == "decoder"]
             user_defined_slice = self._create_slice(
                 slice.sources,
                 None,
                 slice.merge_method,
                 slice.output_layer_id,
-                output_layer_name=user_defined_layer.format(layer_index=slice.output_layer_id)
+                output_layer_name=user_defined_layer.format(layer_index=slice.output_layer_id),
+                layer_type="decoder",
             )
             remaining_slices = [
                 self._create_slice(
@@ -320,7 +330,8 @@ class NormalizationRunner:
                     layer.name.format(layer_index=user_defined_layer_id[0]),
                     _MergeMethod(name="passthrough"),
                     slice.output_layer_id,
-                    output_layer_name=layer.name.format(layer_index=slice.output_layer_id)
+                    output_layer_name=layer.name.format(layer_index=slice.output_layer_id),
+                    layer_type=layer.layer_type.value,
                 )
                 for layer in remaining_layers
             ]
@@ -336,7 +347,7 @@ class NormalizationRunner:
 
     def _create_slice(
             self, sources: List[_Source], layer: Optional[str], merge_method: _MergeMethod, output_layer_id: int,
-            output_layer_name: str,
+            output_layer_name: str, layer_type: str
     ) -> _Slice:
         # creates a slice, sets merge_method and layer
         # while making sure to keep all other keys.
@@ -355,6 +366,7 @@ class NormalizationRunner:
             output_layer_id=output_layer_id,
             merge_method=merge_method,
             sources=sources_with_layer,
+            layer_type=layer_type,
         )
 
     def _determine_base_model(self, sources: List[_Source]) -> str | None:
