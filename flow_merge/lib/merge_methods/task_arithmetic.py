@@ -175,11 +175,12 @@ class TaskArithmetic:
         task_vectors: List[Tuple[torch.Tensor, float]] = []
 
         all_zero = True
-        for tensor, weight, _, _, _ in models_tensors:
-            task_vector = tensor - base_model_tensor
-            task_vectors.append((task_vector, weight))
-            if not torch.allclose(task_vector, torch.zeros_like(task_vector)):
-                all_zero = False
+        for tensor, weight, is_base, _, _ in models_tensors:
+            if not is_base:
+                task_vector = tensor - base_model_tensor
+                task_vectors.append((task_vector, weight))
+                if not torch.allclose(task_vector, torch.zeros_like(task_vector)):
+                    all_zero = False
 
         if all_zero:
             return []

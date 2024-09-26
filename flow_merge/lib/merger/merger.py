@@ -31,19 +31,19 @@ _merge_methods = {
 
 
 def resolve_model_layers(slices) -> Dict[str, Any]:
-    models_layers = {}
+    model_layers = {}
 
     for slice in slices:
         for source in slice.sources:
             model = source.model
             layer = source.layer
             
-            if model not in models_layers:
-                models_layers[model] = set()
+            if model not in model_layers:
+                model_layers[model] = set()
             
-            models_layers[model].add(layer)
+            model_layers[model].add(layer)
 
-    return models_layers
+    return model_layers
 
 
 class Merger:
