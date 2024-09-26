@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 import torch
 from transformers import AutoConfig
 from flow_merge.lib.config import ApplicationConfig
@@ -30,6 +30,22 @@ _merge_methods = {
 }
 
 
+def resolve_model_layers(slices) -> Dict[str, Any]:
+    models_layers = {}
+
+    for slice in slices:
+        for source in slice.sources:
+            model = source.model
+            layer = source.layer
+            
+            if model not in models_layers:
+                models_layers[model] = set()
+            
+            models_layers[model].add(layer)
+
+    return models_layers
+
+
 class Merger:
 
     def __init__(
@@ -57,9 +73,22 @@ class Merger:
             merge_plan: MergePlan,
         ):
         tokenizer = self.tokenizer_service.get_merge_tokenizer(merge_plan)
+
+        model_layers = resolve_model_layers(merge_plan.slices)
+        model_shards = {}
+
+        for model, layers in model_layers.items():
+            metadata = self.metadata_service.load_model_metadata(model)
+            shards = self.model_service.create_shard_files(
+                model_metadata=metadata,
+                layers_to_download=layers
+            )
+            model_shards[model] = shards
+        
         # Don't count the embedding layer, the LM head layer
         # This should be the hidden_num_layers
         hidden_dim = max(merge_plan.slices, key=lambda x: x.output_layer_id if x.layer_type==ModelWeightLayerType.decoder.value else 0).output_layer_id
+        
         with TensorWriter(output_dir=self.config.output_dir) as writer:
             for idx, s in enumerate(merge_plan.slices):
                 logger.info(f"Merging slice for output-layer: {s.output_layer_name}")
@@ -68,11 +97,9 @@ class Merger:
                 # Fixme: creating map of all models to their weights (layers names)
                 tensors_weights_pairs: List[Tuple[torch.Tensor, float, bool, str]] = []
                 for source in s.sources:
-                    metadata = self.metadata_service.load_model_metadata(source.model)
-                    shards = self.model_service.create_shard_files(model_metadata=metadata)
 
                     tensor = self.tensor_repository.get_tensor(
-                        shards=shards,
+                        shards=model_shards[source.model],
                         tensor_key=self.get_model_weight(source.model, source.layer).name,
                         device=self.config.device,
                     )
