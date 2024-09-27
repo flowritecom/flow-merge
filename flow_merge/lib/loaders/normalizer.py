@@ -120,7 +120,7 @@ class NormalizationRunner:
         for i, s in enumerate(slices):
             s = self._apply_transformations(s)
             s.output_layer_id = i
-            normalized_slices.extend(self._process_slice(s))
+            normalized_slices.extend(self._process_template_slices(s))
         normalized_slices = self._process_special_layers(normalized_slices, raw_data["base_model"])
         normalized_slices = self._move_embed_slice_to_top(normalized_slices)
         normalized_slices = self._reindex_slices_with_embed_slice(normalized_slices)
@@ -162,12 +162,6 @@ class NormalizationRunner:
             raise ValueError("No valid source found to set as base_model")
         # if already a source with base_model == True, return the original slice
         return slice
-
-    def _process_slice(self, s: _Slice) -> List[_Slice]:
-        # we process layer and range type slices, expanding range type
-        slices = self._process_template_slices(s)
-
-        return slices
     
     def _process_post_norm_merge_method(self, normalized_slices: List[_Slice]) -> List[_Slice]:
         # We treat the model.norm.weight layer as a special layer and add it with the interpolate method
@@ -262,7 +256,7 @@ class NormalizationRunner:
         def get_slices_for_all_layers(start, end, _slice: _Slice, layers):
             return [
                 _Slice(
-                    output_layer_name=lnt.name.format(layer_index=start + i),
+                    output_layer_name=lnt.name.format(layer_index=i),
                     output_layer_id=_slice.output_layer_id + i,
                     merge_method=_slice.merge_method,
                     sources=[
@@ -277,10 +271,12 @@ class NormalizationRunner:
                 for lnt in layers
             ]
 
+        # Range syntax and no filtering
         if all(src.range is not None for src in slice.sources) and slice.layers is None:
             start, end = slice.sources[0].range
             return get_slices_for_all_layers(start, end, slice, layer_name_templates)
 
+        # Range syntax and layers filtering applied
         elif all(src.range is not None for src in slice.sources) and slice.layers is not None:
             # Layers filter applied
             # We create slices with the layers defined by user in the layers filter
@@ -303,7 +299,7 @@ class NormalizationRunner:
                 _Slice(
                     output_layer_id=slice.output_layer_id + i,
                     merge_method=_MergeMethod(name="passthrough"),
-                    output_layer_name=lnt.name.format(layer_index=base_source.range[0] + i),
+                    output_layer_name=lnt.name.format(layer_index=slice.output_layer_id + i),
                     sources=[
                         _Source(model=base_model, is_base=True,
                                 layer=lnt.name.format(layer_index=base_source.range[0] + i))
@@ -315,6 +311,8 @@ class NormalizationRunner:
             ]
 
             return user_requested_slices + remaining_slices
+
+        # Layer syntax
         elif all(src.layer is not None for src in slice.sources):
             user_defined_layer_id = re.findall(r'\.(\d+)\.', base_source.layer)
             if len(user_defined_layer_id) == 0:
