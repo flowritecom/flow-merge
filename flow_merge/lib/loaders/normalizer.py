@@ -103,7 +103,7 @@ class NormalizationRunner:
     config: ApplicationConfig
 
     def __init__(self, model_arch_provider: ModelArchitectureProvider):
-        self.transformations = [self._ensure_base_model]
+        self.transformations = [self._ensure_base_model, self._normalize_range_syntax]
         self.model_arch_provider = model_arch_provider
 
     def normalize(self, raw_data: Dict) -> List[Dict[str, Any]]:
@@ -161,6 +161,16 @@ class NormalizationRunner:
                     return _slice
             raise ValueError("No valid source found to set as base_model")
         # if already a source with base_model == True, return the original slice
+        return _slice
+
+    def _normalize_range_syntax(self, _slice: _Slice) -> _Slice:
+        # It's possible to use `range` syntax in two ways: as a single number or as a range
+        # Later normalization stages require it to be a range, so here we convert single number one
+        # to a range of the same start and end
+        for src in _slice.sources:
+            if isinstance(src.range, int):
+                src.range = [src.range, src.range]
+
         return _slice
 
     def _process_post_norm_merge_method(self, normalized_slices: List[_Slice]) -> List[_Slice]:

@@ -13,10 +13,6 @@ from flow_merge.lib.merge_config import MergeConfig
 from flow_merge.lib.merge_plan import MergePlan
 from flow_merge.lib.merger.merger import Merger
 
-import pydevd_pycharm
-pydevd_pycharm.settrace('172.17.0.1', port=9898, stdoutToServer=True, stderrToServer=True, suspend=False)
-
-
 class FileFormat(Enum):
     YAML = 'yaml'
     JSON = 'json'

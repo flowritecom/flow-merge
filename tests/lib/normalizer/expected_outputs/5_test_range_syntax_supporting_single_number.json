@@ -1,0 +1,86 @@
+[
+  {
+    "output_layer_name": "model.layers.0.self_attn.k_proj",
+    "block_id": 0,
+    "sources": [
+      {
+        "layer": "model.layers.2.self_attn.k_proj",
+        "model": "A",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.15.self_attn.k_proj",
+        "model": "B",
+        "weight": 0.69
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.0.mlp.gate_proj.weight",
+    "block_id": 0,
+    "sources": [
+      {
+        "layer": "model.layers.2.mlp.gate_proj.weight",
+        "model": "A",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.15.mlp.gate_proj.weight",
+        "model": "B",
+        "weight": 0.69
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.embed_tokens.weight",
+    "block_id": null,
+    "sources": [
+      {
+        "layer": "model.embed_tokens.weight",
+        "model": "A",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.embed_tokens.weight",
+        "model": "B",
+        "weight": 0.69
+      }
+    ],
+    "merge_method": {
+      "name": "interpolate"
+    },
+    "layer_type": "embedding"
+  },
+  {
+    "output_layer_name": "model.norm.weight",
+    "block_id": null,
+    "sources": [
+      {
+        "layer": "model.norm.weight",
+        "model": "A",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.norm.weight",
+        "model": "B",
+        "weight": 0.69
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "post_norm"
+  }
+]
