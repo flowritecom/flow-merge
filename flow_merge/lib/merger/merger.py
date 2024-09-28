@@ -87,7 +87,7 @@ class Merger:
         
         # Don't count the embedding layer, the LM head layer
         # This should be the hidden_num_layers
-        hidden_dim = len({l.output_layer_id for l in merge_plan.slices if l.layer_type == ModelWeightLayerType.decoder.value})
+        hidden_num_layers = len({l.block_id for l in merge_plan.slices if l.layer_type == ModelWeightLayerType.decoder.value})
         
         with TensorWriter(output_dir=self.config.output_dir) as writer:
             for idx, s in enumerate(merge_plan.slices):
@@ -158,7 +158,7 @@ class Merger:
 
         merged_config._name_or_path = str(self.config.output_dir)
 
-        merged_config.num_hidden_layers = hidden_dim
+        merged_config.num_hidden_layers = hidden_num_layers
 
         if tokenizer.input_ids_mappings:
             merged_config.vocab_size = len(tokenizer.tokenizer.get_vocab())

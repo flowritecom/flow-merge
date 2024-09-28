@@ -2,31 +2,31 @@ import unittest
 
 import yaml
 
-from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
-from flow_merge.lib.validators import DirectorySettings
+from flow_merge.lib.model.architecture import ModelArchitectureProvider, ModelArchitecture, ModelWeight
 
 
 class TestNormalizationRunner(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
-        self.runner = NormalizationRunner(ApplicationConfig(), None)
+        self.model_arch_provider = MagicMock(ModelArchitectureProvider)
+        arch = MagicMock(ModelArchitecture)
+        arch.raw_weights = [
+            ModelWeight(name="model.embed_tokens.weight", type="embed_tokens", layer_type="embedding"),
+            ModelWeight(name="model.layers.{layer_index}.self_attn.k_proj.weight", type="self_attn",
+                        layer_type="decoder"),
+            ModelWeight(name="model.norm.weight", type="norm", layer_type="post_norm"),
+            ModelWeight(name="lm_head.weight", type="lm_head", layer_type="head"),
+        ]
+        self.model_arch_provider.get_by_id.return_value = arch
+        self.runner = NormalizationRunner(self.model_arch_provider)
 
-    @patch('flow_merge.lib.loaders.normalizer.load_architecture')
-    def test_special_layers_are_added_with_range_syntax(self, mock_load_architecture):
+    def test_special_layers_are_added_with_range_syntax(self):
         """
-        Architecture defines special layer `lm_head` – it should be added as a last slice in the output
+        Architecture defines special layer `lm_head` – it should be added in the output
         """
-        mock_load_architecture.return_value = {
-            "weights": [
-                {"name": "model.embed_tokens.weight", "type": "embed", "layer_type": "embedding"},
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
-                {"name": "model.norm.weight", "type": "norm", "layer_type": "post_norm"},
-                {"name": "lm_head.weight", "type": "lm_head", "layer_type": "head"},
-            ]
-        }
         yaml_input = """
         base_model: A
         definition:
@@ -43,17 +43,9 @@ class TestNormalizationRunner(unittest.TestCase):
         """
         expected = [
             {
-                "output_layer_id": 0,
-                "sources": [
-                    {"is_base": True, "layer": "model.embed_tokens.weight", "model": "A", "weight": 1.0},
-                    {"layer": "model.embed_tokens.weight", "model": "B", "weight": 0.5},
-                ],
-                "merge_method": {
-                    "name": "interpolate"
-                }
-            },
-            {
-                "output_layer_id": 1,
+                "block_id": 0,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.0.self_attn.k_proj.weight",
                 "sources": [
                     {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", "weight": 1.0},
                     {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", "weight": 0.5},
@@ -63,7 +55,9 @@ class TestNormalizationRunner(unittest.TestCase):
                 }
             },
             {
-                "output_layer_id": 2,
+                "block_id": 1,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.1.self_attn.k_proj.weight",
                 "sources": [
                     {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", "weight": 1.0},
                     {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", "weight": 0.5},
@@ -73,17 +67,33 @@ class TestNormalizationRunner(unittest.TestCase):
                 }
             },
             {
-                "output_layer_id": 3,
+                "block_id": None,
+                "layer_type": "embedding",
+                "output_layer_name": "model.embed_tokens.weight",
                 "sources": [
-                    {"is_base": True, "layer": "model.norm.weight", "model": "A", "weight": 1.0},
-                    {"layer": "model.norm.weight", "model": "B", "weight": 0.5},
+                    {"is_base": True, "layer": "model.embed_tokens.weight", "model": "A", "weight": 1.0},
+                    {"layer": "model.embed_tokens.weight", "model": "B", "weight": 0.5},
                 ],
                 "merge_method": {
                     "name": "interpolate"
                 }
             },
             {
-                "output_layer_id": 4,
+                "block_id": None,
+                "layer_type": "post_norm",
+                "output_layer_name": "model.norm.weight",
+                "sources": [
+                    {"is_base": True, "layer": "model.norm.weight", "model": "A", "weight": 1.0},
+                    {"layer": "model.norm.weight", "model": "B", "weight": 0.5},
+                ],
+                "merge_method": {
+                    "name": "slerp"
+                }
+            },
+            {
+                "block_id": None,
+                "layer_type": "head",
+                "output_layer_name": "lm_head.weight",
                 "sources": [
                     {"is_base": True, "layer": "lm_head.weight", "model": "A", "weight": 1.0},
                     {"layer": "lm_head.weight", "model": "B", "weight": 0.5},
@@ -95,18 +105,10 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        processed, num_hidden_layers = self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
-
-        self.assertEqual(2, num_hidden_layers)
+        processed = self.runner.normalize(yaml_loaded)
         self.assertEqual(expected, processed)
 
-    @patch('flow_merge.lib.loaders.normalizer.load_architecture')
-    def test_lack_of_global_base_model(self, mock_load_architecture):
-        mock_load_architecture.return_value = {
-            "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
-            ]
-        }
+    def test_lack_of_global_base_model(self):
         yaml_input = """
             definition:
               - merge_method: 
@@ -119,17 +121,11 @@ class TestNormalizationRunner(unittest.TestCase):
 
         yaml_loaded = yaml.safe_load(yaml_input)
         with self.assertRaises(Exception) as e:
-            self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+            self.runner.normalize(yaml_loaded)
 
         self.assertEqual("Base model is missing", e.exception.__str__())
 
-    @patch('flow_merge.lib.loaders.normalizer.load_architecture')
-    def test_no_source_available_for_base(self, mock_load_architecture):
-        mock_load_architecture.return_value = {
-            "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
-            ]
-        }
+    def test_no_source_available_for_base(self):
         yaml_input = """
             base_model: A
             definition:
@@ -143,17 +139,11 @@ class TestNormalizationRunner(unittest.TestCase):
 
         yaml_loaded = yaml.safe_load(yaml_input)
         with self.assertRaises(Exception) as e:
-            self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+            self.runner.normalize(yaml_loaded)
 
         self.assertEqual("No valid source found to set as base_model", e.exception.__str__())
 
-    @patch('flow_merge.lib.loaders.normalizer.load_architecture')
-    def test_slice_without_range_and_layer(self, mock_load_architecture):
-        mock_load_architecture.return_value = {
-            "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
-            ]
-        }
+    def test_slice_without_range_and_layer(self):
         yaml_input = """
             base_model: A
             definition:
@@ -166,30 +156,6 @@ class TestNormalizationRunner(unittest.TestCase):
 
         yaml_loaded = yaml.safe_load(yaml_input)
         with self.assertRaises(Exception) as e:
-            self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
+            self.runner.normalize(yaml_loaded)
 
-        self.assertEqual("Neither range or layers defined for merging", e.exception.__str__())
-
-    @patch('flow_merge.lib.loaders.normalizer.load_architecture')
-    def test_not_mergable_layer_used(self, mock_load_architecture):
-        mock_load_architecture.return_value = {
-            "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
-            ]
-        }
-        yaml_input = """
-            base_model: A
-            definition:
-              - merge_method:
-                  name: slerp
-                sources:
-                  - model: A
-                    is_base: True
-                    layer: model.lm_head
-            """
-
-        yaml_loaded = yaml.safe_load(yaml_input)
-        with self.assertRaises(Exception) as e:
-            self.runner.normalize(yaml_loaded, directory_settings=DirectorySettings())
-
-        self.assertEqual("Layer defined for merging must be a hidden layer (pattern layer)", e.exception.__str__())
+        self.assertEqual("Slice provided without range of layers to merge", e.exception.__str__())

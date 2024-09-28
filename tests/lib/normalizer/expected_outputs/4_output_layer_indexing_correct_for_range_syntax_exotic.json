@@ -1,0 +1,1053 @@
+[
+  {
+    "output_layer_name": "model.layers.0.self_attn.k_proj",
+    "block_id": 0,
+    "sources": [
+      {
+        "layer": "model.layers.0.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.0.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.0.mlp.gate_proj.weight",
+    "block_id": 0,
+    "sources": [
+      {
+        "layer": "model.layers.0.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.0.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.1.self_attn.k_proj",
+    "block_id": 1,
+    "sources": [
+      {
+        "layer": "model.layers.1.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.1.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.1.mlp.gate_proj.weight",
+    "block_id": 1,
+    "sources": [
+      {
+        "layer": "model.layers.1.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.1.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.2.self_attn.k_proj",
+    "block_id": 2,
+    "sources": [
+      {
+        "layer": "model.layers.2.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.2.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.2.mlp.gate_proj.weight",
+    "block_id": 2,
+    "sources": [
+      {
+        "layer": "model.layers.2.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.2.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.3.self_attn.k_proj",
+    "block_id": 3,
+    "sources": [
+      {
+        "layer": "model.layers.3.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.3.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.3.mlp.gate_proj.weight",
+    "block_id": 3,
+    "sources": [
+      {
+        "layer": "model.layers.3.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.3.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.4.self_attn.k_proj",
+    "block_id": 4,
+    "sources": [
+      {
+        "layer": "model.layers.4.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.4.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.4.mlp.gate_proj.weight",
+    "block_id": 4,
+    "sources": [
+      {
+        "layer": "model.layers.4.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.4.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.5.self_attn.k_proj",
+    "block_id": 5,
+    "sources": [
+      {
+        "layer": "model.layers.5.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.5.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.5.mlp.gate_proj.weight",
+    "block_id": 5,
+    "sources": [
+      {
+        "layer": "model.layers.5.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.5.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.6.self_attn.k_proj",
+    "block_id": 6,
+    "sources": [
+      {
+        "layer": "model.layers.6.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.6.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.6.mlp.gate_proj.weight",
+    "block_id": 6,
+    "sources": [
+      {
+        "layer": "model.layers.6.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.6.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.7.self_attn.k_proj",
+    "block_id": 7,
+    "sources": [
+      {
+        "layer": "model.layers.7.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.7.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.7.mlp.gate_proj.weight",
+    "block_id": 7,
+    "sources": [
+      {
+        "layer": "model.layers.7.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.7.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.8.self_attn.k_proj",
+    "block_id": 8,
+    "sources": [
+      {
+        "layer": "model.layers.8.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.8.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.8.mlp.gate_proj.weight",
+    "block_id": 8,
+    "sources": [
+      {
+        "layer": "model.layers.8.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.8.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.9.self_attn.k_proj",
+    "block_id": 9,
+    "sources": [
+      {
+        "layer": "model.layers.9.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.9.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.9.mlp.gate_proj.weight",
+    "block_id": 9,
+    "sources": [
+      {
+        "layer": "model.layers.9.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.9.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.10.self_attn.k_proj",
+    "block_id": 10,
+    "sources": [
+      {
+        "layer": "model.layers.10.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.10.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.10.mlp.gate_proj.weight",
+    "block_id": 10,
+    "sources": [
+      {
+        "layer": "model.layers.10.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.10.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.11.self_attn.k_proj",
+    "block_id": 11,
+    "sources": [
+      {
+        "layer": "model.layers.11.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.11.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.11.mlp.gate_proj.weight",
+    "block_id": 11,
+    "sources": [
+      {
+        "layer": "model.layers.11.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.11.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.12.self_attn.k_proj",
+    "block_id": 12,
+    "sources": [
+      {
+        "layer": "model.layers.12.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.12.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.12.mlp.gate_proj.weight",
+    "block_id": 12,
+    "sources": [
+      {
+        "layer": "model.layers.12.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.12.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.13.self_attn.k_proj",
+    "block_id": 13,
+    "sources": [
+      {
+        "layer": "model.layers.13.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.13.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.13.mlp.gate_proj.weight",
+    "block_id": 13,
+    "sources": [
+      {
+        "layer": "model.layers.13.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.13.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.14.self_attn.k_proj",
+    "block_id": 14,
+    "sources": [
+      {
+        "layer": "model.layers.14.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.14.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.14.mlp.gate_proj.weight",
+    "block_id": 14,
+    "sources": [
+      {
+        "layer": "model.layers.14.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.14.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.15.self_attn.k_proj",
+    "block_id": 15,
+    "sources": [
+      {
+        "layer": "model.layers.15.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.15.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.15.mlp.gate_proj.weight",
+    "block_id": 15,
+    "sources": [
+      {
+        "layer": "model.layers.15.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.15.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.16.self_attn.k_proj",
+    "block_id": 16,
+    "sources": [
+      {
+        "layer": "model.layers.16.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.16.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.16.mlp.gate_proj.weight",
+    "block_id": 16,
+    "sources": [
+      {
+        "layer": "model.layers.16.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.16.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.17.self_attn.k_proj",
+    "block_id": 17,
+    "sources": [
+      {
+        "layer": "model.layers.17.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.17.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.17.mlp.gate_proj.weight",
+    "block_id": 17,
+    "sources": [
+      {
+        "layer": "model.layers.17.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.17.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.18.self_attn.k_proj",
+    "block_id": 18,
+    "sources": [
+      {
+        "layer": "model.layers.18.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.18.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.18.mlp.gate_proj.weight",
+    "block_id": 18,
+    "sources": [
+      {
+        "layer": "model.layers.18.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.18.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "addition-task-arithmetic",
+      "params": {
+        "scaling-coefficient": 0.8,
+        "normalize": true
+      }
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.19.self_attn.k_proj",
+    "block_id": 19,
+    "sources": [
+      {
+        "layer": "model.layers.22.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "is_base": true,
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "passthrough"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.19.mlp.gate_proj.weight",
+    "block_id": 19,
+    "sources": [
+      {
+        "layer": "model.layers.22.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "is_base": true,
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "passthrough"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.20.self_attn.k_proj",
+    "block_id": 20,
+    "sources": [
+      {
+        "layer": "model.layers.23.self_attn.k_proj",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "is_base": true,
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "passthrough"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.20.mlp.gate_proj.weight",
+    "block_id": 20,
+    "sources": [
+      {
+        "layer": "model.layers.23.mlp.gate_proj.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "is_base": true,
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "passthrough"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.embed_tokens.weight",
+    "block_id": null,
+    "sources": [
+      {
+        "layer": "model.embed_tokens.weight",
+        "model": "Qwen/Qwen2-0.5B",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.embed_tokens.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "interpolate"
+    },
+    "layer_type": "embedding"
+  },
+  {
+    "output_layer_name": "model.norm.weight",
+    "block_id": null,
+    "sources": [
+      {
+        "layer": "model.norm.weight",
+        "model": "Qwen/Qwen2-0.5B-Chat",
+        "is_base": true,
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "passthrough"
+    },
+    "layer_type": "post_norm"
+  }
+]

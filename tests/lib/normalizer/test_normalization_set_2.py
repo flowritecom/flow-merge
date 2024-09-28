@@ -1,27 +1,27 @@
 import unittest
+from unittest.mock import MagicMock
 
 import yaml
 
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.loaders.normalizer import NormalizationRunner
-from unittest.mock import patch
-
-from flow_merge.lib.validators import DirectorySettings
+from flow_merge.lib.model.architecture import ModelArchitecture, ModelWeight, ModelArchitectureProvider
 
 
 class TestNormalizationRunner(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
+        self.model_arch_provider = MagicMock(ModelArchitectureProvider)
+        arch = MagicMock(ModelArchitecture)
+        arch.raw_weights = [
+            ModelWeight(name="model.layers.{layer_index}.self_attn.k_proj.weight", type="self_attn", layer_type="decoder"),
+            ModelWeight(name="model.layers.{layer_index}.mlp.weight", type="mlp", layer_type="decoder"),
+        ]
+        self.model_arch_provider.get_by_id.return_value = arch
+        self.runner = NormalizationRunner(self.model_arch_provider)
 
-    @patch('flow_merge.lib.loaders.normalizer.load_architecture')
-    def test_range_without_layers_filter(self, mock_load_architecture):
-        mock_load_architecture.return_value = {
-            "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
-                {"name": "model.layers.{layer_index}.mlp.weight", "type": "mlp", "layer_type": "decoder"},
-            ]
-        }
+    def test_range_without_layers_filter(self):
         yaml_input = """
         base_model: A
         definition:
@@ -38,7 +38,9 @@ class TestNormalizationRunner(unittest.TestCase):
         """
         expected = [
             {
-                "output_layer_id": 0,
+                "block_id": 0,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.0.self_attn.k_proj.weight",
                 "sources": [
                     {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", "weight": 0.5},
                     {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", "weight": 1.0},
@@ -48,7 +50,9 @@ class TestNormalizationRunner(unittest.TestCase):
                 }
             },
             {
-                "output_layer_id": 0,
+                "block_id": 0,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.0.mlp.weight",
                 "sources": [
                     {"is_base": True, "layer": "model.layers.0.mlp.weight", "model": "A", "weight": 0.5},
                     {"layer": "model.layers.0.mlp.weight", "model": "B", "weight": 1.0},
@@ -58,7 +62,9 @@ class TestNormalizationRunner(unittest.TestCase):
                 }
             },
             {
-                "output_layer_id": 1,
+                "block_id": 1,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.1.self_attn.k_proj.weight",
                 "sources": [
                     {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", "weight": 0.5},
                     {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", "weight": 1.0},
@@ -68,7 +74,9 @@ class TestNormalizationRunner(unittest.TestCase):
                 }
             },
             {
-                "output_layer_id": 1,
+                "block_id": 1,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.1.mlp.weight",
                 "sources": [
                     {"is_base": True, "layer": "model.layers.1.mlp.weight", "model": "A", "weight": 0.5},
                     {"layer": "model.layers.1.mlp.weight", "model": "B", "weight": 1.0},
@@ -80,26 +88,16 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        normalizer = NormalizationRunner(ApplicationConfig(), None)
-        processed, num_hidden_layers = normalizer.normalize(yaml_loaded, directory_settings=DirectorySettings())
-
-        self.assertEqual(2, num_hidden_layers)
+        processed = self.runner.normalize(yaml_loaded)
         self.assertEqual(expected, processed)
 
-    @patch('flow_merge.lib.loaders.normalizer.load_architecture')
-    def test_range_with_layers_filter(self, mock_load_architecture):
-        mock_load_architecture.return_value = {
-            "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
-                {"name": "model.layers.{layer_index}.mlp.weight", "type": "mlp", "layer_type": "decoder"},
-            ]
-        }
+    def test_range_with_layers_filter(self):
         yaml_input = """
         base_model: A
         definition:
           - merge_method: 
               name: slerp
-            layers: ["attn"]
+            layers: ["self_attn"]
             sources:
               - model: A
                 is_base: True
@@ -111,7 +109,9 @@ class TestNormalizationRunner(unittest.TestCase):
         """
         expected = [
             {
-                "output_layer_id": 0,
+                "block_id": 0,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.0.self_attn.k_proj.weight",
                 "sources": [
                     {"is_base": True, "layer": "model.layers.0.self_attn.k_proj.weight", "model": "A", "weight": 0.5},
                     {"layer": "model.layers.0.self_attn.k_proj.weight", "model": "B", "weight": 1.0},
@@ -121,7 +121,9 @@ class TestNormalizationRunner(unittest.TestCase):
                 }
             },
             {
-                "output_layer_id": 1,
+                "block_id": 1,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.1.self_attn.k_proj.weight",
                 "sources": [
                     {"is_base": True, "layer": "model.layers.1.self_attn.k_proj.weight", "model": "A", "weight": 0.5},
                     {"layer": "model.layers.1.self_attn.k_proj.weight", "model": "B", "weight": 1.0},
@@ -131,18 +133,22 @@ class TestNormalizationRunner(unittest.TestCase):
                 }
             },
             {
-                "output_layer_id": 0,
+                "block_id": 0,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.0.mlp.weight",
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.0.mlp.weight", "model": "A"},
+                    {"is_base": True, "layer": "model.layers.0.mlp.weight", "model": "A", "weight": 1.0},
                 ],
                 "merge_method": {
                     "name": "passthrough"
                 }
             },
             {
-                "output_layer_id": 1,
+                "block_id": 1,
+                "layer_type": "decoder",
+                "output_layer_name": "model.layers.1.mlp.weight",
                 "sources": [
-                    {"is_base": True, "layer": "model.layers.1.mlp.weight", "model": "A"},
+                    {"is_base": True, "layer": "model.layers.1.mlp.weight", "model": "A", "weight": 1.0},
                 ],
                 "merge_method": {
                     "name": "passthrough"
@@ -151,19 +157,11 @@ class TestNormalizationRunner(unittest.TestCase):
         ]
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        normalizer = NormalizationRunner(ApplicationConfig(), None)
-        processed, num_hidden_layers = normalizer.normalize(yaml_loaded, directory_settings=DirectorySettings())
-
-        self.assertEqual(2, num_hidden_layers)
+        processed = self.runner.normalize(yaml_loaded)
         self.assertEqual(expected, processed)
 
-    @patch('flow_merge.lib.loaders.normalizer.load_architecture')
-    def test_nontexisting_model_layer_in_layers_filter(self, mock_load_architecture):
-        mock_load_architecture.return_value = {
-            "weights": [
-                {"name": "model.layers.{layer_index}.self_attn.k_proj.weight", "type": "attn", "layer_type": "decoder"},
-            ]
-        }
+
+    def test_nontexisting_model_layer_in_layers_filter(self):
         yaml_input = """
         base_model: A
         definition:
@@ -181,8 +179,7 @@ class TestNormalizationRunner(unittest.TestCase):
         """
 
         yaml_loaded = yaml.safe_load(yaml_input)
-        normalizer = NormalizationRunner(ApplicationConfig(), None)
 
         with self.assertRaises(Exception) as e:
-            normalizer.normalize(yaml_loaded, directory_settings=DirectorySettings())
+            self.runner.normalize(yaml_loaded)
         self.assertEqual("Layer 'xyz_not_existing' does not exist in the model", e.exception.__str__())

@@ -1,0 +1,365 @@
+[
+  {
+    "output_layer_name": "model.layers.0.self_attn.k_proj",
+    "block_id": 0,
+    "sources": [
+      {
+        "layer": "model.layers.12.self_attn.k_proj",
+        "model": "A",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.77.self_attn.k_proj",
+        "model": "B",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.0.mlp.gate_proj.weight",
+    "block_id": 0,
+    "sources": [
+      {
+        "layer": "model.layers.12.mlp.gate_proj.weight",
+        "model": "A",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.77.mlp.gate_proj.weight",
+        "model": "B",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.1.self_attn.k_proj",
+    "block_id": 1,
+    "sources": [
+      {
+        "layer": "model.layers.13.self_attn.k_proj",
+        "model": "A",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.78.self_attn.k_proj",
+        "model": "B",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.1.mlp.gate_proj.weight",
+    "block_id": 1,
+    "sources": [
+      {
+        "layer": "model.layers.13.mlp.gate_proj.weight",
+        "model": "A",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.78.mlp.gate_proj.weight",
+        "model": "B",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.2.self_attn.k_proj",
+    "block_id": 2,
+    "sources": [
+      {
+        "layer": "model.layers.69.self_attn.k_proj",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.33.self_attn.k_proj",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.2.mlp.gate_proj.weight",
+    "block_id": 2,
+    "sources": [
+      {
+        "layer": "model.layers.69.mlp.gate_proj.weight",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.33.mlp.gate_proj.weight",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.3.self_attn.k_proj",
+    "block_id": 3,
+    "sources": [
+      {
+        "layer": "model.layers.70.self_attn.k_proj",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.34.self_attn.k_proj",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.3.mlp.gate_proj.weight",
+    "block_id": 3,
+    "sources": [
+      {
+        "layer": "model.layers.70.mlp.gate_proj.weight",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.34.mlp.gate_proj.weight",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.4.self_attn.k_proj",
+    "block_id": 4,
+    "sources": [
+      {
+        "layer": "model.layers.71.self_attn.k_proj",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.35.self_attn.k_proj",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.4.mlp.gate_proj.weight",
+    "block_id": 4,
+    "sources": [
+      {
+        "layer": "model.layers.71.mlp.gate_proj.weight",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.35.mlp.gate_proj.weight",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.5.self_attn.k_proj",
+    "block_id": 5,
+    "sources": [
+      {
+        "layer": "model.layers.123.self_attn.k_proj",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.99.self_attn.k_proj",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.6.self_attn.k_proj",
+    "block_id": 6,
+    "sources": [
+      {
+        "layer": "model.layers.124.self_attn.k_proj",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.100.self_attn.k_proj",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.7.self_attn.k_proj",
+    "block_id": 7,
+    "sources": [
+      {
+        "layer": "model.layers.125.self_attn.k_proj",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.layers.101.self_attn.k_proj",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "slerp"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.5.mlp.gate_proj.weight",
+    "block_id": 5,
+    "sources": [
+      {
+        "layer": "model.layers.123.mlp.gate_proj.weight",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "passthrough"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.6.mlp.gate_proj.weight",
+    "block_id": 6,
+    "sources": [
+      {
+        "layer": "model.layers.124.mlp.gate_proj.weight",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "passthrough"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.layers.7.mlp.gate_proj.weight",
+    "block_id": 7,
+    "sources": [
+      {
+        "layer": "model.layers.125.mlp.gate_proj.weight",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "passthrough"
+    },
+    "layer_type": "decoder"
+  },
+  {
+    "output_layer_name": "model.embed_tokens.weight",
+    "block_id": null,
+    "sources": [
+      {
+        "layer": "model.embed_tokens.weight",
+        "model": "A",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.embed_tokens.weight",
+        "model": "B",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "interpolate"
+    },
+    "layer_type": "embedding"
+  },
+  {
+    "output_layer_name": "model.norm.weight",
+    "block_id": null,
+    "sources": [
+      {
+        "layer": "model.norm.weight",
+        "model": "X",
+        "is_base": true,
+        "weight": 1.0
+      },
+      {
+        "layer": "model.norm.weight",
+        "model": "Y",
+        "weight": 1.0
+      }
+    ],
+    "merge_method": {
+      "name": "passthrough"
+    },
+    "layer_type": "post_norm"
+  }
+]

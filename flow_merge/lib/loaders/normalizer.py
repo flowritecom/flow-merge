@@ -1,15 +1,15 @@
 from pydantic import BaseModel
 
 from flow_merge.lib.merge_methods import MergeMethodIdentifier
-from flow_merge.lib.model.architecture import ModelArchitectureProvider, ModelWeight
+from flow_merge.lib.model.architecture import ModelArchitectureProvider, ModelWeight, ModelWeightLayerType
 from typing import Any, Dict, List, Optional
 from functools import reduce
-import re
 
 from flow_merge.lib.config import ApplicationConfig
 from flow_merge.lib.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class NormalizedSource(BaseModel):
     weight: Optional[float] = None
@@ -26,7 +26,7 @@ class MergeMethod(BaseModel):
 class NormalizedSlice(BaseModel):
     merge_method: MergeMethod
     sources: List[NormalizedSource]
-    output_layer_id: int
+    block_id: int
     output_layer_name: str
     layer_type: str
 
@@ -69,7 +69,7 @@ class _MergeMethod:
 
 
 class _Slice:
-    output_layer_id: int
+    block_id: int
     output_layer_name: str
     layers: Optional[List[str]] = None
     sources: List[_Source] = None
@@ -78,7 +78,7 @@ class _Slice:
 
     def __init__(self, **kwargs):
         self.output_layer_name = kwargs["output_layer_name"] if "output_layer_name" in kwargs else None
-        self.output_layer_id = kwargs["output_layer_id"] if "output_layer_id" in kwargs else None
+        self.block_id = kwargs["block_id"] if "block_id" in kwargs else None
         self.layers = kwargs["layers"] if "layers" in kwargs else None
         self.sources = [
             _Source(**source) if isinstance(source, dict) else _Source(**source.__dict__)
@@ -98,7 +98,7 @@ class _Slice:
 
 class NormalizationRunner:
     model_arch_provider: ModelArchitectureProvider = None
-    models_layers: Dict[str, ModelWeight] = {}
+    models_layers: Dict[str, Dict[str, ModelWeight]] = {}
     models_layers_by_type: Dict[str, Dict[str, List[ModelWeight]]] = {}
     config: ApplicationConfig
 
@@ -116,14 +116,14 @@ class NormalizationRunner:
         normalized_slices = []
 
         logger.info("Normalizing merge config slices")
-
+        last_block_id = 0
         for i, s in enumerate(slices):
             s = self._apply_transformations(s)
-            s.output_layer_id = i
+            s.block_id = last_block_id
             normalized_slices.extend(self._process_template_slices(s))
+            last_block_id = max(normalized_slices, key=lambda x: x.block_id).block_id + 1
+
         normalized_slices = self._process_special_layers(normalized_slices, raw_data["base_model"])
-        normalized_slices = self._move_embed_slice_to_top(normalized_slices)
-        normalized_slices = self._reindex_slices_with_embed_slice(normalized_slices)
         normalized_slices = self._process_post_norm_merge_method(normalized_slices)
 
         for s in normalized_slices:
@@ -144,12 +144,12 @@ class NormalizationRunner:
         # whole list of slices
         return reduce(lambda c, t: t(c), self.transformations, s)
 
-    def _ensure_base_model(self, slice: _Slice) -> _Slice:
+    def _ensure_base_model(self, _slice: _Slice) -> _Slice:
         # we allow user to write slice without indicating base_model
         # or just base_model = False
         # here we make sure every slice has one base_model = True
         # where it is picked to be the first non-False, if undecided
-        sources = slice.sources or []
+        sources = _slice.sources or []
 
         # check if there's any source with base_model set to True
         if not any((src.is_base is True) for src in sources):
@@ -157,24 +157,27 @@ class NormalizationRunner:
             # and set that to be the base_model = True
             for idx, src in enumerate(sources):
                 if src.is_base is not False:
-                    slice.sources[idx].is_base = True
-                    return slice
+                    _slice.sources[idx].is_base = True
+                    return _slice
             raise ValueError("No valid source found to set as base_model")
         # if already a source with base_model == True, return the original slice
-        return slice
-    
+        return _slice
+
     def _process_post_norm_merge_method(self, normalized_slices: List[_Slice]) -> List[_Slice]:
         # We treat the model.norm.weight layer as a special layer and add it with the interpolate method
         # Then after processing and correct order of the slices we update the method for this slice
         # This is to preserve the correct merge method based on the config
         # We always append the norm layer to the end so the previous merge method that is not interpolate
         # should hold true
-        for i, slice in enumerate(normalized_slices):
-            if slice.output_layer_name == "model.norm.weight":
-                for ind in range(i - 1, -1, -1):
-                    if normalized_slices[ind].merge_method != MergeMethodIdentifier.INTERPOLATE:
-                        slice.merge_method = normalized_slices[ind].merge_method
-                        break
+        for i, _slice in enumerate(normalized_slices):
+            if _slice.output_layer_name == "model.norm.weight":
+
+                max_block_id = max(s.block_id for s in normalized_slices if s.block_id is not None)
+                last_non_interpolate_block = [s for s in normalized_slices if
+                                              s.block_id == max_block_id and s.merge_method != MergeMethodIdentifier.INTERPOLATE].pop()
+                if last_non_interpolate_block is not None:
+                    _slice.merge_method = last_non_interpolate_block.merge_method
+                    break
         return normalized_slices
 
     def _process_special_layers(self, normalized_data: List[_Slice], base_model: str) -> List[_Slice]:
@@ -197,6 +200,14 @@ class NormalizationRunner:
                 for source in sources
             ]
 
+        def get_last_block_sources(normalized_slices: List[_Slice]) -> List[_Source]:
+            last_block_id = max(s.block_id for s in normalized_slices if s.block_id is not None)
+            sources = [s.sources for s in normalized_slices if s.block_id == last_block_id]
+            return [s for sublist in sources for s in sublist]  # flatten the sources list
+
+        def unique_sources(sources: List[_Source]) -> List[_Source]:
+            return list({s.model: s for s in sources}.values())
+
         special_layers = [
             layer
             for name, layer in self.models_layers[base_model].items()
@@ -209,55 +220,41 @@ class NormalizationRunner:
                     get_plain_sources(normalized_data[0].sources),
                     special_layer.name,
                     _MergeMethod(name="interpolate"),
-                    0,
+                    None,
                     special_layer.name,
                     special_layer.layer_type.value
                 )
                 normalized_data.append(embed_slice)
 
-            if special_layer.layer_type == "post_norm":
-                norm_slice = self._create_slice(
-                    get_plain_sources(normalized_data[len(normalized_data) - 1].sources),
+            if special_layer.layer_type == "post_norm" or special_layer.layer_type == "head":
+                layer = self._create_slice(
+                    unique_sources(get_plain_sources(get_last_block_sources(normalized_data))),
                     special_layer.name,
                     _MergeMethod(name="interpolate"),
-                    self._get_last_output_slice_id(normalized_data) + 1,
+                    None,
                     special_layer.name,
                     special_layer.layer_type.value
                 )
-                normalized_data.append(norm_slice)
+                normalized_data.append(layer)
 
-            if special_layer.layer_type == "head":
-                lm_head_slice = self._create_slice(
-                    get_plain_sources(normalized_data[len(normalized_data) - 1].sources),
-                    special_layer.name,
-                    _MergeMethod(name="interpolate"),
-                    self._get_last_output_slice_id(normalized_data) + 1,
-                    special_layer.name,
-                    special_layer.layer_type.value
-                )
-                normalized_data.append(lm_head_slice)
         return normalized_data
 
-    def _get_last_output_slice_id(self, slices: List[_Slice]) -> int:
-        sorted_slices = sorted(slices, key=lambda s: s.output_layer_id, reverse=True)
-        return sorted_slices[0].output_layer_id
-
-    def _process_template_slices(self, slice: _Slice) -> List[_Slice]:
+    def _process_template_slices(self, _slice: _Slice) -> List[_Slice]:
         # should only be passed non-special-layer slices
         # ie. ones that take layer index to be templated and thus are expanded
         # to match the range indicated - or ones where a single 'layer' is
         # already specified manually (below)
-        base_model = self._determine_base_model(slice.sources)
-        base_source = self._determine_base_source(slice.sources)
+        base_model = self._determine_base_model(_slice.sources)
+        base_source = self._determine_base_source(_slice.sources)
         layer_name_templates = [
             layer for _, layer in self.models_layers[base_model].items() if layer.layer_type == "decoder"
         ]
 
-        def get_slices_for_all_layers(start, end, _slice: _Slice, layers):
+        def get_slices_for_all_layers(count: int, _slice: _Slice, layers):
             return [
                 _Slice(
-                    output_layer_name=lnt.name.format(layer_index=i),
-                    output_layer_id=_slice.output_layer_id + i,
+                    output_layer_name=lnt.name.format(layer_index=_slice.block_id + i),
+                    block_id=_slice.block_id + i,
                     merge_method=_slice.merge_method,
                     sources=[
                         _Source(**{**src.__dict__,
@@ -267,39 +264,40 @@ class NormalizationRunner:
                     ],
                     layer_type=lnt.layer_type.value,
                 )
-                for i in range(end - start + 1)
+                for i in range(count)
                 for lnt in layers
             ]
 
         # Range syntax and no filtering
-        if all(src.range is not None for src in slice.sources) and slice.layers is None:
-            start, end = slice.sources[0].range
-            return get_slices_for_all_layers(start, end, slice, layer_name_templates)
+        if all(src.range is not None for src in _slice.sources) and _slice.layers is None:
+            start, end = _slice.sources[0].range
+            return get_slices_for_all_layers((end - start + 1), _slice, layer_name_templates)
 
         # Range syntax and layers filtering applied
-        elif all(src.range is not None for src in slice.sources) and slice.layers is not None:
+        elif all(src.range is not None for src in _slice.sources) and _slice.layers is not None:
             # Layers filter applied
             # We create slices with the layers defined by user in the layers filter
             # and then fill in the rest of the layers based on the model architecture definition.
 
             # Validate if requested layers are at all available in the architecture of the base model
-            self._validate_layers_filter_values(base_model, slice)
+            self._validate_layers_filter_values(base_model, _slice)
 
-            start, end = slice.sources[0].range
+            start, end = _slice.sources[0].range
             user_requested_layers = [
                 layer
-                for requested_layer_type in slice.layers
+                for requested_layer_type in _slice.layers
                 for layer in self.models_layers_by_type[base_model][requested_layer_type]
             ]
 
-            remaining_layers = [l for _, l in self.models_layers[base_model].items() if l not in user_requested_layers]
+            remaining_layers = [l for _, l in self.models_layers[base_model].items() if
+                                l not in user_requested_layers and l.layer_type == ModelWeightLayerType.decoder.value]
 
-            user_requested_slices = get_slices_for_all_layers(start, end, slice, user_requested_layers)
+            user_requested_slices = get_slices_for_all_layers((end - start + 1), _slice, user_requested_layers)
             remaining_slices = [
                 _Slice(
-                    output_layer_id=slice.output_layer_id + i,
+                    block_id=_slice.block_id + i,
                     merge_method=_MergeMethod(name="passthrough"),
-                    output_layer_name=lnt.name.format(layer_index=slice.output_layer_id + i),
+                    output_layer_name=lnt.name.format(layer_index=_slice.block_id + i),
                     sources=[
                         _Source(model=base_model, is_base=True,
                                 layer=lnt.name.format(layer_index=base_source.range[0] + i))
@@ -312,46 +310,15 @@ class NormalizationRunner:
 
             return user_requested_slices + remaining_slices
 
-        # Layer syntax
-        elif all(src.layer is not None for src in slice.sources):
-            user_defined_layer_id = re.findall(r'\.(\d+)\.', base_source.layer)
-            if len(user_defined_layer_id) == 0:
-                raise Exception("Layer defined for merging must be a hidden layer (pattern layer)")
+        raise Exception("Slice provided without range of layers to merge")
 
-            user_defined_layer = re.sub(r'\.\d+\.', ".{layer_index}.", base_source.layer)
-            remaining_layers = [l for _, l in self.models_layers[base_model].items() if
-                                l.name != user_defined_layer and l.layer_type.value == "decoder"]
-            user_defined_slice = self._create_slice(
-                slice.sources,
-                None,
-                slice.merge_method,
-                slice.output_layer_id,
-                output_layer_name=user_defined_layer.format(layer_index=slice.output_layer_id),
-                layer_type="decoder",
-            )
-            remaining_slices = [
-                self._create_slice(
-                    [base_source],
-                    layer.name.format(layer_index=user_defined_layer_id[0]),
-                    _MergeMethod(name="passthrough"),
-                    slice.output_layer_id,
-                    output_layer_name=layer.name.format(layer_index=slice.output_layer_id),
-                    layer_type=layer.layer_type.value,
-                )
-                for layer in remaining_layers
-            ]
-
-            return [user_defined_slice] + remaining_slices
-
-        raise Exception("Neither range or layers defined for merging")
-
-    def _validate_layers_filter_values(self, base_model: str, slice: _Slice):
-        for l in slice.layers:
+    def _validate_layers_filter_values(self, base_model: str, _slice: _Slice):
+        for l in _slice.layers:
             if l not in self.models_layers_by_type[base_model]:
                 raise Exception(f"Layer '{l}' does not exist in the model")
 
     def _create_slice(
-            self, sources: List[_Source], layer: Optional[str], merge_method: _MergeMethod, output_layer_id: int,
+            self, sources: List[_Source], layer: Optional[str], merge_method: _MergeMethod, block_id: int | None,
             output_layer_name: str, layer_type: str
     ) -> _Slice:
         # creates a slice, sets merge_method and layer
@@ -368,7 +335,7 @@ class NormalizationRunner:
         ]
         return _Slice(
             output_layer_name=output_layer_name,
-            output_layer_id=output_layer_id,
+            block_id=block_id,
             merge_method=merge_method,
             sources=sources_with_layer,
             layer_type=layer_type,
@@ -402,32 +369,3 @@ class NormalizationRunner:
                 weight.type: [w for w in arch.raw_weights if w.type is weight.type]
                 for weight in arch.raw_weights
             }
-
-    def _move_embed_slice_to_top(self, normalized_data: List[_Slice]) -> List[_Slice]:
-        embed_index = self._embed_slice_index(normalized_data)
-        if embed_index is None:
-            return normalized_data
-
-        normalized_data.insert(0, normalized_data.pop(embed_index))
-        return normalized_data
-
-    def _reindex_slices_with_embed_slice(self, normalized_data: List[_Slice]) -> List[_Slice]:
-        embed_index = self._embed_slice_index(normalized_data)
-        if embed_index is None:
-            return normalized_data
-
-        for i, slice in enumerate(normalized_data):
-            if i is not embed_index:
-                slice.output_layer_id += 1
-
-        return normalized_data
-
-    def _embed_slice_index(self, normalized_data: List[_Slice]) -> bool | int:
-        return next(
-            (
-                i
-                for i, slice_entry in enumerate(normalized_data)
-                if any("embed" in src.layer for src in slice_entry.sources)
-            ),
-            None,
-        )
