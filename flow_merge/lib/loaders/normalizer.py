@@ -26,7 +26,7 @@ class MergeMethod(BaseModel):
 class NormalizedSlice(BaseModel):
     merge_method: MergeMethod
     sources: List[NormalizedSource]
-    block_id: int
+    block_id: Optional[int]
     output_layer_name: str
     layer_type: str
 
