@@ -36,16 +36,23 @@ class SliceValidator:
         if any("layer" in src for src in s["sources"]) and "layers" in s:
             raise ValueError("Layers filter can only be used with `range` definition, not with `layer`")
 
-        # Check if range length is bigger than 0
-        if any("range" in src and src["range"][0] >= src["range"][1] for src in s["sources"]):
-            raise ValueError("Provided layers range is not positive")
+        if (
+                any(isinstance(src["range"], int) for src in s["sources"])
+                and not all(isinstance(src["range"], int) for src in s["sources"])
+        ):
+            raise ValueError("Range for all sources must only be used either with single layer or range of layers")
 
-        # Check if all ranges are of the same length
-        if any("range" in src for src in s["sources"]):
-            l = s["sources"][0]["range"][1] - s["sources"][0]["range"][0]
-            for src in s["sources"]:
-                if src["range"][1] - src["range"][0] is not l:
-                    raise ValueError("All `range` must be of the same length")
+        if not any(isinstance(src["range"], int) for src in s["sources"]):
+            # Check if range length is bigger than 0
+            if any("range" in src and src["range"][0] >= src["range"][1] for src in s["sources"]):
+                raise ValueError("Provided layers range is not positive")
+
+            # Check if all ranges are of the same length
+            if any("range" in src for src in s["sources"]):
+                l = s["sources"][0]["range"][1] - s["sources"][0]["range"][0]
+                for src in s["sources"]:
+                    if src["range"][1] - src["range"][0] is not l:
+                        raise ValueError("All `range` must be of the same length")
 
         if "merge_method" not in s or not isinstance(s["merge_method"], dict) or "name" not in s["merge_method"]:
             raise ValueError("`merge_method` must be a dictionary with `name` field and optional `params` field")
