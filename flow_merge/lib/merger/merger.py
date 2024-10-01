@@ -140,7 +140,7 @@ class Merger:
                         MergeMethodIdentifier.DARE_TIES_MERGING: DareTiesMergingSettings,
                         MergeMethodIdentifier.ADDITION_TASK_ARITHMETIC: TaskArithmeticSettings,
                     }
-                    merge_alg_settings = settings_class[s.merge_method.name](**s.merge_method.params)
+                    merge_alg_settings = settings_class[s.merge_method.name](**s.merge_method.params or {})
 
                 writer.save_tensor(
                     weight_name=s.output_layer_name, 
