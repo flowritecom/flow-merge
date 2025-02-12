@@ -16,7 +16,7 @@ setup(
         "pyyaml==6.0.1",
         "safetensors==0.4.2",
         "torch==2.2.1",
-        "transformers==4.38.1",
+        "transformers==4.48.0",
     ],
     package_data={
         "flow_merge": ["data/architectures/*"],
